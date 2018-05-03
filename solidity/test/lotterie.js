@@ -11,6 +11,11 @@ lotterieLib = {
     Absolute : 2,
     Relative : 3
   },
+  participationStates : {
+    BidSent : 0,
+    Revealed : 1,
+    Cashout : 2
+  },
   phases : {
     Bidding : 0,
     Participation : 1,
@@ -20,9 +25,52 @@ lotterieLib = {
   cashoutEndModes : {
     Absolute : 0,
     Relative : 1
+  },
+  calcCommitment : function(hexstring) {
+    if (hexstring.startsWith('0x')) {
+      hexstring = hexstring.substr(2);
+    }
+    return web3.sha3(hexstring.padStart(64,'0'),{encoding:'hex'});
+  },
+  padHexInt : function(hexstring) {
+    if (hexstring.startsWith('0x')) {
+      hexstring = hexstring.substr(2);
+      hexstring = '0x' + hexstring.padStart(64,'0');
+    } else {
+      hexstring = hexstring.padStart(64,'0');
+    }
+    return hexstring;
+  },
+  calcScore : function(hexpseed,hexcseed) {
+    var b1 = hexToBytes(this.padHexInt(hexpseed));
+    var b2 = hexToBytes(this.padHexInt(hexcseed));
+    for (var i = 0; i < b1.length; ++i) {
+      b1[i] = b1[i] ^ b2[i];
+    }
+    return '0x' + this.padHexInt(bytesToHex(b1));
   }
+
+
+
 }
-var conf1 = {
+
+function hexToBytes(hex) {
+    if (hex.startsWith('0x')) {
+      hex = hex.substr(2);
+    }
+    for (var bytes = [], c = 0; c < hex.length; c += 2)
+    bytes.push(parseInt(hex.substr(c, 2), 16));
+    return bytes;
+}
+function bytesToHex(bytes) {
+    for (var hex = [], i = 0; i < bytes.length; i++) {
+        hex.push((bytes[i] >>> 4).toString(16));
+        hex.push((bytes[i] & 0xF).toString(16));
+    }
+    return hex.join("");
+}
+
+const conf1 = {
   dosalt : true,
   nbWinners : 5,
   nbWinnerMinRatio : 50, // less than 10 participant we apply ratio 
@@ -118,7 +166,7 @@ contract('Lotterie', function(accounts) {
   it("should add params", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
-    var lotterie = await Lotterie.deployed(account_contract_author);
+    var lotterie = await Lotterie.new(account_contract_author);
     var nbWinners = 5;
     var nbWinnerMinRatio = 50; // less than 10 participant we apply ratio 
     var nbparam = await lotterie.getWiningParamsCount.call();
@@ -138,10 +186,7 @@ contract('Lotterie', function(accounts) {
     assert.equal(res[1], nbWinnerMinRatio);
   });
 
-});
 
-// running multiple contract (issue with update and read from multiple test
-contract('Lotterie2', function(accounts) {
   it("should withdraw for some account", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
@@ -248,9 +293,6 @@ contract('Lotterie2', function(accounts) {
     assert.equal(res.error, null);
   });
 
-});
-
-contract('Lotterie2bis', function(accounts) {
   it("should withdraw all", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
@@ -284,13 +326,11 @@ contract('Lotterie2bis', function(accounts) {
       return ev.to === account_contract_author && ev.amount == authorContractExpected;
     });
   });
-});
 
-contract('Lotterie3', function(accounts) {
   it("should not allow margin over 100%", async function() {
     var account_one = accounts[0];
     var account_contract_author = accounts[1];
-    var lotterie = await Lotterie.deployed(account_contract_author);
+    var lotterie = await Lotterie.new(account_contract_author);
     var account_contract_dapp = accounts[2];
 
     await configuration(lotterie,account_contract_dapp,conf1);
@@ -307,6 +347,208 @@ contract('Lotterie3', function(accounts) {
      throwerMargin
     ));
   });
+
+  it("calculate correct commitments", async function() {
+    var lotterie = await Lotterie.new(accounts[1]);
+    var checkit = async function(hexval) {
+      var jscalc = lotterieLib.calcCommitment(hexval);
+      var chaincalc = await lotterie.checkCommitment.call(hexval);
+      assert.equal(lotterieLib.padHexInt(web3.toHex(chaincalc)),jscalc);
+    };
+    checkit("0x0");
+    checkit("0x1ab");
+    checkit("0x12344");
+    checkit("0x123446b1341");
+    checkit("0xb123446b1347859720721");
+    checkit("0x5cee5c91812f9cf35e8b05c524993810a78f25fd7e87ae61008433d43e27bb0");
+  });
+  it("calculate correct scores", async function() {
+    var lotterie = await Lotterie.new(accounts[1]);
+    var checkit = async function(hexval1,hexval2) {
+      var jscalc = lotterieLib.calcScore(hexval1,hexval2);
+      var chaincalc = await lotterie.checkScore.call(hexval1,hexval2);
+      assert.equal(lotterieLib.padHexInt(web3.toHex(chaincalc)),jscalc);
+    };
+    checkit("0x0","0x0");
+    checkit("0x1ab","0x0");
+    checkit("0x123446b1341","0x5cee5c91812f9cf35e8b05c524993810a78f25fd7e87ae61008433d43e27bb0");
+  });
+
+
+  it("switch phases on user tresholds", async function() {
+    var myConf = Object.assign({}, conf1);
+    myConf.maxParticipant = 5;
+    //myConf.nbWinners = 4;
+    myConf.nbWinnerMinRatio = 80; // 4 winner (ratio applying)
+    // warn need to pass 4 cashout during those 3 secs, might be enough on most testing confs
+    myConf.cashoutEndValue = 3;
+    var account_one = accounts[0];
+    var account_contract_author = accounts[1];
+    var lotterie = await Lotterie.new(account_contract_author);
+    var account_contract_dapp = accounts[2];
+    var account_bidder1 = accounts[3];
+    var account_bidder2 = accounts[4];
+    var account_bidder3 = accounts[5];
+
+    await configuration(lotterie,account_contract_dapp,myConf);
+    await lotterie.initThrow (0,0,0,0,0);
+    await lotterie.bid("0x0",lotterieLib.calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue });
+    await lotterie.bid(0,lotterieLib.calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue });
+    await lotterie.bid(0,lotterieLib.calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue });
+    await lotterie.bid(0,lotterieLib.calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue });
+    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Bidding);
+    await lotterie.bid(0,lotterieLib.calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue });
+    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Participation);
+    // reveal
+    var thr = await lotterie.getThrow.call(0);
+    var currentSeed = thr[1];
+    var thrBlock = thr[7];
+
+
+    assertRevert(lotterie.revealParticipation(0,1));
+    thr = await lotterie.getThrow.call(0);
+    assert.equal(web3.toHex(currentSeed), web3.toHex(thr[1]));
+    currentSeed = thr[1];
+    var res = await lotterie.challengeParticipation.call(0,0);
+    assert.equal(web3.toHex(res[0]),web3.toHex(res[1]));
+    await lotterie.revealParticipation(0,0);
+    thr = await lotterie.getThrow.call(0);
+    assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr[1]));
+    currentSeed = thr[1];
+
+    assertRevert(lotterie.revealParticipation(0,0));
+    await lotterie.revealParticipation(4,4);
+    thr = await lotterie.getThrow.call(0);
+    assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr[1]));
+    currentSeed = thr[1];
+
+
+    await lotterie.revealParticipation(3,3);
+    thr = await lotterie.getThrow.call(0);
+    assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr[1]));
+    currentSeed = thr[1];
+
+
+    await lotterie.revealParticipation(1,'0x1111111111111111111111111111111111');
+    thr = await lotterie.getThrow.call(0);
+    assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr[1]));
+    currentSeed = thr[1];
+
+
+    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Participation);
+    await lotterie.revealParticipation(2,2);
+    thr = await lotterie.getThrow.call(0);
+    assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr[1]));
+    currentSeed = thr[1];
+    assert.equal(thr[5], 5);
+    assert.equal(thr[4], 5);
+    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Cashout);
+    const finalSeed = web3.toHex(currentSeed);
+    // get all score warning do not use this (iterate on all participation of all throws)
+    var nbParts = await lotterie.getParticipationsCount.call();
+    var posNb0_1 = nbParts;
+    assert.equal(posNb0_1,5);
+    var posNb0_1 = 5;
+    var scoreNb0 = null;
+    var scoreNb0Ref = null;
+    var part0Ref = null;
+    var hidden0Ref = null;
+    var last = null;
+    var lastScore = null;
+    for (var i=0; i < 5; ++i) {
+      var partelts = await lotterie.getParticipation.call(i);
+      // right throwid
+      if (partelts[0] == 0) {
+        assert.equal(partelts[3], lotterieLib.participationStates.Revealed);
+        var mySeed = web3.toHex(partelts[1]);
+        var score = lotterieLib.calcScore(finalSeed,mySeed);
+        if (scoreNb0 == null) {
+          scoreNb0 = score;
+          hidden0Ref = mySeed;
+          scoreNb0Ref = score;
+          part0Ref = i;
+          last = i;
+          lastScore = score;
+        } else {
+        // warning for comparison to run as expected we need to pad the hexstring at same size
+        // plus we do it for first participation so it is considered better on equality
+        if (scoreNb0 >= score) {
+          posNb0_1 -= 1;
+        }
+          if (lastScore >= score) {
+            last = i;
+            lastScore = score;
+          }
+        }
+      }
+
+    }
+
+    // get postition by heavy cost call (still less costy thant previous method
+    var posNb0_2 = await lotterie.checkPositionHeavyCost.call(0);
+    assert.equal(posNb0_1,posNb0_2);
+    // TODO get position by reading logs : should be the only method use because it respects throwId
+    // TODO with 1.0 web 3 uset getPastEvents
+    lotterie.Revealed(
+      {
+        participationId : 0
+      },
+      {
+      fromBlock: thrBlock,
+      toBlock: 'latest'
+      }
+    ).get(function(error,events){
+      assert.equal(events.length, 5);
+      var scoreNb0 = null;
+      var posNb0_3 = 5;
+      for (var i=0; i < 5; ++i) {
+        evt = events[i];
+        var mySeed = web3.toHex(evt.args.hiddenSeed);
+              assert.notEqual(events[0].args.hiddenSeed,events[1].args.hiddenSeed);
+        var score = lotterieLib.calcScore(finalSeed,mySeed);
+        if (scoreNb0 == null) {
+          scoreNb0 = score;
+          assert.equal(part0Ref, evt.args.participationId);
+          assert.equal(hidden0Ref, mySeed);
+          assert.equal(scoreNb0Ref, scoreNb0);
+        } else {
+          // warning cf previous method
+          if (scoreNb0 >= score) {
+            posNb0_3 -= 1;
+          }
+        }
+      }
+      assert.equal(posNb0_3,posNb0_1);
+    });
+
+    var ix = await lotterie.currentIxAmongWinners.call(last);
+    assert.equal(ix,0);
+    // first last insert to try to get something (start possible ix at 0)
+    await lotterie.cashOut(last, ix);
+    // do not cashout twice
+    assertRevert(lotterie.cashOut(last, ix + 1));
+    // could not insert twice
+    for (var i = 0; i < 5; ++i) {
+      if (i != last) {
+        // for test only
+        var ix = await lotterie.currentIxAmongWinners.call(last);
+        if (ix == 2) {
+          // check ok with insertion in between calculation (multiple cashout in a block
+          ix == 0;
+        }
+        await lotterie.cashOut(i, ix);
+      }
+    }
+    var nbwin = await lotterie.nbWinners(0);
+    assert.equal(nbwin,4);
+    // dirty 5secs pause
+    var currentTime = new Date().getTime();
+    while (currentTime + 3 * 1000 >= new Date().getTime()) { 
+      await new Promise(function (resolve) { setTimeout(resolve,100) });
+    }
+    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.End);
+  });
+
 });
 
 async function assertRevert(pr) {
@@ -317,5 +559,4 @@ async function assertRevert(pr) {
     assert.match(e, /VM Exception[a-zA-Z0-9 ]+: revert/,"wrong exception");
   }
 }
-
 

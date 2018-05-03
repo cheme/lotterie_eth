@@ -23,7 +23,7 @@ contract Lotterie is Ownable, LotterieLib {
   event ChangePhase(uint throwId, Phase newPhase);
 
   // only to log, nothing useful to index
-  event Revealed(uint participationId, uint256 hiddenSeed);
+  event Revealed(uint indexed throwId, uint participationId, uint256 hiddenSeed);
 
   // address to reward author TODO move in its contract
   address public authorContract;
@@ -51,6 +51,18 @@ contract Lotterie is Ownable, LotterieLib {
   }
 
   Participation [] public participations; // TODO not public (access to set if public??)
+
+  function getParticipationsCount() public constant returns(uint) {
+    return participations.length;
+  }
+
+ 
+  function getParticipation(uint participationId) public constant returns(uint,uint,address,uint8) {
+    Participation storage part = participations[participationId];
+    return (part.throwId, part.seed, part.from, uint8(part.state));
+  }
+
+
 
 
   // ensure right phase for throw action
@@ -101,7 +113,7 @@ contract Lotterie is Ownable, LotterieLib {
         // calculate nbCashout
         if (ratioBidWinner < uint(wparams.nbWinners)) {
            if (ratioBidWinner == 0) {
-             rcashout = 0;
+             rcashout = 1;
            } else {
              rcashout = uint16(ratioBidWinner);
            }
@@ -132,12 +144,14 @@ contract Lotterie is Ownable, LotterieLib {
   }
   enum ParticipationState {
     BidSent,
-    Revealed
+    Revealed,
+    Cashout
   }
 
 
   struct LotterieThrow {
     uint paramsId;
+    uint blockNumber; // not sure if needed : use to filter a bit
     //uint id; useless (is index)
     uint currentSeed;
     uint totalBidValue;
@@ -155,10 +169,10 @@ contract Lotterie is Ownable, LotterieLib {
     LotterieResult results;
   }
 
-  function getThrow(uint throwId) external constant returns(uint,uint,uint,uint,uint64,uint64,address) {
+  function getThrow(uint throwId) external constant returns(uint,uint,uint,uint,uint64,uint64,address,uint) {
     require(allthrows.length > throwId);
     LotterieThrow storage thr = allthrows[throwId];
-    return (thr.paramsId, thr.currentSeed, thr.totalBidValue, thr.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thr.thrower);
+    return (thr.paramsId, thr.currentSeed, thr.totalBidValue, thr.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thr.thrower,thr.blockNumber);
   }
 
 
@@ -192,7 +206,7 @@ contract Lotterie is Ownable, LotterieLib {
 
   struct Participation {
     uint throwId;
-    uint commitmentSeed;
+    uint seed;
     address from;
 //   uint bid;
     ParticipationState state;
@@ -320,6 +334,7 @@ contract Lotterie is Ownable, LotterieLib {
     LotterieThrow memory thr = LotterieThrow({
       paramsId : paramsId,
 //      id : throwId,
+      blockNumber : block.number,
       numberOfBid : 0,
       numberOfRevealParticipation : 0,
       currentSeed : 0,
@@ -362,12 +377,30 @@ contract Lotterie is Ownable, LotterieLib {
       throwId : throwId,
       from : msg.sender,
 //      bid : msg.value,
-      commitmentSeed : commitmentSeed,
+      seed : commitmentSeed,
       state : ParticipationState.BidSent
     });
     participations.push(part);
     emit NewParticipation(participationId,throwId,msg.value);
   }
+
+  // warning this function should not be use outside of testing 
+  // (especially not for calculing bid commitment when using non local ethereum instance)
+  function checkCommitment(uint256 hiddenSeed) pure external returns(uint) {
+    return (uint(keccak256(hiddenSeed)));
+  }
+  // mainly for testing or asserting correct implementation
+  function checkScore(uint256 hiddenSeed,uint256 currentSeed) pure external returns(uint) {
+    return (hiddenSeed ^ currentSeed);
+  }
+
+
+
+  function challengeParticipation(uint participationId, uint256 hiddenSeed) view external returns(uint,uint) {
+    Participation storage part = participations[participationId];
+    return (part.seed,uint(keccak256(hiddenSeed)));
+  }
+
  
   /// note that any user can use it, this is intended
   function revealParticipation (
@@ -376,7 +409,7 @@ contract Lotterie is Ownable, LotterieLib {
   ) external forParticipation(participationId,ParticipationState.BidSent,Phase.Participation) {
     Participation storage part = participations[participationId];
     // check seed (phase and throw checked in forParticipation)
-    require(part.commitmentSeed == uint(keccak256(hiddenSeed)));
+    require(part.seed == uint(keccak256(hiddenSeed)));
     // update
     LotterieThrow storage thr = allthrows[part.throwId];
     LC.LotterieParams storage thrparams = params[thr.paramsId];
@@ -387,13 +420,39 @@ contract Lotterie is Ownable, LotterieLib {
     } else {
       thr.currentSeed = thr.currentSeed ^ hiddenSeed;
     }
-    uint com = part.commitmentSeed;
-    part.commitmentSeed = hiddenSeed;
+    uint com = part.seed;
+    part.seed = hiddenSeed;
     part.state = ParticipationState.Revealed;
 
-    emit Revealed(participationId,com);
+    emit Revealed(part.throwId, participationId,hiddenSeed);
 
   }
+
+  // should not be use in dapp, log should be used
+  function checkPositionHeavyCost(uint participationId)
+   external constant returns (uint)
+  {
+    Participation storage part = participations[participationId];
+    LotterieThrow storage thr = allthrows[part.throwId];
+    LC.LotterieParams storage thrparams = params[thr.paramsId];
+    Phase calculatedNewPhase = getCurrentPhase(thr,thrparams);
+    require(calculatedNewPhase != Phase.Bidding);
+    require(calculatedNewPhase != Phase.Participation);
+
+    uint myScore = part.seed ^ thr.currentSeed;
+    uint position = thr.numberOfBid;
+    for(uint i = 0; i < participations.length; ++i) {
+      if (i != participationId) {
+        Participation storage pelse = participations[i];
+        uint pscore = pelse.seed ^ thr.currentSeed;
+        if (myScore > pscore || (myScore == pscore && participationId < i)) {
+          --position;
+        }
+      }
+    }
+    return (position);
+  }
+  
  
   // startPossibleIx is current position in the last block state winners list
   // position is final calculated position; position is 0 for winner (-1)
@@ -406,8 +465,11 @@ contract Lotterie is Ownable, LotterieLib {
     // using fn instead of modifier due to stack size
     forParticipationInternal(participationId,ParticipationState.Revealed,Phase.Cashout);
     Participation storage part = participations[participationId];
+
+    part.state = ParticipationState.Cashout;
+
     LotterieThrow storage thr = allthrows[part.throwId];
-    uint myScore = part.commitmentSeed ^ thr.currentSeed;
+    uint myScore = part.seed ^ thr.currentSeed;
     LC.LotterieParams storage thrparams = params[thr.paramsId];
     LC.WinningParams storage wparams = winningParams[thrparams.winningParamsId];
     
@@ -420,12 +482,12 @@ contract Lotterie is Ownable, LotterieLib {
     uint16 iter = 0;
     if (startPossibleIx > 0) {
       require(ptr != 255);
-      w = winners[ptr];
       for (;ptr != 255 && iter < startPossibleIx; iter++) {
-        before = ptr;
+        w = winners[ptr];
+        //before = ptr;
         ptr = w.nextWinner;
       }
-      w = winners[before];
+      //w = winners[before];
       // compare with previous
       // we need to check n-1 is superior 
       // (otherwhise best score could take place of others)
@@ -436,7 +498,7 @@ contract Lotterie is Ownable, LotterieLib {
     }
     for (;
       // not null ptr
-      ptr != 255 && 
+      ptr != 255 &&
       // not found
       next == 255 &&
       // in result nb
@@ -444,14 +506,8 @@ contract Lotterie is Ownable, LotterieLib {
       w = winners[ptr];
       before = ptr;
       ptr = w.nextWinner;
-      if (myScore >= w.score) {
-        if (myScore == w.score) {
-          if(participationId < w.participationId) {
-            next = ptr;
-          }
-        } else {
-          next = ptr;
-        }
+      if (myScore > w.score || (myScore == w.score && participationId < w.participationId)) {
+        next = ptr;
       }
     }
     if (winners.length < thr.results.totalCashout) {
@@ -463,12 +519,12 @@ contract Lotterie is Ownable, LotterieLib {
         score : myScore,
         nextWinner : next
       }));
-      iter = uint16(winners.length);
+      iter = uint16(winners.length) - 1;
     } else {
       // get last ix
-      for (; iter < thr.results.totalCashout; iter++) {
-        w = winners[ptr];
+      for (; w.nextWinner != 255 && iter < thr.results.totalCashout; iter++) {
         ptr = w.nextWinner;
+        w = winners[ptr];
       }
       w.participationId = participationId;
       w.score = myScore;
@@ -484,12 +540,68 @@ contract Lotterie is Ownable, LotterieLib {
 
     // TODO change state for participation (do not write twice) + check before starting
 
-
   }
 
-  function getPosition (
-    uint participationId) external view {
-    // TODO very costy funtion to call before cashOut call
+  function nbWinners (
+    uint participationId
+  ) view external returns (uint)
+  {
+     Participation storage part = participations[participationId];
+     Winner[] winners = allwinners[part.throwId];
+     return (winners.length);
+  }
+  function getWinners (
+    uint participationId,
+    uint winnerIx
+  ) view external returns (bool,uint,uint,uint)
+  {
+     Participation storage part = participations[participationId];
+     LotterieThrow storage thr = allthrows[part.throwId];
+     Winner[] winners = allwinners[part.throwId];
+     uint16 ptr = thr.results.firstWinner;
+     Winner storage w;
+     for (uint iter = 0; ptr != 255 && 
+       iter < winnerIx;++iter) {
+       require(ptr < winners.length);
+       w = winners[ptr];
+       ptr = w.nextWinner;
+     }
+     require(ptr != 255);
+     w = winners[ptr];
+     return (w.withdrawned, w.totalPositionWin, w.participationId, w.score);
+ 
+  }
+ 
+
+ 
+  // a function to avoid some gas cost in cash out
+  function currentIxAmongWinners (
+    uint participationId
+  ) view external returns(uint) {
+     require(participationId < participations.length);
+     uint result = 0;
+     // go through linked list
+     Participation storage part = participations[participationId];
+     LotterieThrow storage thr = allthrows[part.throwId];
+     uint myScore = part.seed ^ thr.currentSeed;
+     LC.LotterieParams storage thrparams = params[thr.paramsId];
+     LC.WinningParams storage wparams = winningParams[thrparams.winningParamsId];
+     Winner[] winners = allwinners[part.throwId];
+     Winner storage w;
+
+     uint16 ptr = thr.results.firstWinner;
+
+     for (; ptr != 255 && 
+       result < thr.results.totalCashout;++result) {
+       require(ptr < winners.length);
+       w = winners[ptr];
+       if (myScore >= w.score || (myScore == w.score && participationId < w.participationId)) {
+         return (result);
+       }
+       ptr = w.nextWinner;
+     }
+     
+     return (result);
   }
  
   function canSwitchToParticipation(LotterieThrow thr,LC.LotterieParams thrparams) internal returns(bool) {
