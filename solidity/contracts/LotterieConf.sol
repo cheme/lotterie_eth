@@ -34,9 +34,7 @@ library LotterieConf {
   }
 
   struct LotterieParams {
-  // TODO rename to phaseParamsId then move to throw
     address authorDapp;
-    uint phaseParamsId;
     uint winningParamsId;
     uint minBidValue;
     uint biddingTreshold;

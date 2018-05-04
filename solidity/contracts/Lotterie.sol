@@ -110,7 +110,7 @@ contract Lotterie is Ownable, LotterieLib {
     require(allthrows.length > throwId);
     LotterieThrow storage thr = allthrows[throwId];
     LC.LotterieParams storage thrparams = params[thr.paramsId];
-    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thrparams.phaseParamsId];
+    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thr.paramsPhaseId];
     Phase calculatedNewPhase = getCurrentPhase(thr,thrparams,thrphaseparams);
     // lazy init (additional cost on first user to switch phase)
     if (thr.currentPhase != calculatedNewPhase) {
@@ -127,12 +127,12 @@ contract Lotterie is Ownable, LotterieLib {
         }
       } else if (calculatedNewPhase == Phase.Cashout) {
         // init winning base
-        if (thr.totalBidValue != 0) {
-          thr.withdraws.winningBase = thr.totalBidValue
-            - LC.calcMargin(thr.totalBidValue, thr.withdraws.authorContractMargin)
-            - LC.calcMargin(thr.totalBidValue, thr.withdraws.authorDappMargin)
-            - LC.calcMargin(thr.totalBidValue, thr.withdraws.throwerMargin)
-            - LC.calcMargin(thr.totalBidValue, thr.withdraws.ownerMargin);
+        if (thr.results.totalBidValue != 0) {
+          thr.withdraws.winningBase = thr.results.totalBidValue
+            - LC.calcMargin(thr.results.totalBidValue, thr.withdraws.authorContractMargin)
+            - LC.calcMargin(thr.results.totalBidValue, thr.withdraws.authorDappMargin)
+            - LC.calcMargin(thr.results.totalBidValue, thr.withdraws.throwerMargin)
+            - LC.calcMargin(thr.results.totalBidValue, thr.withdraws.ownerMargin);
         }
         LC.WinningParams wparams = winningParams[thrparams.winningParamsId];
         uint ratioBidWinner = uint(thr.numberOfBid) * wparams.nbWinnerMinRatio / 100;
@@ -183,11 +183,10 @@ contract Lotterie is Ownable, LotterieLib {
 
   struct LotterieThrow {
     uint paramsId;
+    uint paramsPhaseId;
     uint blockNumber; // not sure if needed : use to filter a bit
     //uint id; useless (is index)
     uint currentSeed;
-    uint totalBidValue;
-    uint totalClaimedValue;
     uint tmpTime;
     uint64 numberOfBid;
     uint64 numberOfRevealParticipation;
@@ -204,11 +203,13 @@ contract Lotterie is Ownable, LotterieLib {
   function getThrow(uint throwId) external constant returns(uint,uint,uint,uint,uint64,uint64,address,uint) {
     require(allthrows.length > throwId);
     LotterieThrow storage thr = allthrows[throwId];
-    return (thr.paramsId, thr.currentSeed, thr.totalBidValue, thr.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thr.thrower,thr.blockNumber);
+    return (thr.paramsId, thr.currentSeed, thr.results.totalBidValue, thr.results.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thr.thrower,thr.blockNumber);
   }
 
 
   struct LotterieResult {
+    uint totalBidValue;
+    uint totalClaimedValue;
     uint16 totalCashout;
     // linked list over winners sort by rank
     uint16 firstWinner;
@@ -274,7 +275,6 @@ contract Lotterie is Ownable, LotterieLib {
    function addParams (
 
     uint winningParamsId,
-    uint phaseParamsId,
     bool doSalt,
 
     address authorDapp,
@@ -285,12 +285,9 @@ contract Lotterie is Ownable, LotterieLib {
     uint64 maxParticipant
 
   ) external {
-    uint participationStartTreshold = phaseParams[phaseParamsId].participationStartTreshold;
-    require(LC.validParticipationSwitch(maxParticipant,biddingTreshold,participationStartTreshold));
 
     LC.LotterieParams memory param =
       LC.LotterieParams({
-        phaseParamsId : phaseParamsId,
         winningParamsId : winningParamsId,
         authorDapp : authorDapp,
         minBidValue : minBidValue,
@@ -355,6 +352,7 @@ contract Lotterie is Ownable, LotterieLib {
   // @payable value is added as inital win value (that way you can do free lotterie with something to win with minBidValue to 0 and not participating)
   function initThrow (
     uint paramsId,
+    uint paramsPhaseId,
 
     uint32 ownerMargin,
     uint32 authorContractMargin,
@@ -362,6 +360,12 @@ contract Lotterie is Ownable, LotterieLib {
     uint32 throwerMargin
 
   ) external payable {
+
+    require(LC.validParticipationSwitch(
+      params[paramsId].maxParticipant,
+      params[paramsId].biddingTreshold,
+      phaseParams[paramsPhaseId].participationStartTreshold
+    ));
     uint throwId = allthrows.length;
     require(validWithdrawMargins(
       ownerMargin,
@@ -382,19 +386,20 @@ contract Lotterie is Ownable, LotterieLib {
 
     });
     LotterieResult memory results = LotterieResult({
+      totalBidValue : msg.value,
+      totalClaimedValue : 0,
       firstWinner : 255,
       totalCashout : 0
     });
 
     LotterieThrow memory thr = LotterieThrow({
       paramsId : paramsId,
+      paramsPhaseId : paramsPhaseId,
 //      id : throwId,
       blockNumber : block.number,
       numberOfBid : 0,
       numberOfRevealParticipation : 0,
       currentSeed : 0,
-      totalBidValue : msg.value,
-      totalClaimedValue : 0,
       tmpTime : 0,
       thrower : msg.sender,
       currentPhase : Phase.Bidding,
@@ -424,7 +429,7 @@ contract Lotterie is Ownable, LotterieLib {
     LC.LotterieParams storage thrparams = params[thr.paramsId];
     require(msg.value >= thrparams.minBidValue);
     if (msg.value > 0) {
-      thr.totalBidValue = thr.totalBidValue.add(msg.value);
+      thr.results.totalBidValue = thr.results.totalBidValue.add(msg.value);
     }
     thr.numberOfBid += 1;
     uint participationId = participations.length;
@@ -490,7 +495,7 @@ contract Lotterie is Ownable, LotterieLib {
     Participation storage part = participations[participationId];
     LotterieThrow storage thr = allthrows[part.throwId];
     LC.LotterieParams storage thrparams = params[thr.paramsId];
-    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thrparams.phaseParamsId];
+    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thr.paramsPhaseId];
     Phase calculatedNewPhase = getCurrentPhase(thr,thrparams,thrphaseparams);
     require(calculatedNewPhase != Phase.Bidding);
     require(calculatedNewPhase != Phase.Participation);
@@ -728,7 +733,7 @@ contract Lotterie is Ownable, LotterieLib {
     if (thrparams.maxParticipant > 0 && thr.numberOfBid == thrparams.maxParticipant) {
       return true;
     }
-    if (thrparams.biddingTreshold > 0 && thr.totalBidValue >= thrparams.biddingTreshold) {
+    if (thrparams.biddingTreshold > 0 && thr.results.totalBidValue >= thrparams.biddingTreshold) {
       return true;
     }
     if (thrphaseparams.participationStartTreshold > 0) {
@@ -769,7 +774,7 @@ contract Lotterie is Ownable, LotterieLib {
     require(allthrows.length > throwId);
     LotterieThrow storage thr = allthrows[throwId];
     LC.LotterieParams storage thrparams = params[thr.paramsId];
-    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thrparams.phaseParamsId];
+    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thr.paramsPhaseId];
     Phase calculatedNewPhase = getCurrentPhase(thr,thrparams,thrphaseparams);
     return (uint8(calculatedNewPhase));
   }
@@ -823,7 +828,7 @@ contract Lotterie is Ownable, LotterieLib {
          require(w.withdrawned == false);
          w.withdrawned = true;
          if (amount > 0) {
-           thr.totalClaimedValue += amount;
+           thr.results.totalClaimedValue += amount;
            msg.sender.transfer(amount);
          }
          emit Win(throwId, participationId, msg.sender, uint16(result) + 1, amount);
@@ -843,11 +848,11 @@ contract Lotterie is Ownable, LotterieLib {
     
     LotterieThrow storage thr = allthrows[throwId];
     if (thr.withdraws.ownerWithdrawned == false) {
-    uint amount = LC.calcMargin(thr.totalBidValue, thr.withdraws.ownerMargin);
+    uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.ownerMargin);
 
     if (amount > 0) {
         thr.withdraws.ownerWithdrawned = true;
-        thr.totalClaimedValue += amount;
+        thr.results.totalClaimedValue += amount;
         msg.sender.transfer(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
@@ -862,10 +867,10 @@ contract Lotterie is Ownable, LotterieLib {
     
     LotterieThrow storage thr = allthrows[throwId];
     if (thr.withdraws.authorContractWithdrawned == false) {
-    uint amount = LC.calcMargin(thr.totalBidValue, thr.withdraws.authorContractMargin);
+    uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.authorContractMargin);
       if (amount > 0) {
         thr.withdraws.authorContractWithdrawned = true;
-        thr.totalClaimedValue += amount;
+        thr.results.totalClaimedValue += amount;
         msg.sender.transfer(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
@@ -880,10 +885,10 @@ contract Lotterie is Ownable, LotterieLib {
     LotterieThrow storage thr = allthrows[throwId];
     require(thr.thrower == msg.sender);
     if (thr.withdraws.throwerWithdrawned == false) {
-    uint amount = LC.calcMargin(thr.totalBidValue, thr.withdraws.throwerMargin);
+    uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.throwerMargin);
       if (amount > 0) {
         thr.withdraws.throwerWithdrawned = true;
-        thr.totalClaimedValue += amount;
+        thr.results.totalClaimedValue += amount;
         msg.sender.transfer(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
@@ -899,10 +904,10 @@ contract Lotterie is Ownable, LotterieLib {
     LC.LotterieParams storage thrparams = params[thr.paramsId];
     require(thrparams.authorDapp == msg.sender);
     if (thr.withdraws.authorDappWithdrawned == false) {
-    uint amount = LC.calcMargin(thr.totalBidValue, thr.withdraws.authorDappMargin);
+    uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.authorDappMargin);
       if (amount > 0) {
         thr.withdraws.authorDappWithdrawned = true;
-        thr.totalClaimedValue += amount;
+        thr.results.totalClaimedValue += amount;
         msg.sender.transfer(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
@@ -917,9 +922,9 @@ contract Lotterie is Ownable, LotterieLib {
     onlyOwner
     external {
     LotterieThrow storage thr = allthrows[throwId];
-    var amount = thr.totalBidValue.sub(thr.totalClaimedValue);
+    var amount = thr.results.totalBidValue.sub(thr.results.totalClaimedValue);
     if (amount != 0) {
-      thr.totalClaimedValue += amount;
+      thr.results.totalClaimedValue += amount;
       msg.sender.transfer(amount);
     }
   }

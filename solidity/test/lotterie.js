@@ -142,7 +142,6 @@ async function configuration(lotterie,account_contract_dapp,c) {
     assert.equal(res.error, null);
     var res = await lotterie.addParams(
       0,
-      0,
       c.dosalt,
       account_contract_dapp,
       c.minBidValue,
@@ -265,6 +264,7 @@ contract('Lotterie', function(accounts) {
 
     var res = await lotterie.initThrow (
      0,
+     0,
      ownerMargin,
      authorContractMargin,
      authorDappMargin,
@@ -364,6 +364,7 @@ contract('Lotterie', function(accounts) {
 
     var res = await lotterie.initThrow (
      0,
+     0,
      ownerMargin,
      authorContractMargin,
      authorDappMargin,
@@ -393,6 +394,7 @@ contract('Lotterie', function(accounts) {
     var authorDappMargin = 2**32 / 4; // ~25%
     var throwerMargin = 2**32 / 3; // ~33%
     assertRevert(lotterie.initThrow (
+     0,
      0,
      ownerMargin,
      authorContractMargin,
@@ -447,7 +449,7 @@ contract('Lotterie', function(accounts) {
 
     var accountParts = [];
     await configuration(lotterie,account_contract_dapp,myConf);
-    await lotterie.initThrow (0,0,0,0,0);
+    await lotterie.initThrow (0,0,0,0,0,0);
     await lotterie.bid("0x0",lotterieLib.calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue });
     accountParts.push(account_bidder1);
     await lotterie.bid(0,lotterieLib.calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue });
