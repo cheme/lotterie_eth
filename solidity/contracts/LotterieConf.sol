@@ -19,35 +19,47 @@ library LotterieConf {
     Relative
   }
 
+  enum WinningDistribution {
+    Equal
+  }
+
+
   // rules for winning
   struct WinningParams {
     // Hard limit to 256 winners due to cost of accessing 256 position in linked storage
     uint16 nbWinners;
     // Percentage, If not enough participant to reach this ratio of , round down but one if result 0
     uint16 nbWinnerMinRatio;
+    WinningDistribution distribution;
   }
 
   struct LotterieParams {
+  // TODO rename to phaseParamsId then move to throw
     address authorDapp;
+    uint phaseParamsId;
     uint winningParamsId;
     uint minBidValue;
     uint biddingTreshold;
-    uint participationStartTreshold;
-    uint participationEndValue;
-    uint cashoutEndValue;
     uint64 maxParticipant;
-
-    // u8
-    ParticipationEndModes participationEndMode; // TODO find enum
-    // bool
-    CashoutEndMode cashoutEndMode;
     // salt might be consider to costfull (additional gas cost on every user)
     bool doSalt;
   }
 
+  struct LotteriePhaseParams {
+    uint participationStartTreshold;
+    uint participationEndValue;
+    uint cashoutEndValue;
+    uint throwEndValue;
+    // u8
+    ParticipationEndModes participationEndMode; // TODO find enum
+    // bool
+    CashoutEndMode cashoutEndMode;
+    CashoutEndMode throwEndMode;
+  }
   function validParticipationSwitch(uint64 maxParticipant, uint biddingTreshold, uint participationStartTreshold) public returns(bool) {
      return (maxParticipant != 0 || biddingTreshold != 0 || participationStartTreshold > now);
   }
+
   function validCashoutSwitch(ParticipationEndModes participationEndMode, uint participationEndValue) public returns(bool) {
     // avoid relative time overflow
     if (participationEndMode == ParticipationEndModes.EagerRelative 
@@ -62,24 +74,33 @@ library LotterieConf {
       (participationEndMode == ParticipationEndModes.Absolute
       || participationEndMode == ParticipationEndModes.Relative)));
   }
+
   // note that relative allows way longer lotterie because duration hard limit is relative to start of cashout phase
   // when absolute hard limit is only relative to the start of the lotterie
   function validEndSwitch(CashoutEndMode cashoutEndMode, uint cashoutDuration) public returns(bool) {
-    // hard limit to the cashout duration
-    uint cashoutHardLimit = 1 years;
-    if (cashoutEndMode == CashoutEndMode.Absolute) {
+    uint limit = 4 weeks;
+    return validDateOnlySwitch(cashoutEndMode,cashoutDuration,limit);
+  }
+  function validOffSwitch(CashoutEndMode cashoutEndMode, uint cashoutDuration) public returns(bool) {
+    uint limit = 20 weeks;
+    return validDateOnlySwitch(cashoutEndMode,cashoutDuration,limit);
+  }
+
+  function validDateOnlySwitch(CashoutEndMode endMode, uint duration, uint hardLimit) public returns(bool) {
+    if (endMode == CashoutEndMode.Absolute) {
       // absolute
-      if (now + cashoutHardLimit > cashoutDuration) {
+      if (now + hardLimit > duration) {
         return false;
       }
     } else {
       // relative
-      if (cashoutDuration > cashoutHardLimit) {
+      if (duration > hardLimit) {
         return false;
       }
     }
     return true;
   }
+
 
   function validWinningParams(uint16 nbWinners, uint16 nbWinnerMinRatio) public returns(bool) {
     if (nbWinnerMinRatio > 100) {

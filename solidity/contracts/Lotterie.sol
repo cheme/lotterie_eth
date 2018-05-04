@@ -12,6 +12,8 @@ contract Lotterie is Ownable, LotterieLib {
 
   // for debugging
   event Withdraw(address to, uint amount);
+  // win event
+  event Win(uint throwId, uint participationId, address winner, uint16 position, uint amount);
   // TODO index it and info for list of throw : harder than expected
   // probably need date to limit to a period range (which will be indexed)
   event NewThrow(uint throwId);
@@ -37,6 +39,7 @@ contract Lotterie is Ownable, LotterieLib {
   // TODO test other defs
   mapping(uint => Winner[]) public allwinners; // TODO not public (access to set if public??)
   LC.LotterieParams [] public params; // TODO not public (access to set if public??)
+  LC.LotteriePhaseParams [] public phaseParams; // TODO not public (access to set if public??)
 
   LC.WinningParams [] public winningParams; // TODO not public (access to set if public??)
 
@@ -45,9 +48,9 @@ contract Lotterie is Ownable, LotterieLib {
     return winningParams.length;
   }
 
-  function getWinningParams(uint index) public constant returns(uint16, uint16) {
+  function getWinningParams(uint index) public constant returns(uint16, uint16, uint8) {
     LC.WinningParams storage p = winningParams[index]; 
-    return (p.nbWinners,p.nbWinnerMinRatio);
+    return (p.nbWinners,p.nbWinnerMinRatio, uint8(p.distribution));
   }
 
   Participation [] public participations; // TODO not public (access to set if public??)
@@ -69,13 +72,21 @@ contract Lotterie is Ownable, LotterieLib {
   // TODO diff with a function call or find a way to use thr in fn
   // TODO rename to forThrow
   modifier forThrowStorage(uint throwId, Phase throwPhase) {
-    forThrowStorageInternal(throwId, throwPhase, true);
+    forThrowStorageInternal(throwId, throwPhase);
     _;
   }
-  modifier forThrowStorageNot(uint throwId, Phase throwPhase) {
-    forThrowStorageInternal(throwId, throwPhase, false);
+/*  modifier forThrowStorageNot(uint throwId, Phase throwPhase) {
+    Phase currentPhase = forThrowStorageMyPhase(throwId);
+    require(currentPhase != throwPhase);
+    _;
+  }*/
+  modifier forThrowStorageNot2(uint throwId, Phase throwPhase1, Phase throwPhase2) {
+    Phase currentPhase = forThrowStorageMyPhase(throwId);
+    require(currentPhase != throwPhase1);
+    require(currentPhase != throwPhase2);
     _;
   }
+
 
   modifier forParticipation(uint participationId, ParticipationState participationState, Phase throwPhase) {
     forParticipationInternal(participationId, participationState, throwPhase);
@@ -85,28 +96,44 @@ contract Lotterie is Ownable, LotterieLib {
     require(participations.length > participationId);
     Participation storage part = participations[participationId];
     require(part.state == participationState);
-    forThrowStorageInternal(part.throwId, throwPhase, true);
+    Phase currentPhase = forThrowStorageMyPhase(part.throwId);
+    require(currentPhase == throwPhase);
   }
  
-  function forThrowStorageInternal(uint throwId, Phase throwPhase, bool eq) internal {
+  function forThrowStorageInternal(uint throwId, Phase throwPhase) internal {
+    Phase currentPhase = forThrowStorageMyPhase(throwId);
+    require(currentPhase == throwPhase);
+  }
+
+  // switch phase if needed and return current phase
+  function forThrowStorageMyPhase(uint throwId) internal returns (Phase) {
     require(allthrows.length > throwId);
     LotterieThrow storage thr = allthrows[throwId];
     LC.LotterieParams storage thrparams = params[thr.paramsId];
-    Phase calculatedNewPhase = getCurrentPhase(thr,thrparams);
+    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thrparams.phaseParamsId];
+    Phase calculatedNewPhase = getCurrentPhase(thr,thrparams,thrphaseparams);
     // lazy init (additional cost on first user to switch phase)
     if (thr.currentPhase != calculatedNewPhase) {
       thr.currentPhase = calculatedNewPhase;
       if (calculatedNewPhase == Phase.Participation) {
         // calculate relative end time for relative mode
-        if (thrparams.participationEndValue > 0) {
-          if (thrparams.participationEndMode == LC.ParticipationEndModes.EagerRelative
-           || thrparams.participationEndMode == LC.ParticipationEndModes.Relative) {
-            thr.tmpTime = now + thrparams.participationEndValue;
+        if (thrphaseparams.participationEndValue > 0) {
+          if (thrphaseparams.participationEndMode == LC.ParticipationEndModes.EagerRelative
+           || thrphaseparams.participationEndMode == LC.ParticipationEndModes.Relative) {
+            thr.tmpTime = now + thrphaseparams.participationEndValue;
           } else {
-            thr.tmpTime = thrparams.participationEndValue;
+            thr.tmpTime = thrphaseparams.participationEndValue;
           }
         }
       } else if (calculatedNewPhase == Phase.Cashout) {
+        // init winning base
+        if (thr.totalBidValue != 0) {
+          thr.withdraws.winningBase = thr.totalBidValue
+            - LC.calcMargin(thr.totalBidValue, thr.withdraws.authorContractMargin)
+            - LC.calcMargin(thr.totalBidValue, thr.withdraws.authorDappMargin)
+            - LC.calcMargin(thr.totalBidValue, thr.withdraws.throwerMargin)
+            - LC.calcMargin(thr.totalBidValue, thr.withdraws.ownerMargin);
+        }
         LC.WinningParams wparams = winningParams[thrparams.winningParamsId];
         uint ratioBidWinner = uint(thr.numberOfBid) * wparams.nbWinnerMinRatio / 100;
         uint16 rcashout;
@@ -121,27 +148,32 @@ contract Lotterie is Ownable, LotterieLib {
           rcashout = wparams.nbWinners;
         }
         thr.results.totalCashout = rcashout;
-        if (thrparams.cashoutEndMode == LC.CashoutEndMode.Relative) {
-          thr.tmpTime = now + thrparams.cashoutEndValue;
+        if (thrphaseparams.cashoutEndMode == LC.CashoutEndMode.Relative) {
+          thr.tmpTime = now + thrphaseparams.cashoutEndValue;
         } else {
-          thr.tmpTime = thrparams.cashoutEndValue;
+          thr.tmpTime = thrphaseparams.cashoutEndValue;
+        }
+      } else if (calculatedNewPhase == Phase.End) {
+        if (thrphaseparams.throwEndMode == LC.CashoutEndMode.Relative) {
+          thr.tmpTime = now + thrphaseparams.throwEndValue;
+        } else {
+          thr.tmpTime = thrphaseparams.throwEndValue;
         }
       }
       emit ChangePhase(throwId,calculatedNewPhase);
     }
-    if (eq) {
-      require(thr.currentPhase == throwPhase);
-    } else {
-      require(thr.currentPhase != throwPhase);
-    }
+    return (thr.currentPhase);
   }
+
 
   enum Phase {
     Bidding,
     Participation,
     Cashout,
-    End
+    End,
+    Off
   }
+
   enum ParticipationState {
     BidSent,
     Revealed,
@@ -192,6 +224,7 @@ contract Lotterie is Ownable, LotterieLib {
     uint16 nextWinner;
   }
   struct LotterieWithdraw {
+    uint winningBase;
     uint32 ownerMargin;
     uint32 authorContractMargin;
     uint32 authorDappMargin;
@@ -238,10 +271,10 @@ contract Lotterie is Ownable, LotterieLib {
     authorContract = newAuthor;
   }
 
-
    function addParams (
 
     uint winningParamsId,
+    uint phaseParamsId,
     bool doSalt,
 
     address authorDapp,
@@ -249,47 +282,68 @@ contract Lotterie is Ownable, LotterieLib {
     uint minBidValue,
 
     uint biddingTreshold,
+    uint64 maxParticipant
+
+  ) external {
+    uint participationStartTreshold = phaseParams[phaseParamsId].participationStartTreshold;
+    require(LC.validParticipationSwitch(maxParticipant,biddingTreshold,participationStartTreshold));
+
+    LC.LotterieParams memory param =
+      LC.LotterieParams({
+        phaseParamsId : phaseParamsId,
+        winningParamsId : winningParamsId,
+        authorDapp : authorDapp,
+        minBidValue : minBidValue,
+        biddingTreshold : biddingTreshold,
+        maxParticipant : maxParticipant,
+        doSalt : doSalt
+      });
+    params.push(param);
+  }
+
+
+  function addPhaseParams (
+
     uint participationStartTreshold,
-    uint64 maxParticipant,
 
     uint8 participationEndMode,
     uint participationEndValue,
 
     uint8 cashoutEndMode,
-    uint cashoutEndValue
+    uint cashoutEndValue,
+
+    uint8 throwEndMode,
+    uint throwEndValue
   ) external {
-    require(LC.validParticipationSwitch(maxParticipant,biddingTreshold,participationStartTreshold));
     require(LC.validCashoutSwitch(LC.ParticipationEndModes(participationEndMode),participationEndValue));
     require(LC.validEndSwitch(LC.CashoutEndMode(cashoutEndMode), cashoutEndValue));
+    require(LC.validOffSwitch(LC.CashoutEndMode(throwEndMode), throwEndValue));
 
-    uint paramId = params.length;
-    LC.LotterieParams memory param =
-      LC.LotterieParams({
-        winningParamsId : winningParamsId,
-        authorDapp : authorDapp,
-        minBidValue : minBidValue,
-        biddingTreshold : biddingTreshold,
+    LC.LotteriePhaseParams memory phaseParam = LC.LotteriePhaseParams({
         participationStartTreshold : participationStartTreshold,
-        maxParticipant : maxParticipant,
         participationEndMode : LC.ParticipationEndModes(participationEndMode),
         participationEndValue : participationEndValue,
         cashoutEndMode : LC.CashoutEndMode(cashoutEndMode),
         cashoutEndValue : cashoutEndValue,
-        doSalt : doSalt
-      });
-    params.push(param);
+        throwEndMode : LC.CashoutEndMode(throwEndMode),
+        throwEndValue : throwEndValue
+    });
+    phaseParams.push(phaseParam);
   }
+
+
   function addWinningParams (
     uint16 nbWinners,
-    uint16 nbWinnerMinRatio
+    uint16 nbWinnerMinRatio,
+    uint8 distribution
   ) external {
     require(LC.validWinningParams(nbWinners,nbWinnerMinRatio));
 
-    uint paramId = winningParams.length;
     LC.WinningParams memory param =
       LC.WinningParams({
         nbWinners : nbWinners,
-        nbWinnerMinRatio : nbWinnerMinRatio
+        nbWinnerMinRatio : nbWinnerMinRatio,
+        distribution : LC.WinningDistribution(distribution)
       });
     winningParams.push(param);
   }
@@ -315,6 +369,7 @@ contract Lotterie is Ownable, LotterieLib {
       authorDappMargin,
       throwerMargin));
     LotterieWithdraw memory wdraw = LotterieWithdraw({
+      winningBase : 0,
       ownerMargin : ownerMargin,
       authorContractMargin : authorContractMargin,
       authorDappMargin : authorDappMargin,
@@ -435,7 +490,8 @@ contract Lotterie is Ownable, LotterieLib {
     Participation storage part = participations[participationId];
     LotterieThrow storage thr = allthrows[part.throwId];
     LC.LotterieParams storage thrparams = params[thr.paramsId];
-    Phase calculatedNewPhase = getCurrentPhase(thr,thrparams);
+    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thrparams.phaseParamsId];
+    Phase calculatedNewPhase = getCurrentPhase(thr,thrparams,thrphaseparams);
     require(calculatedNewPhase != Phase.Bidding);
     require(calculatedNewPhase != Phase.Participation);
 
@@ -521,7 +577,7 @@ contract Lotterie is Ownable, LotterieLib {
       // initiate a cashout value if not all used
       winners.push(Winner({
         withdrawned : false,
-        totalPositionWin : 0, // TODO calculate winning part for next position
+        totalPositionWin : calcPositionWin(wparams.distribution,thr.results.totalCashout,thr.withdraws.winningBase), // TODO calculate winning part for next position
         participationId : participationId,
         score : myScore,
         nextWinner : next
@@ -545,11 +601,13 @@ contract Lotterie is Ownable, LotterieLib {
       winners[before].nextWinner = iter;
     }
 
-
-    // TODO change state for participation (do not write twice) + check before starting
-
   }
-
+  function calcPositionWin(LC.WinningDistribution distribution,uint16 totalWin, uint base) constant public returns(uint) {
+    if (distribution == LC.WinningDistribution.Equal) {
+      return base / uint(totalWin);
+    }
+    return 0;
+  }
   function nbWinners (
     uint participationId
   ) view external returns (uint)
@@ -562,7 +620,7 @@ contract Lotterie is Ownable, LotterieLib {
   function getWinner (
     uint throwId,
     uint winnerIx
-  ) view external returns (bool,uint,uint,uint)
+  ) view external returns (bool,uint,uint)
   {
      LotterieThrow storage thr = allthrows[throwId];
      Winner[] winners = allwinners[throwId];
@@ -577,7 +635,7 @@ contract Lotterie is Ownable, LotterieLib {
      }
      require(ptr != 255);
      w = winners[ptr];
-     return (w.withdrawned, w.totalPositionWin, w.participationId, w.score);
+     return (w.withdrawned, w.participationId, w.score);
  
   }
 
@@ -634,8 +692,38 @@ contract Lotterie is Ownable, LotterieLib {
      
      return (result);
   }
+
+  // check the wining ix of a participation (after all cashout (phase end))
+  // returns position win (0 for loser)
+  function positionAtPhaseEnd (
+    uint participationId
+  ) view external returns(uint) {
+     require(participationId < participations.length);
+     // go through linked list
+     Participation storage part = participations[participationId];
+     LotterieThrow storage thr = allthrows[part.throwId];
+     Winner[] winners = allwinners[part.throwId];
+     Winner storage w;
+
+     uint16 ptr = thr.results.firstWinner;
+
+
+     uint result = 0;
+     for (; ptr != 255 && 
+       result < thr.results.totalCashout;++result) {
+       require(ptr < winners.length);
+       w = winners[ptr];
+       if (w.participationId == participationId) {
+         return (result + 1);
+       }
+       ptr = w.nextWinner;
+     }
+     
+     return (0);
+  }
  
-  function canSwitchToParticipation(LotterieThrow thr,LC.LotterieParams thrparams) internal returns(bool) {
+ 
+  function canSwitchToParticipation(LotterieThrow thr,LC.LotterieParams thrparams, LC.LotteriePhaseParams thrphaseparams) internal returns(bool) {
     // costless criterion first
     if (thrparams.maxParticipant > 0 && thr.numberOfBid == thrparams.maxParticipant) {
       return true;
@@ -643,18 +731,18 @@ contract Lotterie is Ownable, LotterieLib {
     if (thrparams.biddingTreshold > 0 && thr.totalBidValue >= thrparams.biddingTreshold) {
       return true;
     }
-    if (thrparams.participationStartTreshold > 0) {
-      if (now >= thrparams.participationStartTreshold) {
+    if (thrphaseparams.participationStartTreshold > 0) {
+      if (now >= thrphaseparams.participationStartTreshold) {
         return true;
       }
     }
     return false;
   }
 
-  function canSwitchToCashout(LotterieThrow thr,LC.LotterieParams thrparams) internal returns(bool) {
+  function canSwitchToCashout(LotterieThrow thr,LC.LotterieParams thrparams, LC.LotteriePhaseParams thrphaseparams) internal returns(bool) {
     // test eager first (avoid call to now)
-    if (thrparams.participationEndMode == LC.ParticipationEndModes.EagerRelative
-        || thrparams.participationEndMode == LC.ParticipationEndModes.EagerAbsolute) {
+    if (thrphaseparams.participationEndMode == LC.ParticipationEndModes.EagerRelative
+        || thrphaseparams.participationEndMode == LC.ParticipationEndModes.EagerAbsolute) {
       if (thr.numberOfRevealParticipation == thr.numberOfBid) {
         // TODO switch those == with >= and assert not > to detect problems during testing?
         return true;
@@ -673,36 +761,83 @@ contract Lotterie is Ownable, LotterieLib {
     }
     return false;
   }
+  function canSwitchToOff(LotterieThrow thr) internal returns(bool) {
+    return canSwitchToEnded(thr);
+  }
 
   function getPhase(uint throwId) external constant returns(uint8) {
     require(allthrows.length > throwId);
     LotterieThrow storage thr = allthrows[throwId];
     LC.LotterieParams storage thrparams = params[thr.paramsId];
-    Phase calculatedNewPhase = getCurrentPhase(thr,thrparams);
+    LC.LotteriePhaseParams storage thrphaseparams = phaseParams[thrparams.phaseParamsId];
+    Phase calculatedNewPhase = getCurrentPhase(thr,thrparams,thrphaseparams);
     return (uint8(calculatedNewPhase));
   }
 
   // do not try switching to phase + 2 due to relative time condition
-  function getCurrentPhase(LotterieThrow thr,LC.LotterieParams thrparams) internal returns(Phase) {
+  function getCurrentPhase(LotterieThrow thr,LC.LotterieParams thrparams, LC.LotteriePhaseParams thrphaseparams) internal returns(Phase) {
 //    LotterieThrow thr = allthrows[throwId];
     if (thr.currentPhase == Phase.Bidding) {
-      if (canSwitchToParticipation(thr,thrparams)) {
+      if (canSwitchToParticipation(thr,thrparams,thrphaseparams)) {
         return Phase.Participation;
       }
     } else if (thr.currentPhase == Phase.Participation) { 
-      if (canSwitchToCashout(thr,thrparams)) {
+      if (canSwitchToCashout(thr,thrparams,thrphaseparams)) {
         return Phase.Cashout;
       }
     } else if (thr.currentPhase == Phase.Cashout
       && canSwitchToEnded(thr)) {
       return Phase.End;
+    } else if (thr.currentPhase == Phase.End
+      && canSwitchToOff(thr)) {
+      return Phase.Off;
     }
+ 
     return thr.currentPhase;
+  }
+
+  function withdrawWin(uint throwId, uint participationId)
+    public 
+    forParticipation(participationId,ParticipationState.Cashout,Phase.End) 
+    {
+     // go through linked list
+     Participation storage part = participations[participationId];
+
+     require(msg.sender == part.from);
+
+     LotterieThrow storage thr = allthrows[part.throwId];
+     Winner[] winners = allwinners[part.throwId];
+     Winner storage w;
+
+     uint16 ptr = thr.results.firstWinner;
+
+
+     uint result = 0;
+     for (; ptr != 255 && 
+       result < thr.results.totalCashout;++result) {
+       require(ptr < winners.length);
+       w = winners[ptr];
+       if (w.participationId == participationId) {
+         // actual withdraw
+         uint amount = winners[result].totalPositionWin;
+         require(w.withdrawned == false);
+         w.withdrawned = true;
+         if (amount > 0) {
+           thr.totalClaimedValue += amount;
+           msg.sender.transfer(amount);
+         }
+         emit Win(throwId, participationId, msg.sender, uint16(result) + 1, amount);
+         break;
+       }
+       ptr = w.nextWinner;
+     }
+     // fail if not found
+     require(result != thr.results.totalCashout);
   }
 
   // can withdraw in participation
   function withdrawOwner(uint throwId)
-    forThrowStorageNot(throwId,Phase.Bidding)
+    forThrowStorageNot2(throwId,Phase.Bidding,Phase.Off)
     onlyOwner 
     public returns (uint) {
     
@@ -721,7 +856,7 @@ contract Lotterie is Ownable, LotterieLib {
     return 0;
   }
   function withdrawContractAuthor(uint throwId)
-    forThrowStorageNot(throwId,Phase.Bidding)
+    forThrowStorageNot2(throwId,Phase.Bidding,Phase.Off)
     onlyContractAuthor
     public returns (uint) {
     
@@ -739,7 +874,7 @@ contract Lotterie is Ownable, LotterieLib {
     return 0;
   }
   function withdrawThrower(uint throwId)
-    forThrowStorageNot(throwId,Phase.Bidding)
+    forThrowStorageNot2(throwId,Phase.Bidding,Phase.Off)
     public returns (uint) {
     
     LotterieThrow storage thr = allthrows[throwId];
@@ -757,7 +892,7 @@ contract Lotterie is Ownable, LotterieLib {
     return 0;
   }
   function withdrawDappAuthor(uint throwId)
-    forThrowStorageNot(throwId,Phase.Bidding)
+    forThrowStorageNot2(throwId,Phase.Bidding,Phase.Off)
     public returns (uint) {
     
     LotterieThrow storage thr = allthrows[throwId];
@@ -776,6 +911,18 @@ contract Lotterie is Ownable, LotterieLib {
     return 0;
   }
 
+  // do not let stuck value in a throw
+  function emptyOffThrow(uint throwId)
+    forThrowStorage(throwId,Phase.Off) 
+    onlyOwner
+    external {
+    LotterieThrow storage thr = allthrows[throwId];
+    var amount = thr.totalBidValue.sub(thr.totalClaimedValue);
+    if (amount != 0) {
+      thr.totalClaimedValue += amount;
+      msg.sender.transfer(amount);
+    }
+  }
 
 
 
