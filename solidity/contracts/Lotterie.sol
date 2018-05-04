@@ -475,16 +475,15 @@ contract Lotterie is Ownable, LotterieLib {
     
     Winner[] winners = allwinners[part.throwId];
     require(startPossibleIx <= winners.length);
-    uint16 before = 255;
-    uint16 next = 255;
     Winner storage w;
     uint16 ptr = thr.results.firstWinner;
     uint16 iter = 0;
+    uint16 before = 255;
     if (startPossibleIx > 0) {
       require(ptr != 255);
       for (;ptr != 255 && iter < startPossibleIx; iter++) {
         w = winners[ptr];
-        //before = ptr;
+        before = ptr;
         ptr = w.nextWinner;
       }
       //w = winners[before];
@@ -499,17 +498,25 @@ contract Lotterie is Ownable, LotterieLib {
     for (;
       // not null ptr
       ptr != 255 &&
-      // not found
-      next == 255 &&
       // in result nb
       iter < thr.results.totalCashout; iter++) {
       w = winners[ptr];
-      before = ptr;
-      ptr = w.nextWinner;
       if (myScore > w.score || (myScore == w.score && participationId < w.participationId)) {
-        next = ptr;
+        break; 
+      } else {
+        before = ptr;
+        ptr = w.nextWinner;
       }
     }
+    uint16 next = 255;
+    // next TODO include in loop
+    if (before == 255) {
+      next = thr.results.firstWinner;
+    } else {
+      next = winners[before].nextWinner;
+    }
+
+
     if (winners.length < thr.results.totalCashout) {
       // initiate a cashout value if not all used
       winners.push(Winner({
@@ -521,7 +528,6 @@ contract Lotterie is Ownable, LotterieLib {
       }));
       iter = uint16(winners.length) - 1;
     } else {
-      // get last ix
       for (; w.nextWinner != 255 && iter < thr.results.totalCashout; iter++) {
         ptr = w.nextWinner;
         w = winners[ptr];
@@ -531,12 +537,14 @@ contract Lotterie is Ownable, LotterieLib {
       w.nextWinner = next;
       iter = ptr;
     }
+
     // insert
     if (before == 255) {
       thr.results.firstWinner = iter;
     } else {
       winners[before].nextWinner = iter;
     }
+
 
     // TODO change state for participation (do not write twice) + check before starting
 
@@ -550,16 +558,17 @@ contract Lotterie is Ownable, LotterieLib {
      Winner[] winners = allwinners[part.throwId];
      return (winners.length);
   }
-  function getWinners (
-    uint participationId,
+
+  function getWinner (
+    uint throwId,
     uint winnerIx
   ) view external returns (bool,uint,uint,uint)
   {
-     Participation storage part = participations[participationId];
-     LotterieThrow storage thr = allthrows[part.throwId];
-     Winner[] winners = allwinners[part.throwId];
-     uint16 ptr = thr.results.firstWinner;
+     LotterieThrow storage thr = allthrows[throwId];
+     Winner[] winners = allwinners[throwId];
+     require(winnerIx < winners.length);
      Winner storage w;
+     uint16 ptr = thr.results.firstWinner;
      for (uint iter = 0; ptr != 255 && 
        iter < winnerIx;++iter) {
        require(ptr < winners.length);
@@ -571,8 +580,30 @@ contract Lotterie is Ownable, LotterieLib {
      return (w.withdrawned, w.totalPositionWin, w.participationId, w.score);
  
   }
- 
 
+  // TODO remove (redundant with other method)
+  function linkedWinnersLength (
+    uint throwId
+  ) view external returns(uint) {
+     uint result = 0;
+     // go through linked list
+     LotterieThrow storage thr = allthrows[throwId];
+     LC.LotterieParams storage thrparams = params[thr.paramsId];
+     LC.WinningParams storage wparams = winningParams[thrparams.winningParamsId];
+     Winner[] winners = allwinners[throwId];
+     Winner storage w;
+
+     uint16 ptr = thr.results.firstWinner;
+
+     for (; ptr != 255 && 
+       result < thr.results.totalCashout;++result) {
+       require(ptr < winners.length);
+       w = winners[ptr];
+       ptr = w.nextWinner;
+     }
+     
+     return (result);
+  }
  
   // a function to avoid some gas cost in cash out
   function currentIxAmongWinners (
@@ -595,7 +626,7 @@ contract Lotterie is Ownable, LotterieLib {
        result < thr.results.totalCashout;++result) {
        require(ptr < winners.length);
        w = winners[ptr];
-       if (myScore >= w.score || (myScore == w.score && participationId < w.participationId)) {
+       if (myScore > w.score || (myScore == w.score && participationId < w.participationId)) {
          return (result);
        }
        ptr = w.nextWinner;

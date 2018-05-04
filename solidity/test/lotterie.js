@@ -3,8 +3,28 @@ const truffleAssert = require('truffle-assertions');
 
 var Lotterie = artifacts.require("./Lotterie.sol");
 
+
+
 // TODO move to its own js lif
 lotterieLib = {
+  arrayAccessor : function(arr,conf) {
+    result = {};
+    for (var field in conf) {
+      if (conf.hasOwnProperty(field)) {
+        result[field] = arr[conf[field]];
+      }
+    }
+    return result;
+  },
+  newWinnerArray : function(arr) {
+    return this.arrayAccessor(arr, {
+     //return (w.withdrawned, w.totalPositionWin, w.participationId, w.score);
+     withdrawned : 0,
+     totalPositionWin : 1,
+     participationId : 2,
+     score : 3
+    });
+  },
   participationEndModes : {
     EagerAbsolute : 0,
     EagerRelative : 1,
@@ -49,9 +69,6 @@ lotterieLib = {
     }
     return '0x' + this.padHexInt(bytesToHex(b1));
   }
-
-
-
 }
 
 function hexToBytes(hex) {
@@ -375,6 +392,7 @@ contract('Lotterie', function(accounts) {
   });
 
 
+  // TODO test a lot more than the name : split it using scenario1 functions
   it("switch phases on user tresholds", async function() {
     var myConf = Object.assign({}, conf1);
     myConf.maxParticipant = 5;
@@ -527,26 +545,49 @@ contract('Lotterie', function(accounts) {
     await lotterie.cashOut(last, ix);
     // do not cashout twice
     assertRevert(lotterie.cashOut(last, ix + 1));
-    // could not insert twice
+    assert.equal(await lotterie.currentIxAmongWinners.call(last),1);
+    // iterate on participation
     for (var i = 0; i < 5; ++i) {
       if (i != last) {
         // for test only
-        var ix = await lotterie.currentIxAmongWinners.call(last);
+        var ix = await lotterie.currentIxAmongWinners.call(i);
         if (ix == 2) {
-          // check ok with insertion in between calculation (multiple cashout in a block
+          // check ok with insertion in between calculation (multiple cashout in a block)
           ix == 0;
         }
         await lotterie.cashOut(i, ix);
+//        assert.notEqual(await lotterie.currentIxAmongWinners.call(last),0);
+//        assert.notEqual(await lotterie.currentIxAmongWinners.call(last),1);
       }
     }
     var nbwin = await lotterie.nbWinners(0);
     assert.equal(nbwin,4);
-    // dirty 5secs pause
-    var currentTime = new Date().getTime();
-    while (currentTime + 3 * 1000 >= new Date().getTime()) { 
-      await new Promise(function (resolve) { setTimeout(resolve,100) });
-    }
+    assert.equal(web3.toHex(await lotterie.linkedWinnersLength.call(0)),4);
+    // TODO additional user trying to insert (in a non salt conf it will be easier)
+    await dirtyPause(3);
     assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.End);
+    var lastScore = null;
+    for (var i = 0; i < nbwin; ++i) {
+      var w = lotterieLib.newWinnerArray(await lotterie.getWinner(0, i));
+      assert.equal(w.withdrawned, false);
+      // TODO return rate
+      assert.equal(w.totalPositionWin, 0);
+      //assert.notEqual(w.participationId, last);
+      var itScore = lotterieLib.padHexInt(web3.toHex(w.score));
+      if (lastScore == null) {
+        lastScore = itScore
+      } else {
+        // no testing for eq test as marginal
+        var lessOrEq = itScore <= lastScore;
+        if (!lessOrEq) {
+                assert.equal(itScore,lastScore);
+        }
+        assert(lessOrEq);
+
+        lastScore = itScore
+      }
+    }
+    assertRevert(lotterie.getWinner(0,nbwin));
   });
 
 });
@@ -559,4 +600,9 @@ async function assertRevert(pr) {
     assert.match(e, /VM Exception[a-zA-Z0-9 ]+: revert/,"wrong exception");
   }
 }
-
+async function dirtyPause(nbsecs) {
+  var currentTime = new Date().getTime();
+  while (currentTime + nbsecs * 1000 >= new Date().getTime()) { 
+    await new Promise(function (resolve) { setTimeout(resolve,100) });
+  }
+}
