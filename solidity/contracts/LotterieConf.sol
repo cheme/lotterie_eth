@@ -54,11 +54,11 @@ library LotterieConf {
     CashoutEndMode cashoutEndMode;
     CashoutEndMode throwEndMode;
   }
-  function validParticipationSwitch(uint64 maxParticipant, uint biddingTreshold, uint participationStartTreshold) public returns(bool) {
+  function validParticipationSwitch(uint64 maxParticipant, uint biddingTreshold, uint participationStartTreshold) public view returns(bool) {
      return (maxParticipant != 0 || biddingTreshold != 0 || participationStartTreshold > now);
   }
 
-  function validCashoutSwitch(ParticipationEndModes participationEndMode, uint participationEndValue) public returns(bool) {
+  function validCashoutSwitch(ParticipationEndModes participationEndMode, uint participationEndValue) public pure returns(bool) {
     // avoid relative time overflow
     if (participationEndMode == ParticipationEndModes.EagerRelative 
         || participationEndMode == ParticipationEndModes.Relative) {
@@ -75,16 +75,16 @@ library LotterieConf {
 
   // note that relative allows way longer lotterie because duration hard limit is relative to start of cashout phase
   // when absolute hard limit is only relative to the start of the lotterie
-  function validEndSwitch(CashoutEndMode cashoutEndMode, uint cashoutDuration) public returns(bool) {
+  function validEndSwitch(CashoutEndMode cashoutEndMode, uint cashoutDuration) public view returns(bool) {
     uint limit = 4 weeks;
     return validDateOnlySwitch(cashoutEndMode,cashoutDuration,limit);
   }
-  function validOffSwitch(CashoutEndMode cashoutEndMode, uint cashoutDuration) public returns(bool) {
+  function validOffSwitch(CashoutEndMode cashoutEndMode, uint cashoutDuration) public view returns(bool) {
     uint limit = 20 weeks;
     return validDateOnlySwitch(cashoutEndMode,cashoutDuration,limit);
   }
 
-  function validDateOnlySwitch(CashoutEndMode endMode, uint duration, uint hardLimit) public returns(bool) {
+  function validDateOnlySwitch(CashoutEndMode endMode, uint duration, uint hardLimit) public view returns(bool) {
     if (endMode == CashoutEndMode.Absolute) {
       // absolute
       if (now + hardLimit > duration) {
@@ -100,7 +100,7 @@ library LotterieConf {
   }
 
 
-  function validWinningParams(uint16 nbWinners, uint16 nbWinnerMinRatio) public returns(bool) {
+  function validWinningParams(uint16 nbWinners, uint16 nbWinnerMinRatio) public pure returns(bool) {
     if (nbWinnerMinRatio > 100) {
       return false;
     }
@@ -110,9 +110,9 @@ library LotterieConf {
     }
     return true;
   }
-  function salt() public returns(uint) {
+  function salt() public view returns(uint) {
     //uint no = block.timestamp;
-    uint no = now;
+    //uint no = now;
     uint nb = block.number;
     uint lastblockhashused = uint(blockhash(nb - 1));
     return uint(keccak256(lastblockhashused ^ nb ^ now));

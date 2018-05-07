@@ -248,3 +248,77 @@ Note the comparison is on a non modified throw (code of function do not write th
 
 So modifier version might be fine (TODO redo test with a transaction estimate, ganache log are a bit unclear). // TODO web3 estimate for gas then send trans with this as gas
 
+
+## gas compared
+
+- activating abiv2 does generate lot of serialize code (last test from 43 ko constract to 49 on activation plus 500 o for an accessor function).
+  TODO compare with lib for returning only
+- bid for test
+cumulativeGasUsed: 150873 // first init storage I guess (high first cost)
+cumulativeGasUsed: 105873
+cumulativeGasUsed: 105873
+cumulativeGasUsed: 105809
+cumulativeGasUsed: 105809
+ after switching thrparams to memory (read only anyway)
+cumulativeGasUsed: 152125
+cumulativeGasUsed: 107125
+cumulativeGasUsed: 107125
+cumulativeGasUsed: 107061
+cumulativeGasUsed: 107061
+
+So clearly using memory for read only access is a bad idea (at least for a single variable access)
+
+### at commit
+
+c2 is second test
+
+// init throw
+cumulativeGasUsed: 204393
+c2: 204393
+// bid
+cumulativeGasUsed: 150873
+cumulativeGasUsed: 105873
+cumulativeGasUsed: 105873
+cumulativeGasUsed: 105809
+c2: 150873
+c2: 105873
+c2: 105873
+c2: 105809
+// reveal participation
+cumulativeGasUsed: 105809
+cumulativeGasUsed: 90470
+cumulativeGasUsed: 63191
+cumulativeGasUsed: 63191
+cumulativeGasUsed: 64215
+c2: 105809
+c2: 90470
+c2: 63191
+c2: 63191
+c2: 64215
+// cashout last (first cashout)
+cumulativeGasUsed: 63191
+c2: 63191
+// cashout
+cumulativeGasUsed: 191643
+cumulativeGasUsed: 128395
+cumulativeGasUsed: 145301
+cumulativeGasUsed: 145301
+c2: 206707
+c2: 113331
+c2: 145301
+c2: 145301
+// withdraw win
+cumulativeGasUsed: 70810
+cumulativeGasUsed: 101954
+cumulativeGasUsed: 78580
+cumulativeGasUsed: 77281
+c2: 69961
+c2: 103189
+c2: 78580
+c2: 77281
+// empty for owner
+cumulativeGasUsed: 75982
+c2: 74683
+
+
+

@@ -152,9 +152,16 @@ async function configuration(lotterie,account_contract_dapp,c) {
   }
 
 
-
+var totalCostLog = 0;
 
 contract('Lotterie', function(accounts) {
+   beforeEach(function() {
+     totalCostLog = 0;
+   });
+   afterEach(function() {
+     console.log("Logged gas cost total : ", totalCostLog);
+   });
+
 /*    var lotterie;
     before(async function() {
     var account_contract_author = accounts[1];
@@ -301,7 +308,7 @@ contract('Lotterie', function(accounts) {
 
 
     balanceBefore = web3.eth.getBalance(account_owner);
-    result = await lotterie.withdrawOwner(0, { from : account_owner, gas : gas });
+    result = await lotterie.withdrawOwner(0, { from : account_owner });
     truffleAssert.eventEmitted(result, 'Withdraw',  function(ev) {
       return ev.to === account_owner && withinExpectedBound(ev.amount,ownerExpected);
     });
@@ -432,6 +439,8 @@ contract('Lotterie', function(accounts) {
 
   // TODO test a lot more than the name : split it using scenario1 functions
   it("switch phases on user tresholds", async function() {
+  //dis("switch phases on user tresholds", async function() {
+      
     var myConf = Object.assign({}, conf1);
     myConf.maxParticipant = 5;
     //myConf.nbWinners = 4;
@@ -449,17 +458,17 @@ contract('Lotterie', function(accounts) {
 
     var accountParts = [];
     await configuration(lotterie,account_contract_dapp,myConf);
-    await lotterie.initThrow (0,0,0,0,0,0);
-    await lotterie.bid("0x0",lotterieLib.calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue });
+    tr_log( lotterie.initThrow (0,0,0,0,0,0), true);
+    tr_log( lotterie.bid("0x0",lotterieLib.calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder1);
-    await lotterie.bid(0,lotterieLib.calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue });
+    tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue }), true);
     accountParts.push(account_bidder2);
-    await lotterie.bid(0,lotterieLib.calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue });
+    tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder2);
-    await lotterie.bid(0,lotterieLib.calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue });
+    tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder2);
     assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Bidding);
-    await lotterie.bid(0,lotterieLib.calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue });
+    tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder3);
     assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Participation);
     // reveal
@@ -474,29 +483,29 @@ contract('Lotterie', function(accounts) {
     currentSeed = thr.currentSeed;
     var res = await lotterie.challengeParticipation.call(0,0);
     assert.equal(web3.toHex(res[0]),web3.toHex(res[1]));
-    await lotterie.revealParticipation(0,0);
+    tr_log( lotterie.revealParticipation(0,0), true);
     thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
     assertRevert(lotterie.revealParticipation(0,0));
-    await lotterie.revealParticipation(4,4);
+    tr_log( lotterie.revealParticipation(4,4), true);
     thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
-    await lotterie.revealParticipation(3,3);
+    tr_log( lotterie.revealParticipation(3,3), true);
     thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
-    await lotterie.revealParticipation(1,'0x1111111111111111111111111111111111');
+    tr_log( lotterie.revealParticipation(1,'0x1111111111111111111111111111111111'), true);
     thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
     assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Participation);
-    await lotterie.revealParticipation(2,2);
+    tr_log( lotterie.revealParticipation(2,2), true);
     thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr[1]));
     currentSeed = thr.currentSeed;
@@ -584,7 +593,7 @@ contract('Lotterie', function(accounts) {
     var ix = await lotterie.currentIxAmongWinners.call(last);
     assert.equal(ix,0);
     // first last insert to try to get something (start possible ix at 0)
-    await lotterie.cashOut(last, ix);
+    tr_log( lotterie.cashOut(last, ix), true);
     // do not cashout twice
     assertRevert(lotterie.cashOut(last, ix + 1));
     assert.equal(await lotterie.currentIxAmongWinners.call(last),1);
@@ -597,12 +606,12 @@ contract('Lotterie', function(accounts) {
           // check ok with insertion in between calculation (multiple cashout in a block)
           ix == 0;
         }
-        await lotterie.cashOut(i, ix);
+        tr_log( lotterie.cashOut(i, ix), true);
 //        assert.notEqual(await lotterie.currentIxAmongWinners.call(last),0);
 //        assert.notEqual(await lotterie.currentIxAmongWinners.call(last),1);
       }
     }
-    var nbwin = await lotterie.nbWinners(0);
+    var nbwin = await lotterie.nbWinners.call(0);
     assert.equal(nbwin,4);
     assert.equal(web3.toHex(await lotterie.linkedWinnersLength.call(0)),4);
     // TODO additional user trying to insert (in a non salt conf it will be easier)
@@ -610,7 +619,7 @@ contract('Lotterie', function(accounts) {
     assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.End);
     var lastScore = null;
     for (var i = 0; i < nbwin; ++i) {
-      var w = lotterieLib.newWinnerArray(await lotterie.getWinner(0, i));
+      var w = lotterieLib.newWinnerArray(await lotterie.getWinner.call(0, i));
       assert.equal(w.withdrawned, false);
       // TODO return rate
 //      assert.isLower(0,w.totalPositionWin);
@@ -629,7 +638,7 @@ contract('Lotterie', function(accounts) {
         lastScore = itScore
       }
     }
-    assert.equal(0,await lotterie.positionAtPhaseEnd(last));
+    assert.equal(0,await lotterie.positionAtPhaseEnd.call(last));
     // register win and withdraw
     for (var i = 0; i < 5; ++i) {
       if (i == last) {
@@ -638,6 +647,7 @@ contract('Lotterie', function(accounts) {
         // not for wrong user (avoid dead account)
         assertRevert(lotterie.withdrawWin(0,i, { from : account_contract_dapp }));
         var result = await lotterie.withdrawWin(0,i, { from : accountParts[i] });
+        tr_log2(result, true);
         truffleAssert.eventEmitted(result, 'Win',  function(ev) {
           var result = ev.throwId == 0 && ev.participationId == i;
           if (result) {
@@ -662,7 +672,7 @@ contract('Lotterie', function(accounts) {
     var thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
     assert.equal(web3.toHex(thr.totalBidValue), web3.toHex(thr.totalClaimedValue));
     assertRevert(lotterie.emptyOffThrow(0,{ from : account_contract_dapp }));
-    await lotterie.emptyOffThrow(0,{ from : account_owner });
+    tr_log( lotterie.emptyOffThrow(0,{ from : account_owner }), true);
   });
 
 });
@@ -675,9 +685,24 @@ async function assertRevert(pr) {
     assert.match(e, /VM Exception[a-zA-Z0-9 ]+: revert/,"wrong exception");
   }
 }
+async function tr_log(pr,debug) {
+  var res = await pr;
+  tr_log2(res,debug);
+}
+function tr_log2(res,debug) {
+  var rcpt = web3.eth.getTransactionReceipt(res.tx);
+  if (debug != null && debug) {
+    console.log("cumulativeGasUsed: " + rcpt.cumulativeGasUsed);
+  }
+  totalCostLog += rcpt.cumulativeGasUsed;
+  //console.log("gasPrice: " + web3.eth.gasPrice);
+}
+
+
 async function dirtyPause(nbsecs) {
   var currentTime = new Date().getTime();
   while (currentTime + nbsecs * 1000 >= new Date().getTime()) { 
     await new Promise(function (resolve) { setTimeout(resolve,100) });
   }
 }
+async function dis(a,b){}
