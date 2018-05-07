@@ -6,6 +6,20 @@ pragma solidity ^0.4.23;
 // TODO check if transformed to contract (use call instead of delegatecall) in term of cost
 // TODO this split does not seems relevant contract whise
 library LotterieConf {
+  
+  struct LotterieWithdraw {
+    uint winningBase;
+    uint32 ownerMargin;
+    uint32 authorContractMargin;
+    uint32 authorDappMargin;
+    uint32 throwerMargin;
+
+
+    bool ownerWithdrawned;
+    bool authorContractWithdrawned;
+    bool authorDappWithdrawned;
+    bool throwerWithdrawned;
+  }
 
   enum ParticipationEndModes {
     EagerAbsolute,

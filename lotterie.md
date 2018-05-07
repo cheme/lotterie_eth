@@ -268,7 +268,7 @@ cumulativeGasUsed: 107061
 
 So clearly using memory for read only access is a bad idea (at least for a single variable access)
 
-### at commit
+### at commit a61a9bcea0a6cbab196a18dfbbe211ad6ed7339e
 
 c2 is second test
 
@@ -280,45 +280,51 @@ cumulativeGasUsed: 150873
 cumulativeGasUsed: 105873
 cumulativeGasUsed: 105873
 cumulativeGasUsed: 105809
+cumulativeGasUsed: 105809
 c2: 150873
 c2: 105873
 c2: 105873
 c2: 105809
+c2: 105809
 // reveal participation
-cumulativeGasUsed: 105809
 cumulativeGasUsed: 90470
 cumulativeGasUsed: 63191
 cumulativeGasUsed: 63191
 cumulativeGasUsed: 64215
-c2: 105809
+cumulativeGasUsed: 63191
 c2: 90470
 c2: 63191
 c2: 63191
 c2: 64215
-// cashout last (first cashout)
-cumulativeGasUsed: 63191
 c2: 63191
-// cashout
+// cashout last (first cashout lot of init)
 cumulativeGasUsed: 191643
+c2: 206707
+// cashout
 cumulativeGasUsed: 128395
 cumulativeGasUsed: 145301
 cumulativeGasUsed: 145301
-c2: 206707
+cumulativeGasUsed: 70810
 c2: 113331
 c2: 145301
 c2: 145301
+c2: 69961
 // withdraw win
-cumulativeGasUsed: 70810
 cumulativeGasUsed: 101954
 cumulativeGasUsed: 78580
 cumulativeGasUsed: 77281
-c2: 69961
+cumulativeGasUsed: 75982
 c2: 103189
 c2: 78580
 c2: 77281
-// empty for owner
-cumulativeGasUsed: 75982
 c2: 74683
+// empty for owner
+cumulativeGasUsed: 42934 
 
+Last empty without the phase update status (using getCurrentPhase but no store of phase Off) : 34616
+Last empty with direct check of phase (phase switch force in previous tx) : 23855
+prev phase switch : 41896
+
+ctr dep ~ 5579495
 
 

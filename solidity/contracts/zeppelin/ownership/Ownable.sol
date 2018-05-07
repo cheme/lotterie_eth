@@ -17,9 +17,7 @@ contract Ownable {
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
    * account.
    */
-  // Warn curently using constructor name makes it being skipped (truffle still 4.22?)
-  //function constructor() public {
-  function Ownable() public {
+  constructor() public {
     owner = msg.sender;
   }
 

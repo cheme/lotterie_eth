@@ -219,7 +219,7 @@ contract('Lotterie', function(accounts) {
   });*/
 
 
-  it("should add params", async function() {
+  dis("should add params", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var lotterie = await Lotterie.new(account_contract_author);
@@ -631,7 +631,7 @@ contract('Lotterie', function(accounts) {
         // no testing for eq test as marginal
         var lessOrEq = itScore <= lastScore;
         if (!lessOrEq) {
-                assert.equal(itScore,lastScore);
+          assert.equal(itScore,lastScore);
         }
         assert(lessOrEq);
 
@@ -672,6 +672,8 @@ contract('Lotterie', function(accounts) {
     var thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
     assert.equal(web3.toHex(thr.totalBidValue), web3.toHex(thr.totalClaimedValue));
     assertRevert(lotterie.emptyOffThrow(0,{ from : account_contract_dapp }));
+          console.log("bef");
+//    tr_log( lotterie.recalculateState(0,lotterieLib.phases.Off), true);
     tr_log( lotterie.emptyOffThrow(0,{ from : account_owner }), true);
   });
 

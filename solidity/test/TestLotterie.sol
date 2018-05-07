@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../contracts/Lotterie.sol";
+import "../contracts/LotterieBase.sol";
 import {LotterieConf as LC} from "../contracts/LotterieConf.sol";
 
 contract TestLotterie {
@@ -59,14 +60,14 @@ contract TestLotterie {
     Assert.equal(uint(uint8(LC.CashoutEndMode.Relative)),1,"wrong enum rep");
   }
   function testPhaseVals () {
-    Assert.equal(uint(uint8(Lotterie.Phase.Bidding)),0,"wrong enum rep");
-    Assert.equal(uint(uint8(Lotterie.Phase.Participation)),1,"wrong enum rep");
-    Assert.equal(uint(uint8(Lotterie.Phase.Cashout)),2,"wrong enum rep");
-    Assert.equal(uint(uint8(Lotterie.Phase.End)),3,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Bidding)),0,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Participation)),1,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Cashout)),2,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.End)),3,"wrong enum rep");
   }
   function testParticipationStateVals () {
-    Assert.equal(uint(uint8(Lotterie.ParticipationState.BidSent)),0,"wrong enum rep");
-    Assert.equal(uint(uint8(Lotterie.ParticipationState.Revealed)),1,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.ParticipationState.BidSent)),0,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.ParticipationState.Revealed)),1,"wrong enum rep");
   }
 
   function testMarginCalc () {
