@@ -1,0 +1,22 @@
+{
+  "name": "lotterie-pwasm",
+  "version": "0.0.1",
+  "description": "Pwasm version of lotterie contract",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cheme/TODO"
+  },
+  "author": "Emeric Chevalier <emericchevalie.pro@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cheme"
+  },
+  "homepage": "https://cheme.github.io/TODOblogpost",
+  "dependencies": {
+    "web3": "^1.0.0-beta.34"
+  }
+}
