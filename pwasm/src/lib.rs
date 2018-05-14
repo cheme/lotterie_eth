@@ -128,9 +128,9 @@ mod tests {
   use super::*;
   use self::pwasm_test::{ext_reset, ext_get};
   use parity_hash::Address;
-  use token::TokenInterface;
+/*  use token::TokenInterface;
 
-/*    #[test]
+    #[test]
     fn should_succeed_transfering_1000_from_owner_to_another_address() {
         let mut contract = token::TokenContract{};
         let owner_address = Address::from("0xea674fdde714fd979de3edf0f56aa9716b898ec8");

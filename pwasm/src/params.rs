@@ -23,7 +23,7 @@ static WINNINGS_PARAMS_KEY: H256 = H256(
 #[derive(Serialize,Deserialize)]
 #[repr(u8)]
 pub enum WinningDistribution {
-  Equal
+  Equal = 0
 }
 
 #[derive(Serialize,Deserialize)]
@@ -70,6 +70,11 @@ pub trait ParamsInterface {
     _nbWinners: u16,
     _nbWinnerMinRatio: u16,
     _distribution: u8);*/
+  fn addWinningParams(&mut self,
+    _nbWinners: u32,
+    _nbWinnerMinRatio: u32,
+    _distribution: u32);
+
 }
 
 pub struct ParamsContract;
@@ -77,12 +82,14 @@ pub struct ParamsContract;
 impl ParamsInterface for ParamsContract {
   fn constructor(&mut self) {
   }
+ 
   #[inline]
   fn getWiningParamsCount(&mut self) -> U256 {
     U256::from(pwasm_ethereum::read(&(WINNINGS_PARAMS_KEY)))
   }
 
   fn getWinningParams(&mut self, index: U256) -> (u16, u16, u8) {
+  //fn getWinningParams(&mut self, index: U256) -> (u16, u16, u8) {
     // fix length array resolution (serialize to size 1), if not fix size, key becomes has of
     // wining paramskey and index then use read_from and write_into with stored 32 bit buffer
     let key = index + WINNINGS_PARAMS_KEY.into() + 1.into();
@@ -92,9 +99,13 @@ impl ParamsInterface for ParamsContract {
     (p.nbWinners,p.nbWinnerMinRatio, p.distribution as u8)
   }
   fn addWinningParams(&mut self,
-    nbWinners: u16,
-    nbWinnerMinRatio: u16,
-    distribution: u8) {
+    nbWinners: u32,
+    nbWinnerMinRatio: u32,
+    distribution: u32) {
+    // Type cast before adding u16 and u8 into parity clinet
+    let nbWinners = nbWinners as u16;
+    let nbWinnerMinRatio = nbWinnerMinRatio as u16;
+    let distribution = distribution as u8;
     let p = WinningParams {
       nbWinners,
       nbWinnerMinRatio,
@@ -106,13 +117,13 @@ impl ParamsInterface for ParamsContract {
     // less than one word size
     assert!(ser.len() <= 32);
     let mut dest : [u8;32] = ZERO_WORD.clone(); 
-    dest.copy_from_slice(&ser[..]);
+    dest[..ser.len()].copy_from_slice(&ser[..]);
 
     // TODO fix array struct with length
-    let ix = U256::from(pwasm_ethereum::read(&H256::from(WINNINGS_PARAMS_KEY)));
-    let key = ix + WINNINGS_PARAMS_KEY.into();
-    pwasm_ethereum::write(&H256::from(WINNINGS_PARAMS_KEY), cast_64_8(&(ix + 1.into()).0));
-    pwasm_ethereum::write(&H256::from(WINNINGS_PARAMS_KEY),&dest);
+    let ix = self.getWiningParamsCount();
+    let key = ix + 1.into() + WINNINGS_PARAMS_KEY.into();
+    pwasm_ethereum::write(&H256::from(WINNINGS_PARAMS_KEY), &H256::from(ix + 1.into()).0);
+    pwasm_ethereum::write(&H256::from(key),&dest);
 
   }
 
@@ -127,4 +138,28 @@ fn cast_winning_distribution( src : u8) -> WinningDistribution {
 #[inline]
 fn cast_64_8 ( src : &[u64;4]) -> &[u8;32] {
   unsafe { mem::transmute(src) }
+}
+
+#[inline]
+fn cast_8_64 ( src : &[u64;4]) -> &[u8;32] {
+  unsafe { mem::transmute(src) }
+}
+
+
+
+#[test]
+fn cast_test() {
+  let zero = U256::from(ZERO_WORD);
+  //let zero64 = cast_64_8(&zero.0);
+  let zero64 = H256::from(zero).0;
+  assert_eq!(zero, U256::from(0));
+  let zero2 = U256::from(zero64);
+  assert_eq!(zero2, U256::from(0));
+  let un = zero + 1.into();
+  let un64 : H256 = un.into();
+  let un64 : [u8;32] = un64.0;
+  assert_eq!(un, U256::from(1));
+  let un2 = U256::from(un64);
+  assert_eq!(un2,U256::from(1));
+
 }
