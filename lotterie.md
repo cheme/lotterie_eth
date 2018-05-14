@@ -327,4 +327,45 @@ prev phase switch : 41896
 
 ctr dep ~ 5579495
 
+- Test with one contract per throw (version with fat throwContract)
 
+// init throw definitely huge but we should check after moving byte code in lib.
+cumulativeGasUsed: 2657642 instead of 
+                    204393
+// bids
+cumulativeGasUsed: 140068
+instead of 151 k
+cumulativeGasUsed: 95068
+instead of 106 k
+cumulativeGasUsed: 95068
+cumulativeGasUsed: 95004
+cumulativeGasUsed: 95004
+// reveal
+cumulativeGasUsed: 78375
+instead of 90
+cumulativeGasUsed: 51959
+// instead of 64-63
+cumulativeGasUsed: 51959
+cumulativeGasUsed: 52983
+cumulativeGasUsed: 51959
+
+// cashout last (first cashout lot of init)
+cumulativeGasUsed: 193342
+// 191643 or 206 ~ same
+cumulativeGasUsed: 101383
+// instead of 128 - 145 -> 10 k gain 
+cumulativeGasUsed: 133358
+cumulativeGasUsed: 133358
+cumulativeGasUsed: 43159
+// withdraw win
+cumulativeGasUsed: 90229 / instead of 100
+cumulativeGasUsed: 66447 / instead of 78
+cumulativeGasUsed: 65157
+cumulativeGasUsed: 67737
+bef
+// empty for owner
+cumulativeGasUsed: 34581
+    ✓ switch phases on user tresholds (16629ms)
+
+
+So a 10k gain per operation, considering we want to scale it is way more optimal and trying to reduce contract throw size for costless throw is a effort that I should do.

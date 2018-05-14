@@ -12,7 +12,6 @@ extern crate pwasm_abi_derive;
 /// Bigint used for 256-bit arithmetic
 extern crate bigint;
 
-
 extern crate serde;
 #[macro_use] extern crate serde_derive;
 extern crate bincode;

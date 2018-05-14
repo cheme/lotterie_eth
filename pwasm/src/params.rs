@@ -20,6 +20,12 @@ static WINNINGS_PARAMS_KEY: H256 = H256(
   [97,93,151,149,245,12,191,72,139,162,204,35,60,180,59,172,25,46,99,222,39,52,194,151,225,17,174,241,118,147,57,248]
 );
 
+// TODO remove (just for testing)
+static WINNINGS_PARAMS_KEY_BIS: H256 = H256(
+  [97,93,151,149,245,12,191,73,139,162,204,35,0,180,59,172,25,6,99,22,39,52,194,151,225,17,174,241,118,147,57,248]
+);
+
+
 #[derive(Serialize,Deserialize)]
 #[repr(u8)]
 pub enum WinningDistribution {
@@ -47,6 +53,8 @@ pub trait ParamsInterface {
   #[constant]
   //fn getWinningParams(&mut self, _index: U256) -> (u16, u16, u8);
   fn getWinningParams(&mut self, _index: U256) -> (u16, u16, u8);
+  #[constant]
+  fn getWinningParamsBis(&mut self, _index: U256) -> (u16, u16, u8);
 
 /*
   fn addParams(&mut self,
@@ -74,6 +82,11 @@ pub trait ParamsInterface {
     _nbWinners: u32,
     _nbWinnerMinRatio: u32,
     _distribution: u32);
+  fn addWinningParamsBis(&mut self,
+    _nbWinners: u32,
+    _nbWinnerMinRatio: u32,
+    _distribution: u32);
+
 
 }
 
@@ -98,6 +111,19 @@ impl ParamsInterface for ParamsContract {
     let p : WinningParams = bincode::deserialize(&stored[..]).unwrap();
     (p.nbWinners,p.nbWinnerMinRatio, p.distribution as u8)
   }
+  fn getWinningParamsBis(&mut self, index: U256) -> (u16, u16, u8) {
+  //fn getWinningParams(&mut self, index: U256) -> (u16, u16, u8) {
+    // fix length array resolution (serialize to size 1), if not fix size, key becomes has of
+    // wining paramskey and index then use read_from and write_into with stored 32 bit buffer
+    let key = index + WINNINGS_PARAMS_KEY_BIS.into() + 1.into();
+    let stored : [u8;32] = pwasm_ethereum::read(&H256::from(key));
+    // TODO wrapper which revert on error!!
+    let nbWinners = read_u16(&stored[..2]);
+    let nbWinnerMinRatio = read_u16(&stored[2..4]);
+    let distribution = read_u8(&stored[5..6]);
+    (nbWinners,nbWinnerMinRatio,distribution)
+  }
+
   fn addWinningParams(&mut self,
     nbWinners: u32,
     nbWinnerMinRatio: u32,
@@ -127,6 +153,33 @@ impl ParamsInterface for ParamsContract {
 
   }
 
+  fn addWinningParamsBis(&mut self,
+    nbWinners: u32,
+    nbWinnerMinRatio: u32,
+    distribution: u32) {
+    // Type cast before adding u16 and u8 into parity clinet
+    let nbWinners = nbWinners as u16;
+    let nbWinnerMinRatio = nbWinnerMinRatio as u16;
+    let distribution = distribution as u8;
+    let p = WinningParams {
+      nbWinners,
+      nbWinnerMinRatio,
+      distribution : cast_winning_distribution(distribution)
+    };
+
+    let mut dest : [u8;32] = ZERO_WORD.clone(); 
+    put_u16(p.nbWinners, &mut dest[..2]);
+    put_u16(p.nbWinnerMinRatio, &mut dest[2..4]);
+    put_u8(p.distribution as u8, &mut dest[5..6]);
+
+    // TODO fix array struct with length
+    let ix = self.getWiningParamsCount();
+    let key = ix + 1.into() + WINNINGS_PARAMS_KEY.into();
+    pwasm_ethereum::write(&H256::from(WINNINGS_PARAMS_KEY), &H256::from(ix + 1.into()).0);
+    pwasm_ethereum::write(&H256::from(key),&dest);
+
+  }
+
 
 }
 
@@ -145,6 +198,39 @@ fn cast_8_64 ( src : &[u64;4]) -> &[u8;32] {
   unsafe { mem::transmute(src) }
 }
 
+// should use byteorder crate just here for test purpose
+// ort at least a stream like in derive
+#[inline]
+fn read_u16 ( src : &[u8]) -> u16 {
+  let mut res = 0;
+  res += src[1] as u16;
+  res = res << 8;
+  res += src[0] as u16;
+  res
+}
+#[inline]
+fn put_u16 ( src : u16, dest : &mut [u8]) {
+  dest[1] = (src >> 8) as u8;
+  dest[0] = src as u8; 
+}
+#[inline]
+fn read_u8 ( src : &[u8]) -> u8 {
+  src[0]
+}
+#[inline]
+fn put_u8 ( src : u8, dest : &mut [u8]) {
+  dest[0] = src as u8; 
+}
+
+
+
+#[test]
+fn test_pr() {
+  let test : u16 = 178;
+  let mut arr = [0,0];
+  put_u16(test, &mut arr);
+  assert_eq!(test, read_u16(&arr));
+}
 
 
 #[test]

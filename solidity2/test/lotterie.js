@@ -2,6 +2,8 @@
 const truffleAssert = require('truffle-assertions');
 
 var Lotterie = artifacts.require("./Lotterie.sol");
+var LotterieThrow = artifacts.require("./LotterieThrow.sol");
+var LotterieConf = artifacts.require("./LotterieConf.sol");
 
 
 
@@ -152,7 +154,7 @@ async function configuration(lotterie,account_contract_dapp,c) {
   }
 
 
-var totalCostLog = 0;
+  var totalCostLog = 0;
 
 contract('Lotterie', function(accounts) {
    beforeEach(function() {
@@ -219,7 +221,7 @@ contract('Lotterie', function(accounts) {
   });*/
 
 
-  dis("should add params", async function() {
+  it("should add params", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var lotterie = await Lotterie.new(account_contract_author);
@@ -269,7 +271,7 @@ contract('Lotterie', function(accounts) {
       return val < target * 1.01 && val > target * 0.99;
     }
 
-    var res = await lotterie.initThrow (
+    var result = await lotterie.initThrow (
      0,
      0,
      ownerMargin,
@@ -279,19 +281,27 @@ contract('Lotterie', function(accounts) {
      { from : account_thrower, value : 0 }
     );
 
+    truffleAssert.eventEmitted(result, 'NewThrow',  function(ev) {
+      console.log(ev.throwAddress);
+      return true;
+    });
+    var ltax = await lotterie.getThrowAddress.call(0);
+    assert.equal(ltax,result.logs[0].args.throwAddress)
+    var lotteriethrow = LotterieThrow.at(ltax);
 
-    var phase = await lotterie.getPhase.call(0);
+
+    var phase = await lotteriethrow.getPhase.call();
     assert.equal(phase, lotterieLib.phases.Bidding);
     // cannot withdraw in bid phase
-    assertRevert(lotterie.withdrawOwner(0, { from : account_owner }));
+    assertRevert(lotteriethrow.withdrawOwner({ from : account_owner }));
     // switch phase by reaching conf 1 maxValue treshold
-    await lotterie.bid(0,0, { from : account_bidder, value : conf1.biddingTreshold });
-    var thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+    await lotteriethrow.bid(0, { from : account_bidder, value : conf1.biddingTreshold });
+    var thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(thr.paramsId,0);
     assert.equal(thr.totalBidValue,conf1.biddingTreshold);
     assert.equal(thr.numberOfBid,1);
 
-    var phase = await lotterie.getPhase.call(0);
+    var phase = await lotteriethrow.getPhase.call();
     assert.equal(phase, lotterieLib.phases.Participation);
 
     var ac = await lotterie.authorContract();
@@ -299,7 +309,7 @@ contract('Lotterie', function(accounts) {
     // revert : var d = await lotterie.withdrawContractAuthor.estimateGas(0);
     var gas = 150000;
     var balanceBefore = web3.eth.getBalance(account_contract_author);
-    var result = await lotterie.withdrawContractAuthor(0, { from : account_contract_author, gas : gas });
+    var result = await lotteriethrow.withdrawContractAuthor({ from : account_contract_author, gas : gas });
     var balanceAfter = web3.eth.getBalance(account_contract_author);
     truffleAssert.eventEmitted(result, 'Withdraw',  function(ev) {
       return ev.to === account_contract_author && withinExpectedBound(ev.amount,authorContractExpected);
@@ -308,12 +318,12 @@ contract('Lotterie', function(accounts) {
 
 
     balanceBefore = web3.eth.getBalance(account_owner);
-    result = await lotterie.withdrawOwner(0, { from : account_owner });
+    result = await lotteriethrow.withdrawOwner({ from : account_owner });
     truffleAssert.eventEmitted(result, 'Withdraw',  function(ev) {
       return ev.to === account_owner && withinExpectedBound(ev.amount,ownerExpected);
     });
 
-    result = await lotterie.withdrawOwner(0, { from : account_owner, gas : gas });
+    result = await lotteriethrow.withdrawOwner({ from : account_owner, gas : gas });
     truffleAssert.eventNotEmitted(result, 'Withdraw',  function(ev) {
        return ev.to === account_owner;
     });
@@ -323,13 +333,13 @@ contract('Lotterie', function(accounts) {
 //    assert.equal(balanceAfter - balanceBefore, (conf1.biddingTreshold * 1 / 100) - gas);
 //withdrawThrower
     balanceBefore = web3.eth.getBalance(account_thrower);
-    result = await lotterie.withdrawThrower(0, { from : account_thrower, gas : gas });
+    result = await lotteriethrow.withdrawThrower({ from : account_thrower, gas : gas });
     truffleAssert.eventEmitted(result, 'Withdraw',  function(ev) {
       return ev.to === account_thrower && withinExpectedBound(ev.amount,throwerExpected);
     });
 
 
-    result = await lotterie.withdrawThrower(0, { from : account_thrower, gas : gas });
+    result = await lotteriethrow.withdrawThrower({ from : account_thrower, gas : gas });
     truffleAssert.eventNotEmitted(result, 'Withdraw',  function(ev) {
        return ev.to === account_thrower;
     });
@@ -338,14 +348,14 @@ contract('Lotterie', function(accounts) {
     balanceAfter = web3.eth.getBalance(account_thrower);
 //    assert.equal(balanceAfter - balanceBefore, (conf1.biddingTreshold * 3 / 100) - gas);
     balanceBefore = web3.eth.getBalance(account_contract_dapp);
-    result = await lotterie.withdrawDappAuthor(0, { from : account_contract_dapp, gas : gas });
-    result = await lotterie.withdrawDappAuthor(0, { from : account_contract_dapp, gas : gas });
+    result = await lotteriethrow.withdrawDappAuthor({ from : account_contract_dapp, gas : gas });
+    result = await lotteriethrow.withdrawDappAuthor({ from : account_contract_dapp, gas : gas });
     balanceAfter = web3.eth.getBalance(account_contract_dapp);
 //    assert.equal(balanceAfter - balanceBefore, (conf1.biddingTreshold * 4 / 100) - gas);
-    var z = await lotterie.withdrawDappAuthor.call(0, { from : account_contract_dapp });
+    var z = await lotteriethrow.withdrawDappAuthor.call({ from : account_contract_dapp });
     assert.equal(z, 0);
     balanceBefore = web3.eth.getBalance(account_contract_dapp);
-    await lotterie.withdrawDappAuthor(0, { from : account_contract_dapp, gas : gas });
+    await lotteriethrow.withdrawDappAuthor({ from : account_contract_dapp, gas : gas });
     balanceAfter = web3.eth.getBalance(account_contract_dapp);
     //assert.equal(balanceBefore - balanceAfter, gas);
 
@@ -378,10 +388,13 @@ contract('Lotterie', function(accounts) {
      { from : account_thrower, value : 0 }
     );
 
-    await lotterie.bid(0,0, { from : account_bidder, value : conf1.biddingTreshold });
+    var ltax = await lotterie.getThrowAddress.call(0);
+    var lotteriethrow = LotterieThrow.at(ltax);
+
+    await lotteriethrow.bid(0, { from : account_bidder, value : conf1.biddingTreshold });
 
     var gas = 150000;
-    var result = await lotterie.withdrawContractAuthor(0, { from : account_contract_author, gas : gas });
+    var result = await lotteriethrow.withdrawContractAuthor({ from : account_contract_author, gas : gas });
     truffleAssert.eventEmitted(result, 'Withdraw',  function(ev) {
       return ev.to === account_contract_author && ev.amount == authorContractExpected;
     });
@@ -423,6 +436,7 @@ contract('Lotterie', function(accounts) {
     checkit("0xb123446b1347859720721");
     checkit("0x5cee5c91812f9cf35e8b05c524993810a78f25fd7e87ae61008433d43e27bb0");
   });
+
   it("calculate correct scores", async function() {
     var lotterie = await Lotterie.new(accounts[1]);
     var checkit = async function(hexval1,hexval2) {
@@ -458,62 +472,67 @@ contract('Lotterie', function(accounts) {
     var accountParts = [];
     await configuration(lotterie,account_contract_dapp,myConf);
     await tr_log( lotterie.initThrow (0,0,0,0,0,0), true);
-    await tr_log( lotterie.bid("0x0",lotterieLib.calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue }), true );
+
+    var ltax = await lotterie.getThrowAddress.call(0);
+    var lotteriethrow = LotterieThrow.at(ltax);
+
+    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder1);
-    await tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue }), true);
+    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue }), true);
     accountParts.push(account_bidder2);
-    await tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder2);
-    await tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder2);
-    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Bidding);
-    await tr_log( lotterie.bid(0,lotterieLib.calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue }), true );
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Bidding);
+    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder3);
-    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Participation);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Participation);
     // reveal
-    var thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+    var thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     var currentSeed = thr.currentSeed;
     var thrBlock = thr.blockNumber;
 
-
-    assertRevert(lotterie.revealParticipation(0,1));
-    thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+console.log("A");
+    assertRevert(lotteriethrow.revealParticipation(0,1));
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
-    var res = await lotterie.challengeParticipation.call(0,0);
+    var res = await lotteriethrow.challengeParticipation.call(0,0);
     assert.equal(web3.toHex(res[0]),web3.toHex(res[1]));
-    await tr_log( lotterie.revealParticipation(0,0), true);
-    thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+    await tr_log(lotteriethrow.revealParticipation(0,0), true);
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
-    assertRevert(lotterie.revealParticipation(0,0));
-    await tr_log( lotterie.revealParticipation(4,4), true);
-    thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+console.log("B");
+    assertRevert(lotteriethrow.revealParticipation(0,0));
+    await tr_log( lotteriethrow.revealParticipation(4,4), true);
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
-    await tr_log( lotterie.revealParticipation(3,3), true);
-    thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+    await tr_log( lotteriethrow.revealParticipation(3,3), true);
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
-    await tr_log( lotterie.revealParticipation(1,'0x1111111111111111111111111111111111'), true);
-    thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+    await tr_log( lotteriethrow.revealParticipation(1,'0x1111111111111111111111111111111111'), true);
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
-    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Participation);
-    await tr_log( lotterie.revealParticipation(2,2), true);
-    thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Participation);
+    await tr_log( lotteriethrow.revealParticipation(2,2), true);
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr[1]));
     currentSeed = thr.currentSeed;
     assert.equal(thr.numberOfRevealParticipation, 5);
     assert.equal(thr.numberOfBid, 5);
-    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Cashout);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Cashout);
     const finalSeed = web3.toHex(currentSeed);
     // get all score warning do not use this (iterate on all participation of all throws)
-    var nbParts = await lotterie.getParticipationsCount.call();
+    var nbParts = await lotteriethrow.getParticipationsCount.call();
     var posNb0_1 = nbParts;
     assert.equal(posNb0_1,5);
     var posNb0_1 = 5;
@@ -524,7 +543,7 @@ contract('Lotterie', function(accounts) {
     var last = null;
     var lastScore = null;
     for (var i=0; i < 5; ++i) {
-      var partelts = await lotterie.getParticipation.call(i);
+      var partelts = await lotteriethrow.getParticipation.call(i);
       // right throwid
       if (partelts[0] == 0) {
         assert.equal(partelts[3], lotterieLib.participationStates.Revealed);
@@ -553,11 +572,11 @@ contract('Lotterie', function(accounts) {
     }
 
     // get postition by heavy cost call (still less costy thant previous method
-    var posNb0_2 = await lotterie.checkPositionHeavyCost.call(0);
+    var posNb0_2 = await lotteriethrow.checkPositionHeavyCost.call(0);
     assert.equal(posNb0_1,posNb0_2);
     // TODO get position by reading logs : should be the only method use because it respects throwId
     // TODO with 1.0 web 3 uset getPastEvents
-    lotterie.Revealed(
+    lotteriethrow.Revealed(
       {
         participationId : 0
       },
@@ -589,36 +608,40 @@ contract('Lotterie', function(accounts) {
       assert.equal(posNb0_3,posNb0_1);
     });
 
-    var ix = await lotterie.currentIxAmongWinners.call(last);
+    var ix = await lotteriethrow.currentIxAmongWinners.call(last);
     assert.equal(ix,0);
     // first last insert to try to get something (start possible ix at 0)
-    await tr_log( lotterie.cashOut(last, ix), true);
+    await tr_log(lotteriethrow.cashOut(last, ix), true);
+    var nbwin = await lotteriethrow.nbWinners.call();
+    assert.equal(nbwin,1);
     // do not cashout twice
-    assertRevert(lotterie.cashOut(last, ix + 1));
-    assert.equal(await lotterie.currentIxAmongWinners.call(last),1);
+console.log("C");
+    assertRevert(lotteriethrow.cashOut(last, ix + 1));
+    ix = await lotteriethrow.currentIxAmongWinners.call(last);
+    assert.equal(ix,1);
     // iterate on participation
     for (var i = 0; i < 5; ++i) {
       if (i != last) {
         // for test only
-        var ix = await lotterie.currentIxAmongWinners.call(i);
+        var ix = await lotteriethrow.currentIxAmongWinners.call(i);
         if (ix == 2) {
           // check ok with insertion in between calculation (multiple cashout in a block)
           ix == 0;
         }
-        await tr_log( lotterie.cashOut(i, ix), true);
+        await tr_log( lotteriethrow.cashOut(i, ix), true);
 //        assert.notEqual(await lotterie.currentIxAmongWinners.call(last),0);
 //        assert.notEqual(await lotterie.currentIxAmongWinners.call(last),1);
       }
     }
-    var nbwin = await lotterie.nbWinners.call(0);
+    var nbwin = await lotteriethrow.nbWinners.call();
     assert.equal(nbwin,4);
-    assert.equal(web3.toHex(await lotterie.linkedWinnersLength.call(0)),4);
+    assert.equal(web3.toHex(await lotteriethrow.linkedWinnersLength.call()),4);
     // TODO additional user trying to insert (in a non salt conf it will be easier)
     await dirtyPause(3);
-    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.End);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.End);
     var lastScore = null;
     for (var i = 0; i < nbwin; ++i) {
-      var w = lotterieLib.newWinnerArray(await lotterie.getWinner.call(0, i));
+      var w = lotterieLib.newWinnerArray(await lotteriethrow.getWinner.call(i));
       assert.equal(w.withdrawned, false);
       // TODO return rate
 //      assert.isLower(0,w.totalPositionWin);
@@ -637,20 +660,21 @@ contract('Lotterie', function(accounts) {
         lastScore = itScore
       }
     }
-    assert.equal(0,await lotterie.positionAtPhaseEnd.call(last));
+    assert.equal(0,await lotteriethrow.positionAtPhaseEnd.call(last));
     // register win and withdraw
     for (var i = 0; i < 5; ++i) {
       if (i == last) {
-        assertRevert(lotterie.withdrawWin(0,i, { from : accountParts[i] }));
+console.log("D");
+        assertRevert(lotteriethrow.withdrawWin(i, { from : accountParts[i] }));
       } else {
+console.log("E");
         // not for wrong user (avoid dead account)
-        assertRevert(lotterie.withdrawWin(0,i, { from : account_contract_dapp }));
-        var result = await lotterie.withdrawWin(0,i, { from : accountParts[i] });
+        assertRevert(lotteriethrow.withdrawWin(i, { from : account_contract_dapp }));
+        var result = await lotteriethrow.withdrawWin(i, { from : accountParts[i] });
         tr_log2(result, true);
         truffleAssert.eventEmitted(result, 'Win',  function(ev) {
-          var result = ev.throwId == 0 && ev.participationId == i;
+          var result = ev.participationId == i;
           if (result) {
-            assert.equal(ev.throwId, 0);
             assert.isAbove(ev.position, 0);
             assert.isAbove(ev.amount, 0);
             assert.equal(ev.participationId, i);
@@ -660,20 +684,20 @@ contract('Lotterie', function(accounts) {
         });
 
 
-        assertRevert(lotterie.withdrawWin(0,i, { from : accountParts[i] }));
+        assertRevert(lotteriethrow.withdrawWin(i, { from : accountParts[i] }));
       }
 
     }
     // cannot get winner out of range
-    assertRevert(lotterie.getWinner(0,nbwin));
+    assertRevert(lotteriethrow.getWinner(nbwin));
     await dirtyPause(5);
-    assert.equal(await lotterie.getPhase.call(0), lotterieLib.phases.Off);
-    var thr = lotterieLib.newThrow(await lotterie.getThrow.call(0));
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Off);
+    var thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(web3.toHex(thr.totalBidValue), web3.toHex(thr.totalClaimedValue));
-    assertRevert(lotterie.emptyOffThrow(0,{ from : account_contract_dapp }));
+    assertRevert(lotteriethrow.emptyOffThrow({ from : account_contract_dapp }));
           console.log("bef");
 //    await tr_log( lotterie.recalculateState(0,lotterieLib.phases.Off), true);
-    await tr_log( lotterie.emptyOffThrow(0,{ from : account_owner }), true);
+    await tr_log( lotteriethrow.emptyOffThrow({ from : account_owner }), true);
   });
 
 });

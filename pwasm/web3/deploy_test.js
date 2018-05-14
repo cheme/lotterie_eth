@@ -36,6 +36,8 @@ try {
 }
 res = await LotterieContract.methods.getWiningParamsCount().call();
 console.log(res);
+var gas_get = await LotterieContract.methods.getWinningParams(0).estimateGas();
+console.log(gas_get);
 var param = await LotterieContract.methods.getWinningParams(0).call();
 console.log(param);
 
