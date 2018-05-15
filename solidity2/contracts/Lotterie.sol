@@ -125,38 +125,42 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
       throwerMargin));
     // TODO 
 //    LotterieThrowProxy thr_proxy = new LotterieThrowProxy(throwTemplate);
-    //"0x6080604052348015600f57600080fd5b506040516020806100c783398101604052517f3078313030303000000000000000000000000000000000000000000000000000556076806100516000396000f30060806040527f3078313030303000000000000000000000000000000000000000000000000000543660008037600080366000845af43d806000803e818015604557816000f35b600080fd00a165627a7a7230582027891fe8ccd6e638d92cf5e6e2005b62f9e008beed15888bea3063dea56c14d30029"
+
     address thr_proxy;
     address thr_template = throwTemplate; 
     assembly {
       let contractCode_init := mload(0x40) // free memory ptr
-      let contractCode := contractCode_init
-      mstore(contractCode, 
-0x6080604052348015600f57600080fd5b506040516020806100c7833981016040)
-      contractCode := add(contractCode, 0x20)
-      mstore(contractCode, 
-0x52517f3078313030303000000000000000000000000000000000000000000000)
-      contractCode := add(contractCode, 0x20)
-      mstore(contractCode, 
-0x000000556076806100516000396000f30060806040527f307831303030300000)
-      contractCode := add(contractCode, 0x20)
-      mstore(contractCode, 
-0x0000000000000000000000000000000000000000000000543660008037600080)
-      contractCode := add(contractCode, 0x20)
-      mstore(contractCode, 
-0x366000845af43d806000803e818015604557816000f35b600080fd00a165627a)
-      contractCode := add(contractCode, 0x20)
-      mstore(contractCode, 
-0x7a7230582027891fe8ccd6e638d92cf5e6e2005b62f9e008beed15888bea3063)
-      contractCode := add(contractCode, 0x20)
-      mstore(contractCode, 
-0xdea56c14d3002900000000000000000000000000000000000000000000000000)
-      mstore(add(contractCode, 7), thr_template) // constructor param
-//     mstore(add(contractCode, 0x0b), throwTemplate) // Add target
-//     mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773) // First part of the bytecode, shifted left by 9 bytes, overwrites left padding of target address
-//     mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000) // Final part of bytecode, offset by 43 bytes
 
-       thr_proxy := create(0, contractCode_init, 231) // length (7 * 32) + 7 
+      let contractCode := contractCode_init
+           
+/*     
+       mstore(add(contractCode, 0x0b), thr_template)
+       mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773)
+       mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000)
+            
+       thr_proxy := create(0, contractCode_init, 60)
+            
+            */
+//6080604052348015600f57600080fd5b5060748061001e6000396000f300608060405236600080376000803660007f
+      mstore(contractCode, 
+0x6080604052348015600f57600080fd5b5060748061001e6000396000f3006080)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x60405236600080376000803660007f0000000000000000000000000000000000)
+      contractCode := add(contractCode, 0xf)
+//1234567890000000000000000000000000000000000000000000000123456789
+      mstore(contractCode, thr_template)
+//5af43d806000803e818015604357816000f35b600080fd00a165627a7a723058200604f8368392853a3b25491e46dc26811e266b70c2d5d6b58a9878af7f4c7e2b0029
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x5af43d806000803e818015604357816000f35b600080fd00a165627a7a723058)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x200604f8368392853a3b25491e46dc26811e266b70c2d5d6b58a9878af7f4c7e)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x2b00290000000000000000000000000000000000000000000000000000000000)
+       thr_proxy := create(0, contractCode_init, 146) // length (4 * 32) + 15 + 3
        if iszero(extcodesize(thr_proxy)) {
          revert(0, 0)
        }
