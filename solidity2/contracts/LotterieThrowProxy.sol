@@ -5,14 +5,14 @@ contract LotterieThrowProxy {
 
 constructor(address _add) public {
     assembly {
-      sstore("0x10000",_add)
+      sstore(0x10000,_add)
     }
 }
 /*
 function () payable public {
     bytes memory data = msg.data;
     assembly {
-      let _target := sload("0x10000")
+      let _target := sload(0x10000)
       // dest address is a placeholder
       let result := delegatecall(gas, _target, add(data, 0x20), mload(data), 0, 0)
       let size := returndatasize
@@ -29,7 +29,7 @@ function () payable public {
 
 function () payable public {
   assembly {
-    let _target := sload("0x10000")
+    let _target := sload(0x10000)
     calldatacopy(0x0, 0x0, calldatasize) 
     let retval := delegatecall(gas, _target, 0x0, calldatasize, 0x0, 0)
     let returnsize := returndatasize

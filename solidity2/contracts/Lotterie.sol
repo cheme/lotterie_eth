@@ -124,7 +124,43 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
       authorDappMargin,
       throwerMargin));
     // TODO 
-    LotterieThrowProxy thr_proxy = new LotterieThrowProxy(throwTemplate);
+//    LotterieThrowProxy thr_proxy = new LotterieThrowProxy(throwTemplate);
+    //"0x6080604052348015600f57600080fd5b506040516020806100c783398101604052517f3078313030303000000000000000000000000000000000000000000000000000556076806100516000396000f30060806040527f3078313030303000000000000000000000000000000000000000000000000000543660008037600080366000845af43d806000803e818015604557816000f35b600080fd00a165627a7a7230582027891fe8ccd6e638d92cf5e6e2005b62f9e008beed15888bea3063dea56c14d30029"
+    address thr_proxy;
+    address thr_template = throwTemplate; 
+    assembly {
+      let contractCode_init := mload(0x40) // free memory ptr
+      let contractCode := contractCode_init
+      mstore(contractCode, 
+0x6080604052348015600f57600080fd5b506040516020806100c7833981016040)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x52517f3078313030303000000000000000000000000000000000000000000000)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x000000556076806100516000396000f30060806040527f307831303030300000)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x0000000000000000000000000000000000000000000000543660008037600080)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x366000845af43d806000803e818015604557816000f35b600080fd00a165627a)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0x7a7230582027891fe8ccd6e638d92cf5e6e2005b62f9e008beed15888bea3063)
+      contractCode := add(contractCode, 0x20)
+      mstore(contractCode, 
+0xdea56c14d3002900000000000000000000000000000000000000000000000000)
+      mstore(add(contractCode, 7), thr_template) // constructor param
+//     mstore(add(contractCode, 0x0b), throwTemplate) // Add target
+//     mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773) // First part of the bytecode, shifted left by 9 bytes, overwrites left padding of target address
+//     mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000) // Final part of bytecode, offset by 43 bytes
+
+       thr_proxy := create(0, contractCode_init, 231) // length (7 * 32) + 7 
+       if iszero(extcodesize(thr_proxy)) {
+         revert(0, 0)
+       }
+    }
     //LotterieThrowProxy thr_proxy = new LotterieThrowProxy();
     LotterieThrow thr = LotterieThrow(address(thr_proxy));
 
