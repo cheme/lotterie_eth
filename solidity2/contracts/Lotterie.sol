@@ -133,14 +133,14 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
       let contractCode := contractCode_init
            
-/*     
+     
        mstore(add(contractCode, 0x0b), thr_template)
        mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773)
        mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000)
             
        thr_proxy := create(0, contractCode_init, 60)
             
-            */
+/*
 //6080604052348015600f57600080fd5b5060748061001e6000396000f300608060405236600080376000803660007f
       mstore(contractCode, 
 0x6080604052348015600f57600080fd5b5060748061001e6000396000f3006080)
@@ -161,6 +161,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
       mstore(contractCode, 
 0x2b00290000000000000000000000000000000000000000000000000000000000)
        thr_proxy := create(0, contractCode_init, 146) // length (4 * 32) + 15 + 3
+*/
        if iszero(extcodesize(thr_proxy)) {
          revert(0, 0)
        }
