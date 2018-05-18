@@ -3,9 +3,11 @@ pragma solidity ^0.4.23;
 
 import "./LotterieMargins.sol";
 import "./FromLotterie.sol";
+import "./LotterieIf.sol";
 
 // Contract for Lotterie
 contract LotterieThrow is LotterieMargins {
+
 
   event NewParticipation(uint participationId,uint bid);
   // win event
@@ -70,7 +72,12 @@ contract LotterieThrow is LotterieMargins {
    winningParam.distribution = LC.WinningDistribution(dis);
   }
 
-  constructor(
+  constructor() 
+  public 
+   { }
+
+
+  function deffered_constructor(
 
     uint paramsId,
     uint paramsPhaseId,
@@ -79,18 +86,20 @@ contract LotterieThrow is LotterieMargins {
     uint32 authorContractMargin,
     uint32 authorDappMargin,
     uint32 throwerMargin
-
-
-  ) Thrower(tx.origin)
-  FromLotterie()
+  ) 
   public
   payable
   {
-  
-
+    // warn Construct must be 0 (default value)
+    require(thr.currentPhase == Phase.Construct);
+    // only from lotterie main contract -> NO
+    //require(address(lotterie) == msg.sender);
+    //FromLotterie()
+    lotterie = LotterieIf(msg.sender);
+    //Thrower(tx.origin)
+    thrower = tx.origin;
     initParams(paramsId);
     initPhaseParams(paramsPhaseId);
-
 
     thr = LThrow({
       paramsId : paramsId,

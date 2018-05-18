@@ -60,10 +60,12 @@ contract TestLotterie {
     Assert.equal(uint(uint8(LC.CashoutEndMode.Relative)),1,"wrong enum rep");
   }
   function testPhaseVals () {
-    Assert.equal(uint(uint8(LotterieBase.Phase.Bidding)),0,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.Participation)),1,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.Cashout)),2,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.End)),3,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Construct)),0,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Bidding)),1,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Participation)),2,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Cashout)),3,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.End)),4,"wrong enum rep");
+    Assert.equal(uint(uint8(LotterieBase.Phase.Off)),5,"wrong enum rep");
   }
   function testParticipationStateVals () {
     Assert.equal(uint(uint8(LotterieBase.ParticipationState.BidSent)),0,"wrong enum rep");

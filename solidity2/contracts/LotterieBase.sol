@@ -30,6 +30,7 @@ contract LotterieBase is LotterieLib, LotterieParam {
 
 
   enum Phase {
+    Construct,
     Bidding,
     Participation,
     Cashout,

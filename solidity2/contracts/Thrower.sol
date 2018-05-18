@@ -5,13 +5,13 @@ contract Thrower {
 
   address public thrower;
 
-	constructor(
+/*	constructor(
     address _thrower
   )
   public
   {
     thrower = _thrower;
-  }
+  }*/
 
   modifier onlyThrower() {
     require(msg.sender == thrower);

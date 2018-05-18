@@ -3,12 +3,23 @@ pragma solidity ^0.4.23;
 
 import "./zeppelin/ownership/Ownable.sol";
 import "./LotterieThrow.sol";
+import "./LotterieThrowProxy.sol";
 import "./LotterieParams.sol";
 import "./Author.sol";
 import "./LotterieIf.sol";
 
 // Contract for Lotterie
 contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
+
+
+  event NewThrowTemplate(address throwTemplateAddress);
+
+  address throwTemplate;
+
+  function setThrowTemplate(address newTemplate) external onlyOwner {
+    throwTemplate = newTemplate;
+    emit NewThrowTemplate(newTemplate);
+  }
 
   event NewThrow(address throwAddress);
 
@@ -71,11 +82,15 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   }
 
   constructor(
-    address _authorContract
+    address _authorContract,
+    address _throwTemplate
   )
   Author(_authorContract)
   public
-  { }
+  {
+     throwTemplate = _throwTemplate;
+     emit NewThrowTemplate(_throwTemplate);
+  }
 
   function getAuthorContract()  external returns(address) {
     return authorContract;
@@ -109,7 +124,12 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
       authorDappMargin,
       throwerMargin));
     // TODO 
-    LotterieThrow thr = (new LotterieThrow).value(msg.value)(
+    LotterieThrowProxy thr_proxy = new LotterieThrowProxy(throwTemplate);
+    //LotterieThrowProxy thr_proxy = new LotterieThrowProxy();
+    LotterieThrow thr = LotterieThrow(address(thr_proxy));
+
+ 
+    thr.deffered_constructor.value(msg.value)(
       paramsId,
       paramsPhaseId,
 

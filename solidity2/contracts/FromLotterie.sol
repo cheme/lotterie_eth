@@ -6,12 +6,12 @@ contract FromLotterie {
 
   LotterieIf public lotterie;
 
-	constructor(
+/*	constructor(
   )
   public
   {
     lotterie = LotterieIf(msg.sender);
-  }
+  }*/
 
   modifier onlyContractAuthor() {
     require(msg.sender == lotterie.getAuthorContract());

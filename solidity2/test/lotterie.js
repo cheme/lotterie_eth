@@ -1,8 +1,11 @@
 
+// TODO template in a before all!!!
+
 const truffleAssert = require('truffle-assertions');
 
 var Lotterie = artifacts.require("./Lotterie.sol");
 var LotterieThrow = artifacts.require("./LotterieThrow.sol");
+var LotterieThrowTemplate = artifacts.require("./LotterieThrow.sol");
 var LotterieConf = artifacts.require("./LotterieConf.sol");
 
 
@@ -62,11 +65,12 @@ lotterieLib = {
     Cashout : 2
   },
   phases : {
-    Bidding : 0,
-    Participation : 1,
-    Cashout : 2,
-    End : 3,
-    Off : 4
+    Construct : 0,
+    Bidding : 1,
+    Participation : 2,
+    Cashout : 3,
+    End : 4,
+    Off : 5
   },
   cashoutEndModes : {
     Absolute : 0,
@@ -224,7 +228,8 @@ contract('Lotterie', function(accounts) {
   it("should add params", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
-    var lotterie = await Lotterie.new(account_contract_author);
+    var template = await LotterieThrowTemplate.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address);
     var nbWinners = 5;
     var nbWinnerMinRatio = 50; // less than 10 participant we apply ratio 
     var nbparam = await lotterie.getWiningParamsCount.call();
@@ -251,7 +256,8 @@ contract('Lotterie', function(accounts) {
   it("should withdraw for some account", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
-    var lotterie = await Lotterie.new(account_contract_author, { from : account_owner });
+    var template = await LotterieThrowTemplate.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
     var account_contract_dapp = accounts[2];
     var account_thrower = accounts[3];
     var account_bidder = accounts[4];
@@ -365,7 +371,8 @@ contract('Lotterie', function(accounts) {
   it("should withdraw all", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
-    var lotterie = await Lotterie.new(account_contract_author, { from : account_owner });
+    var template = await LotterieThrowTemplate.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
     var account_contract_dapp = accounts[2];
     var account_thrower = accounts[3];
     var account_bidder = accounts[4];
@@ -403,7 +410,8 @@ contract('Lotterie', function(accounts) {
   it("should not allow margin over 100%", async function() {
     var account_one = accounts[0];
     var account_contract_author = accounts[1];
-    var lotterie = await Lotterie.new(account_contract_author);
+    var template = await LotterieThrowTemplate.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address);
     var account_contract_dapp = accounts[2];
 
     await configuration(lotterie,account_contract_dapp,conf1);
@@ -423,7 +431,8 @@ contract('Lotterie', function(accounts) {
   });
 
   it("calculate correct commitments", async function() {
-    var lotterie = await Lotterie.new(accounts[1]);
+    var template = await LotterieThrowTemplate.new();
+    var lotterie = await Lotterie.new(accounts[1],template.address);
     var checkit = async function(hexval) {
       var jscalc = lotterieLib.calcCommitment(hexval);
       var chaincalc = await lotterie.checkCommitment.call(hexval);
@@ -438,7 +447,8 @@ contract('Lotterie', function(accounts) {
   });
 
   it("calculate correct scores", async function() {
-    var lotterie = await Lotterie.new(accounts[1]);
+    var template = await LotterieThrowTemplate.new();
+    var lotterie = await Lotterie.new(accounts[1],template.address);
     var checkit = async function(hexval1,hexval2) {
       var jscalc = lotterieLib.calcScore(hexval1,hexval2);
       var chaincalc = await lotterie.checkScore.call(hexval1,hexval2);
@@ -463,7 +473,8 @@ contract('Lotterie', function(accounts) {
     myConf.throwEndValue = 5;
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
-    var lotterie = await Lotterie.new(account_contract_author, { from : account_owner });
+    var template = await LotterieThrowTemplate.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
     var account_contract_dapp = accounts[2];
     var account_bidder1 = accounts[3];
     var account_bidder2 = accounts[4];
@@ -493,7 +504,6 @@ contract('Lotterie', function(accounts) {
     var currentSeed = thr.currentSeed;
     var thrBlock = thr.blockNumber;
 
-console.log("A");
     assertRevert(lotteriethrow.revealParticipation(0,1));
     thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
@@ -505,7 +515,6 @@ console.log("A");
     assert.notEqual(web3.toHex(currentSeed), web3.toHex(thr.currentSeed));
     currentSeed = thr.currentSeed;
 
-console.log("B");
     assertRevert(lotteriethrow.revealParticipation(0,0));
     await tr_log( lotteriethrow.revealParticipation(4,4), true);
     thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
@@ -615,7 +624,6 @@ console.log("B");
     var nbwin = await lotteriethrow.nbWinners.call();
     assert.equal(nbwin,1);
     // do not cashout twice
-console.log("C");
     assertRevert(lotteriethrow.cashOut(last, ix + 1));
     ix = await lotteriethrow.currentIxAmongWinners.call(last);
     assert.equal(ix,1);
@@ -664,10 +672,8 @@ console.log("C");
     // register win and withdraw
     for (var i = 0; i < 5; ++i) {
       if (i == last) {
-console.log("D");
         assertRevert(lotteriethrow.withdrawWin(i, { from : accountParts[i] }));
       } else {
-console.log("E");
         // not for wrong user (avoid dead account)
         assertRevert(lotteriethrow.withdrawWin(i, { from : account_contract_dapp }));
         var result = await lotteriethrow.withdrawWin(i, { from : accountParts[i] });
