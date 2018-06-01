@@ -68,7 +68,7 @@ contract LotterieThrow is LotterieMargins {
      winningParam.nbWinnerMinRatio,
      dis
    )
-   = lotterie.getWiningParams(winningParamsId);
+   = lotterie.getWinningParams(winningParamsId);
    winningParam.distribution = LC.WinningDistribution(dis);
   }
 

@@ -64,7 +64,7 @@ library LotterieConf {
     uint cashoutEndValue;
     uint throwEndValue;
     // u8
-    ParticipationEndModes participationEndMode; // TODO find enum
+    ParticipationEndModes participationEndMode;
     // bool
     CashoutEndMode cashoutEndMode;
     CashoutEndMode throwEndMode;

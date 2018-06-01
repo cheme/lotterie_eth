@@ -1,0 +1,37 @@
+
+{{mode}}
+<div *ngIf="param && view()">
+  <div><span>id: </span>{{param.id}}</div>
+  <div><span>Nb winners treshold: {{ param.nbWinners }}</span></div>
+  <!-- already percent -->
+  <div><span>Nb winners min ration: {{ param.nbWinnerMinRatio }}</span></div>
+  <!-- TODO pipe to select values -->
+  <div><span>Winning distribution : {{ param.distribution }}</span></div>
+  <button (click)="createNew()">create new</button>
+</div>
+<div *ngIf="inline()">
+  <div><span>
+      <!-- TODO solve error on routerlink <a routerLink="/param/{{ param.id }}"> -->
+      <a routerLink="/winningparam/{{ param.id }}">
+        id: {{ param.id }}
+      </a>
+    , NbWinners: {{ param.nbWinners }}
+    , NbMinRation: {{ param.nbWinnerMinRatio }}
+    , dist: {{ param.distribution }}
+  </span></div>
+</div>
+<div *ngIf="create()">
+  <label>Nb winners treshold:
+    <input [(ngModel)]="param.nbWinners" placeholder="0">
+  </label>
+  <label>Nb winners Minimal Ratio:
+    <input [(ngModel)]="param.nbWinnerMinRatio" placeholder="0">
+  </label>
+  <label>Distribution:
+    <input [(ngModel)]="param.distribution" placeholder="0">
+  </label>
+  <button (click)="launchCreate()">launch create</button>
+</div>
+<div *ngIf="!inline()">
+  <button (click)="goBack()">go back</button>
+</div>

@@ -8,14 +8,6 @@ interface LotterieIf {
 
   function getOwner() external returns(address);
 
-  function getParams(uint ix) external returns(
-    address,
-    uint,
-    uint,
-    uint,
-    uint64,
-    bool
-  );
  
   function initThrow (
     uint paramsId,
@@ -28,6 +20,15 @@ interface LotterieIf {
 
   ) external payable;
 
+  function getParams(uint ix) external returns(
+    address,
+    uint,
+    uint,
+    uint,
+    uint64,
+    bool
+  );
+
   function getPhaseParams(uint ix) external returns(
     uint,
     uint,
@@ -37,7 +38,7 @@ interface LotterieIf {
     uint8,
     uint8 
   );
- function getWiningParams(uint ix) external returns(
+ function getWinningParams(uint ix) external returns(
     uint16,
     uint16,
     uint8

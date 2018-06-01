@@ -1,122 +1,23 @@
 
 // TODO template in a before all!!!
 
+import lotterieLib from '../index.js';
+
 const truffleAssert = require('truffle-assertions');
 
 var Lotterie = artifacts.require("./Lotterie.sol");
 var LotterieThrow = artifacts.require("./LotterieThrow.sol");
 var LotterieThrowTemplate = artifacts.require("./LotterieThrow.sol");
 var LotterieConf = artifacts.require("./LotterieConf.sol");
-
-
-
-// TODO move to its own js lif
-lotterieLib = {
-  arrayAccessor : function(arr,conf) {
-    result = {};
-    for (var field in conf) {
-      if (conf.hasOwnProperty(field)) {
-        result[field] = arr[conf[field]];
-      }
-    }
-    return result;
-  },
-  newWinnerArray : function(arr) {
-    return this.arrayAccessor(arr, {
-     //return (w.withdrawned, w.participationId, w.score);
-     withdrawned : 0,
-     participationId : 1,
-     score : 2
-    });
-  },
-  newWinningParams : function(arr) {
-    return this.arrayAccessor(arr, {
-    //return (p.nbWinners,p.nbWinnerMinRatio);
-    nbWinners : 0,
-    nbWinnerMinRatio : 1,
-    distribution : 2
-    });
-  },
-  newThrow : function(arr) {
-    return this.arrayAccessor(arr, {
-    //return (thr.paramsId, thr.currentSeed, thr.totalBidValue, thr.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thr.thrower,thr.blockNumber);
-      paramsId : 0,
-      currentSeed : 1,
-      totalBidValue : 2,
-      totalClaimedValue : 3,
-      numberOfBid : 4,
-      numberOfRevealParticipation : 5,
-      thrower : 6,
-      blockNumber : 7
-    });
-  },
-  winningDistribution : {
-    Equal : 0
-  },
-  participationEndModes : {
-    EagerAbsolute : 0,
-    EagerRelative : 1,
-    Absolute : 2,
-    Relative : 3
-  },
-  participationStates : {
-    BidSent : 0,
-    Revealed : 1,
-    Cashout : 2
-  },
-  phases : {
-    Construct : 0,
-    Bidding : 1,
-    Participation : 2,
-    Cashout : 3,
-    End : 4,
-    Off : 5
-  },
-  cashoutEndModes : {
-    Absolute : 0,
-    Relative : 1
-  },
-  calcCommitment : function(hexstring) {
+// lotterilib calc commitment with web3 0.2
+function calcCommitment(hexstring) {
     if (hexstring.startsWith('0x')) {
       hexstring = hexstring.substr(2);
     }
     return web3.sha3(hexstring.padStart(64,'0'),{encoding:'hex'});
-  },
-  padHexInt : function(hexstring) {
-    if (hexstring.startsWith('0x')) {
-      hexstring = hexstring.substr(2);
-      hexstring = '0x' + hexstring.padStart(64,'0');
-    } else {
-      hexstring = hexstring.padStart(64,'0');
-    }
-    return hexstring;
-  },
-  calcScore : function(hexpseed,hexcseed) {
-    var b1 = hexToBytes(this.padHexInt(hexpseed));
-    var b2 = hexToBytes(this.padHexInt(hexcseed));
-    for (var i = 0; i < b1.length; ++i) {
-      b1[i] = b1[i] ^ b2[i];
-    }
-    return '0x' + this.padHexInt(bytesToHex(b1));
   }
-}
 
-function hexToBytes(hex) {
-    if (hex.startsWith('0x')) {
-      hex = hex.substr(2);
-    }
-    for (var bytes = [], c = 0; c < hex.length; c += 2)
-    bytes.push(parseInt(hex.substr(c, 2), 16));
-    return bytes;
-}
-function bytesToHex(bytes) {
-    for (var hex = [], i = 0; i < bytes.length; i++) {
-        hex.push((bytes[i] >>> 4).toString(16));
-        hex.push((bytes[i] & 0xF).toString(16));
-    }
-    return hex.join("");
-}
-
+// TODO move to its own js lif
 const conf1 = {
   dosalt : true,
   nbWinners : 5,
@@ -288,7 +189,6 @@ contract('Lotterie', function(accounts) {
     );
 
     truffleAssert.eventEmitted(result, 'NewThrow',  function(ev) {
-      console.log(ev.throwAddress);
       return true;
     });
     var ltax = await lotterie.getThrowAddress.call(0);
@@ -434,7 +334,7 @@ contract('Lotterie', function(accounts) {
     var template = await LotterieThrowTemplate.new();
     var lotterie = await Lotterie.new(accounts[1],template.address);
     var checkit = async function(hexval) {
-      var jscalc = lotterieLib.calcCommitment(hexval);
+      var jscalc = calcCommitment(hexval);
       var chaincalc = await lotterie.checkCommitment.call(hexval);
       assert.equal(lotterieLib.padHexInt(web3.toHex(chaincalc)),jscalc);
     };
@@ -475,6 +375,7 @@ contract('Lotterie', function(accounts) {
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
     var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
+    console.log("lotterie add:" + lotterie.address);
     var account_contract_dapp = accounts[2];
     var account_bidder1 = accounts[3];
     var account_bidder2 = accounts[4];
@@ -487,16 +388,16 @@ contract('Lotterie', function(accounts) {
     var ltax = await lotterie.getThrowAddress.call(0);
     var lotteriethrow = LotterieThrow.at(ltax);
 
-    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(calcCommitment('0x0'), { from : account_bidder1 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder1);
-    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue }), true);
+    await tr_log( lotteriethrow.bid(calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 , value : myConf.minBidValue }), true);
     accountParts.push(account_bidder2);
-    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder2);
-    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder2);
     assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Bidding);
-    await tr_log( lotteriethrow.bid(lotterieLib.calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue }), true );
     accountParts.push(account_bidder3);
     assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Participation);
     // reveal
@@ -598,7 +499,7 @@ contract('Lotterie', function(accounts) {
       var scoreNb0 = null;
       var posNb0_3 = 5;
       for (var i=0; i < 5; ++i) {
-        evt = events[i];
+        var evt = events[i];
         var mySeed = web3.toHex(evt.args.hiddenSeed);
               assert.notEqual(events[0].args.hiddenSeed,events[1].args.hiddenSeed);
         var score = lotterieLib.calcScore(finalSeed,mySeed);
@@ -701,7 +602,6 @@ contract('Lotterie', function(accounts) {
     var thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(web3.toHex(thr.totalBidValue), web3.toHex(thr.totalClaimedValue));
     assertRevert(lotteriethrow.emptyOffThrow({ from : account_contract_dapp }));
-          console.log("bef");
 //    await tr_log( lotterie.recalculateState(0,lotterieLib.phases.Off), true);
     await tr_log( lotteriethrow.emptyOffThrow({ from : account_owner }), true);
   });

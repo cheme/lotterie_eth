@@ -16,6 +16,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
   address throwTemplate;
 
+
   function setThrowTemplate(address newTemplate) external onlyOwner {
     throwTemplate = newTemplate;
     emit NewThrowTemplate(newTemplate);
@@ -23,59 +24,14 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
   event NewThrow(address throwAddress);
 
-  function getParams(uint ix) external returns(
-    address,
-    uint,
-    uint,
-    uint,
-    uint64,
-    bool
-  ) {
-    return (
-      params[ix].authorDapp,
-      params[ix].winningParamsId,
-      params[ix].minBidValue,
-      params[ix].biddingTreshold,
-      params[ix].maxParticipant,
-      params[ix].doSalt);
-  }
-
-  function getPhaseParams(uint ix) external returns(
-    uint,
-    uint,
-    uint,
-    uint,
-    uint8,
-    uint8,
-    uint8 
-
-  ) {
-    return (
-      phaseParams[ix].participationStartTreshold,
-      phaseParams[ix].participationEndValue,
-      phaseParams[ix].cashoutEndValue,
-      phaseParams[ix].throwEndValue,
-      uint8(phaseParams[ix].participationEndMode),
-      uint8(phaseParams[ix].cashoutEndMode),
-      uint8(phaseParams[ix].throwEndMode)
-    );
-  }
-
-  function getWiningParams(uint ix) external returns(
-    uint16,
-    uint16,
-    uint8
-  ) {
-    return(
-      winningParams[ix].nbWinners,
-      winningParams[ix].nbWinnerMinRatio,
-      uint8(winningParams[ix].distribution)
-    );
-  }
-
 
  
   LotterieThrow [] public allthrows;
+
+  function getTotalNbThrow() view external returns (uint) {
+    return allthrows.length;
+  }
+
 
   function getThrowAddress(uint ix) view external returns (address) {
     return address(allthrows[ix]);
@@ -192,6 +148,60 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   function checkScore(uint256 hiddenSeed,uint256 currentSeed) pure external returns(uint) {
     return (hiddenSeed ^ currentSeed);
   }
+
+  // TODO find a way to declare and address with two If at the same time and move this to params implementing paramsif
+  function getWinningParams(uint ix) external returns(
+    uint16,
+    uint16,
+    uint8
+  ) {
+    return(
+      winningParams[ix].nbWinners,
+      winningParams[ix].nbWinnerMinRatio,
+      uint8(winningParams[ix].distribution)
+    );
+  }
+
+
+
+  function getPhaseParams(uint ix) external returns(
+    uint,
+    uint,
+    uint,
+    uint,
+    uint8,
+    uint8,
+    uint8 
+
+  ) {
+    return (
+      phaseParams[ix].participationStartTreshold,
+      phaseParams[ix].participationEndValue,
+      phaseParams[ix].cashoutEndValue,
+      phaseParams[ix].throwEndValue,
+      uint8(phaseParams[ix].participationEndMode),
+      uint8(phaseParams[ix].cashoutEndMode),
+      uint8(phaseParams[ix].throwEndMode)
+    );
+  }
+
+  function getParams(uint ix) external returns(
+    address,
+    uint,
+    uint,
+    uint,
+    uint64,
+    bool
+  ) {
+    return (
+      params[ix].authorDapp,
+      params[ix].winningParamsId,
+      params[ix].minBidValue,
+      params[ix].biddingTreshold,
+      params[ix].maxParticipant,
+      params[ix].doSalt);
+  }
+
 
 
 }

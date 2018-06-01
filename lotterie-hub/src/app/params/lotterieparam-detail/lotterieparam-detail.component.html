@@ -1,0 +1,27 @@
+{{mode}}
+<div *ngIf="param && view()">
+  <div><span>id: </span>{{param.id}}</div>
+  <div><span>Dapp author: {{ param.authorDapp }}</span></div>
+  <div><span>Winning param id: {{ param.winningParamsId }}</span></div> <!-- TODO make link -->
+  <div><span>Min bid value: {{ param.minBidValue }}</span></div><!-- TODO format with units -->
+  <div><span>Bidding treshold: {{ param.biddingTreshold }}</span></div><!-- TODO format with units -->
+  <div><span>Max nb participant: {{ param.maxParticipant }}</span></div>
+  <div><span>DoSalt: {{ param.doSalt }}</span></div>
+</div>
+<div *ngIf="inline()">
+  <div><span>
+      <a routerLink="/lotterieparam/{{ param.id }}">
+        id: {{ param.id }}
+      </a>
+  , Dapp auth: {{ param.authorDapp }}
+  ,WinningParam: {{ param.winningParamsId }}
+  ,Min bid value: {{ param.minBidValue }}
+  ,Bidding treshold: {{ param.biddingTreshold }}
+  ,Max nb part: {{ param.maxParticipant }}
+  ,doSalt: {{ param.doSalt }}
+  </span></div>
+</div>
+<div *ngIf="!inline()">
+  <button (click)="goBack()">go back</button>
+</div>
+

@@ -13,6 +13,7 @@ This struct (use of struct to pack values) is a const.
 struct *LotterieParams*
 
 TODO check if reward distribution algos are all in generated code in solidity and in wasm!!!
+
 ## algo
 
 - doSalt : adding salt derive from block number on every reveal could be consider to costy in gas and disable. (we do not use a salt on last only because it will make gas cost prediction inaccurate). It should be on except in low reward cost use.

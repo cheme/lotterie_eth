@@ -180,7 +180,6 @@ impl ParamsInterface for ParamsContract {
 
   }
 
-
 }
 
 #[inline]

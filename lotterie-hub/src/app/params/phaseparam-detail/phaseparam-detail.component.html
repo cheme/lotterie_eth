@@ -1,0 +1,29 @@
+{{mode}}
+<div *ngIf="param && view()">
+  <div><span>id: </span>{{param.id}}</div>
+  <div><span>Participation start date treshold: {{ param.participationStartTreshold }}</span></div> <!-- TODO convert to date depending on other conf -->
+  <div><span>Participation end value: {{ param.participationEndValue }}</span></div> <!-- TODO convert to date depending on other conf -->
+  <div><span>Cashout end value: {{ param.cashoutEndValue }}</span></div> <!-- TODO convert to date depending on other conf -->
+  <div><span>Throw end value: {{ param.throwEndValue }}</span></div> <!-- TODO convert to date depending on other conf -->
+  <div><span>Participation end mode: {{ param.participationEndMode }}</span></div> <!-- TODO select -->
+  <div><span>Cashout end mode: {{ param.cashoutEndMode }}</span></div> <!-- TODO select -->
+  <div><span>Throw end mode: {{ param.throwEndMode }}</span></div> <!-- TODO select -->
+</div>
+<div *ngIf="inline()">
+  <div><span>
+      <!-- TODO solve error on routerlink <a routerLink="/param/{{ param.id }}"> -->
+      <a routerLink="/phaseparam/{{ param.id }}">
+        id: {{ param.id }}
+      </a>
+  , Participation start date treshold: {{ param.participationStartTreshold }}
+  , Participation end value: {{ param.participationEndValue }}
+  , Cashout end value: {{ param.cashoutEndValue }}
+  , Throw end value: {{ param.throwEndValue }}
+  , Participation end mode: {{ param.participationEndMode }}
+  , Cashout end mode: {{ param.cashoutEndMode }}
+  , Throw end mode: {{ param.throwEndMode }}
+  </span></div>
+</div>
+<div *ngIf="!inline()">
+  <button (click)="goBack()">go back</button>
+</div>

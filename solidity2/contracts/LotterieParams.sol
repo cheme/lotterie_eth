@@ -3,23 +3,28 @@ pragma solidity ^0.4.23;
 import { LotterieConf as LC } from "./LotterieConf.sol";
 
 
-contract LotterieParams {
+contract LotterieParams  {
 
   LC.LotterieParams [] public params; // TODO not public (access to set if public??)
 
+  function getLotterieParamsCount() public view returns(uint) {
+    return params.length;
+  }
+
+
  
   LC.LotteriePhaseParams [] public phaseParams; // TODO not public (access to set if public??)
+
+  function getPhaseParamsCount() public view returns(uint) {
+    return phaseParams.length;
+  }
+
 
   LC.WinningParams [] public winningParams; // TODO not public (access to set if public??)
 
   // wining params accessor 
   function getWiningParamsCount() public view returns(uint) {
     return winningParams.length;
-  }
-
-  function getWinningParams(uint index) public view returns(uint16, uint16, uint8) {
-    LC.WinningParams storage p = winningParams[index]; 
-    return (p.nbWinners,p.nbWinnerMinRatio, uint8(p.distribution));
   }
 
   function addParams (

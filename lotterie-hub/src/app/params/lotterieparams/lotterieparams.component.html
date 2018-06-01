@@ -1,0 +1,8 @@
+<h2>Lotterie params</h2>
+<ul>
+  <li *ngFor="let p$ of params$">
+  <span  *ngIf="(p$ | async) as p">
+    <app-lotterieparam-detail [param] = "p" [mode] = "'inline'"></app-lotterieparam-detail>
+  </span>
+  </li>
+</ul>
