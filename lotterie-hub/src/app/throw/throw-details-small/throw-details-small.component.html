@@ -1,0 +1,21 @@
+<div *ngIf="thr">
+  <div><a routerLink="/throw/{{ thr.address }}">
+  <span>Address: </span>{{thr.address}}</a></div>
+  <div><span>Number of participation : </span>{{thr.numberOfBid}}</div>
+  <div><span>Total bid value : </span>{{thr.totalBidValue}}</div>
+  <div><span>Number of revealed participation : </span>{{thr.numberOfRevealParticipation}}</div>
+  <div><span>Total claimed value : </span>{{thr.totalClaimedValue}}</div>
+  <div><span>Thrower : </span>{{thr.thrower}}</div>
+  <div><span>Total Margin : </span>{{ thr.totalMargin }}</div>
+  <div *ngIf="thr.calcPhase != 0"><span>Phase : </span>{{ thr.calcPhase }}</div>
+
+  <div> <!-- TODO deploy details in box -->
+    <a routerLink="/phaseparam/{{ thr.paramsPhaseId }}">
+    <span>Phases Rules: </span>{{thr.paramsPhaseId}}</a>
+  </div>
+
+  <div> <!-- TODO deploy details in box -->
+    <a routerLink="/lotterieparam/{{ thr.paramsId }}">
+    <span>Rules: </span>{{thr.paramsId}}</a>
+  </div>
+</div>

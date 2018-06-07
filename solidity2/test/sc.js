@@ -17,11 +17,11 @@ const conf1 = {
   participationStartTreshold : 0, // no time switch (absolute)
   maxParticipant : 50, // 50 participant start
   participationEndMode : lotterieLib.participationEndModes.EagerRelative, // Eager is a must have
-  participationEndValue : 30, // seconds
+  participationEndValue : 300, // seconds
   cashoutEndMode : lotterieLib.cashoutEndModes.Relative,
-  cashoutEndValue : 30,
+  cashoutEndValue : 3600,
   throwEndMode : lotterieLib.cashoutEndModes.Relative, // best absolute most of the time
-  throwEndValue : 30
+  throwEndValue : 300
 }
 async function configuration(lotterie,account_contract_dapp,c) {
     var res = await lotterie.addWinningParams(c.nbWinners,c.nbWinnerMinRatio,c.distribution);
@@ -65,9 +65,6 @@ it("sc", async function() {
     myConf.maxParticipant = 5;
     //myConf.nbWinners = 4;
     myConf.nbWinnerMinRatio = 80; // 4 winner (ratio applying)
-    // warn need to pass 4 cashout during those 3 secs, might be enough on most testing confs
-    myConf.cashoutEndValue = 3;
-    myConf.throwEndValue = 5;
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();

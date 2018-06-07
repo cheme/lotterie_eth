@@ -1,0 +1,6 @@
+<div *ngIf="athrow.calcPhase == 1">
+<label>Bid value:
+  <input [(ngModel)]="bidValue" />
+</label>
+<button *ngIf="!invalidBidValue()" (click)="newParticipation()">Launch a new participation</button>
+</div>

@@ -4,6 +4,7 @@ import { Observable, of, zip } from 'rxjs';
 import { LotterieService } from '../ethereum/lotterie.service';
 import { MessageService } from '../message.service';
 import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 
 export abstract class ParamsComponentBase<PARAM> implements OnInit {
@@ -24,7 +25,7 @@ export abstract class ParamsComponentBase<PARAM> implements OnInit {
     this.getNb().subscribe(nb => {
       var id = new BigNumber(nb);
       var res = [];
-      for (var iter = 10; iter > 0; --iter) {
+      for (var iter = environment.nbParamsShow; iter > 0; --iter) {
         if (id.isGreaterThan(0)) {
           id = id.minus(1);
           res.push(

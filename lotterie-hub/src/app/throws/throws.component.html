@@ -1,3 +1,11 @@
 <p>
   throws works! total nb throws : {{ totalThrows }}
 </p>
+<ul>
+  <li *ngFor="let thr$ of managedThrows$">
+  <span  *ngIf="(thr$ | async) as thr">
+    <app-throw-details-small [thr]="thr"></app-throw-details-small>
+  </span>
+  </li>
+</ul>
+<a routerLink="/newthrow">New throw</a>

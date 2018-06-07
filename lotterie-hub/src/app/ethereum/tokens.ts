@@ -21,7 +21,6 @@ export const LOTTERIELIB = new InjectionToken<lotterieLib>('lotterielib',{
     lotterieLib.lotterieAddress = environment.contractAddress;
     lotterieLib.lotterie = 
       new lotterieLib.web3.eth.Contract(lotterieLib.lotterieAbi, lotterieLib.lotterieAddress);
-
     return lotterieLib;
   },
 });

@@ -23,9 +23,9 @@ contract LotterieBase is LotterieLib, LotterieParam {
   }
 
  
-  function getParticipation(uint participationId) public view returns(uint,uint,address,uint8) {
+  function getParticipation(uint participationId) public view returns(uint,address,uint8) {
     Participation storage part = participations[participationId];
-    return (part.throwId, part.seed, part.from, uint8(part.state));
+    return (part.seed, part.from, uint8(part.state));
   }
 
 
@@ -95,7 +95,6 @@ contract LotterieBase is LotterieLib, LotterieParam {
   }
 
   struct Participation {
-    uint throwId;
     uint seed;
     address from;
 //   uint bid;

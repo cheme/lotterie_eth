@@ -147,10 +147,14 @@ contract('Lotterie', function(accounts) {
     var res = await lotterie.addWinningParams(nbWinners,nbWinnerMinRatio,lotterieLib.winningDistribution.Equal,{gas : d2});
     //var res = await lotterie.addWinningParams(nbWinners,nbWinnerMinRatio,lotterieLib.winningDistribution.Equal);
     assert.equal(res.error, null);
+    nbparam = await lotterie.getWiningParamsCount.call();
+    assert.equal(nbparam, 2);
     // value check
-    res = lotterieLib.newWinningParams(await lotterie.getWinningParams(0));
-    assert.equal(res.nbWinners, nbWinners);
-    assert.equal(res.nbWinnerMinRatio, nbWinnerMinRatio);
+    console.error(await lotterie.getWinningParams.call(0));
+    console.error(await lotterie.getWinningParams.call(1));
+    res = lotterieLib.newWinningParams(await lotterie.getWinningParams.call(0));
+    assert.equal(web3.toHex(res.nbWinnerMinRatio), web3.toHex(nbWinnerMinRatio));
+    assert.equal(web3.toHex(res.nbWinners), web3.toHex(nbWinners));
   });
 
 
@@ -383,7 +387,7 @@ contract('Lotterie', function(accounts) {
 
     var accountParts = [];
     await configuration(lotterie,account_contract_dapp,myConf);
-    await tr_log( lotterie.initThrow (0,0,0,0,0,0), true);
+    await tr_log( lotterie.initThrow (0,0,0,0,0,0, {value:10000}), true);
 
     var ltax = await lotterie.getThrowAddress.call(0);
     var lotteriethrow = LotterieThrow.at(ltax);
@@ -455,9 +459,8 @@ contract('Lotterie', function(accounts) {
     for (var i=0; i < 5; ++i) {
       var partelts = await lotteriethrow.getParticipation.call(i);
       // right throwid
-      if (partelts[0] == 0) {
-        assert.equal(partelts[3], lotterieLib.participationStates.Revealed);
-        var mySeed = web3.toHex(partelts[1]);
+        assert.equal(partelts[2], lotterieLib.participationStates.Revealed);
+        var mySeed = web3.toHex(partelts[0]);
         var score = lotterieLib.calcScore(finalSeed,mySeed);
         if (scoreNb0 == null) {
           scoreNb0 = score;
@@ -477,7 +480,6 @@ contract('Lotterie', function(accounts) {
             lastScore = score;
           }
         }
-      }
 
     }
 
@@ -488,7 +490,6 @@ contract('Lotterie', function(accounts) {
     // TODO with 1.0 web 3 uset getPastEvents
     lotteriethrow.Revealed(
       {
-        participationId : 0
       },
       {
       fromBlock: thrBlock,

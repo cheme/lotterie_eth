@@ -17,7 +17,7 @@ contract LotterieThrow is LotterieMargins {
   event NewThrow(uint throwId);
 
   // only to log, nothing useful to index, concealed seed could be removed if to costy (sha3 of hiddenseed or simply application of concealed function on seed)
-  event Revealed(uint indexed throwId, uint participationId, uint256 hiddenSeed, uint256 concealedSeed);
+  event Revealed(uint participationId, uint256 hiddenSeed, uint256 concealedSeed);
 
 
   function initPhaseParams (uint paramsPhaseId) internal {
@@ -135,10 +135,14 @@ contract LotterieThrow is LotterieMargins {
   }
 
 
-  function getThrow() external view returns(uint,uint,uint,uint,uint64,uint64,address,uint) {
-    return (thr.paramsId, thr.currentSeed, thr.results.totalBidValue, thr.results.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thrower,thr.blockNumber);
+  function getThrow() external view returns(uint,uint,uint,uint,uint,uint64,uint64,address,uint,uint8) {
+    return (thr.paramsId, thr.paramsPhaseId, thr.currentSeed, thr.results.totalBidValue, thr.results.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thrower,thr.blockNumber, uint8(thr.currentPhase));
   }
 
+  function getThrowWithdrawInfo() external view returns(uint32,uint32,uint32,uint32,bool,bool,bool,bool) {
+    return (thr.withdraws.ownerMargin,thr.withdraws.authorContractMargin, thr.withdraws.authorDappMargin, thr.withdraws.throwerMargin,
+    thr.withdraws.ownerWithdrawned, thr.withdraws.authorContractWithdrawned, thr.withdraws.authorDappWithdrawned, thr.withdraws.throwerWithdrawned);
+  }
 
 
   function bid (
@@ -153,7 +157,6 @@ contract LotterieThrow is LotterieMargins {
     thr.numberOfBid += 1;
     uint participationId = participations.length;
     Participation memory part = Participation({
-      throwId : 0, // TODO rem field
       from : msg.sender,
 //      bid : msg.value,
       seed : commitmentSeed,
@@ -183,7 +186,7 @@ contract LotterieThrow is LotterieMargins {
     part.seed = hiddenSeed;
     part.state = ParticipationState.Revealed;
 
-    emit Revealed(part.throwId, participationId,hiddenSeed,concealed);
+    emit Revealed(participationId,hiddenSeed,concealed);
 
   }
 
@@ -243,6 +246,7 @@ contract LotterieThrow is LotterieMargins {
       // compare with previous
       // we need to check n-1 is superior 
       // (otherwhise best score could take place of others)
+      // TODO remove those require when correctly tested (no cost gain currently)
       require(myScore <= w.score);
       if (w.score == myScore) {
         require(participationId > w.participationId);
@@ -305,6 +309,12 @@ contract LotterieThrow is LotterieMargins {
   {
      return (winners.length);
   }
+  function fisrtWinner (
+  ) view external returns (uint)
+  {
+     return (thr.results.firstWinner);
+  }
+ 
 
   function getWinner (
     uint winnerIx
@@ -322,7 +332,6 @@ contract LotterieThrow is LotterieMargins {
      require(ptr != 255);
      w = winners[ptr];
      return (w.withdrawned, w.participationId, w.score);
- 
   }
 
   // TODO remove (redundant with other method)

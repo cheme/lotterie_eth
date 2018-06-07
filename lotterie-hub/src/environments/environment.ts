@@ -4,9 +4,17 @@
 
 export const environment = {
   production: false,
-  contractAddress: '0x899739c54f88d831780437237b21d58659d6a51f'
+  contractAddress: '0x24d86a7821cfd0654e6c9df131ffe8ab532a114e',
+  nbParamsShow: 10,
+  nbThrowsShow: 10,
+  nbParticipationsShow: 10,
+  defaultOwnerMargin: 0,
+  defaultAuthorContractMargin: 0,
+  defaultAuthorDappMargin: 0,
+  defaultThrowerMargin: 0,
+  dbName: 'lotterie-hub',
 };
-  // cca42416a7ac72176f88fbf5d61c1c1d2ff39bbce5b5ea4c94959d7f7d5896ba
+  // 
 /*
  * In development mode, to ignore zone related error stack frames such as
  * `zone.run`, `zoneDelegate.invokeTask` for easier debugging, you can

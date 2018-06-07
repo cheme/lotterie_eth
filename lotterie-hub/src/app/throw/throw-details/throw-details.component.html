@@ -1,0 +1,50 @@
+<div *ngIf="thr">
+  <div>
+    <a routerLink="/throw/{{ thr.address }}">
+    <span>Address: </span>{{thr.address}}</a>
+  </div>
+  <div><span>Registered phase : </span>{{ thr.currentPhase }}</div>
+  <div><span>Updated phase : </span>{{ thr.calcPhase }}</div>
+  <div><span>Nb: </span>{{thr.numberOfBid}}</div>
+  <div><span>Total: </span>{{thr.totalBidValue}}</div>
+  <div><span>Revealed: </span>{{thr.numberOfRevealParticipation}}</div>
+  <div><span>Thrower : </span>{{thr.thrower}}</div>
+  <div><span>Author Contract Margin : </span>{{thr.authorContractMargin}}</div>
+  <div><span>Author Dapp Margin : </span>{{thr.authorDappMargin}}</div>
+  <div><span>Owner Margin : </span>{{thr.ownerMargin}}</div>
+  <div><span>Thrower Margin : </span>{{thr.throwerMargin}}</div>
+  <div><span>Total Margin : </span>{{ thr.totalMargin }}</div>
+  <div>
+    <a routerLink="/phaseparam/{{ thr.paramsPhaseId }}">
+    <span>Phases Rules: </span>{{thr.paramsPhaseId}}</a>
+  </div>
+
+  <div>
+    <a routerLink="/lotterieparam/{{ thr.paramsId }}">
+    <span>Rules: </span>{{thr.paramsId}}</a>
+  </div>
+  <div *ngIf="thr.calcPhase > 0">
+    <app-participations [athrow]=thr></app-participations>
+  </div>
+  <!-- TODO put in box -->
+  <div *ngIf="thr.calcPhase > 2">
+    WINNERS
+ <li *ngFor="let w of sortedWinners">
+    <app-participation-detail 
+      [throwLib]="thr.throwLib"
+      [throwId]="thr.address"
+      [throwState]="thr.calcPhase"
+      [participation]="w"
+    ></app-participation-detail>
+  </li>
+  </div>
+
+  <!-- TODO put creation form in a pop or other mat -->
+  <app-throw-new [params]="thr.paramsId"></app-throw-new>
+ 
+  <!-- TODO put in box -->
+  <div *ngIf="thr.calcPhase > 0">
+    <app-participation-new [athrow]="thr"></app-participation-new>
+  </div>
+</div>
+<button (click)="goBack()">go back</button>

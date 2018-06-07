@@ -55,15 +55,38 @@ var lotterieLib = {
   },
   newThrow : function(arr) {
     return this.arrayAccessor(arr, {
-    //return (thr.paramsId, thr.currentSeed, thr.totalBidValue, thr.totalClaimedValue, thr.numberOfBid, thr.numberOfRevealParticipation, thr.thrower,thr.blockNumber);
       paramsId : 0,
-      currentSeed : 1,
-      totalBidValue : 2,
-      totalClaimedValue : 3,
-      numberOfBid : 4,
-      numberOfRevealParticipation : 5,
-      thrower : 6,
-      blockNumber : 7
+      paramsPhaseId : 1,
+      currentSeed : 2,
+      totalBidValue : 3,
+      totalClaimedValue : 4,
+      numberOfBid : 5,
+      numberOfRevealParticipation : 6,
+      thrower : 7,
+      blockNumber : 8,
+      currentPhase : 9
+    });
+  },
+  newThrowWithdraws : function(arr) {
+    return this.arrayAccessor(arr, {
+//    return (thr.withdraws.ownerMargin,thr.withdraws.authorContractMargin, thr.withdraws.authorDappMargin, thr.withdraws.throwerMargin,
+ //   thr.withdraws.ownerWithdrawned, thr.withdraws.authorContractWithdrawned, thr.withdraws.authorDappWithdrawned, thr.withdraws.throwerWithdrawned);
+
+      ownerMargin : 0,
+      authorContractMargin : 1,
+      authorDappMargin : 2,
+      throwerMargin : 3,
+      ownerWithdrawned : 4,
+      authorContractWithdrawned : 5,
+      authorDappWithdrawned : 6,
+      throwerWithdrawned : 7
+    });
+  },
+  newParticipation : function(arr) {
+    return this.arrayAccessor(arr, {
+      seed : 0,
+      from : 1,
+      state : 2
     });
   },
   winningDistribution : {
@@ -96,7 +119,7 @@ var lotterieLib = {
     if (hexstring.startsWith('0x')) {
       hexstring = hexstring.substr(2);
     }
-    return this.web3.utils.sha3(hexstring.padStart(64,'0'),{encoding:'hex'});
+    return this.web3.utils.sha3('0x' + hexstring.padStart(64,'0'),{encoding:'hex'});
     //return web3.sha3(hexstring.padStart(64,'0'),{encoding:'hex'});
   },
   padHexInt : function(hexstring) {

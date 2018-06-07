@@ -48,6 +48,30 @@ contract LotteriePhases is LotterieBase {
     Phase currentPhase = forThrowStorageMyPhase();
     require(currentPhase == throwPhase);
   }
+  function totalCashout() external view returns (uint16) {
+    Phase currentPhase = getCurrentPhase();
+    if (currentPhase == Phase.Cashout) {
+      return (calcTotalCashout());
+    }
+    return (thr.results.totalCashout);
+  }
+
+  // TODO assert it is similar cost wise as a macro
+  function calcTotalCashout() internal returns (uint16) {
+       uint ratioBidWinner = uint(thr.numberOfBid) * winningParam.nbWinnerMinRatio / 100;
+      uint16 rcashout;
+      // calculate nbCashout
+      if (ratioBidWinner < uint(winningParam.nbWinners)) {
+         if (ratioBidWinner == 0) {
+           rcashout = 1;
+         } else {
+           rcashout = uint16(ratioBidWinner);
+         }
+      } else {
+        rcashout = winningParam.nbWinners;
+      }
+      return(rcashout);
+  }
 
   // switch phase if needed and return current phase
   function forThrowStorageMyPhase() internal returns (Phase) {
@@ -74,19 +98,8 @@ contract LotteriePhases is LotterieBase {
             - LC.calcMargin(thr.results.totalBidValue, thr.withdraws.throwerMargin)
             - LC.calcMargin(thr.results.totalBidValue, thr.withdraws.ownerMargin);
         }
-        uint ratioBidWinner = uint(thr.numberOfBid) * winningParam.nbWinnerMinRatio / 100;
-        uint16 rcashout;
         // calculate nbCashout
-        if (ratioBidWinner < uint(winningParam.nbWinners)) {
-           if (ratioBidWinner == 0) {
-             rcashout = 1;
-           } else {
-             rcashout = uint16(ratioBidWinner);
-           }
-        } else {
-          rcashout = winningParam.nbWinners;
-        }
-        thr.results.totalCashout = rcashout;
+        thr.results.totalCashout = calcTotalCashout();
         if (phaseParam.cashoutEndMode == LC.CashoutEndMode.Relative) {
           thr.tmpTime = now + phaseParam.cashoutEndValue;
         } else {

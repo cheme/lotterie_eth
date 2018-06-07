@@ -3,12 +3,12 @@ import lotterieLib from './index.js';
 import Web3 from 'web3';
 
  
-var unlockaccount = "0x41e72c464d27084a5fb9ac08731c23e8cd318eb4";
-var pk = "0x30fbcb4194ba5cca35db4c045c938ae76b4c520c66d313b55fad6136c6825dfd";
+var unlockaccount = "0xcc25388632cbc6fad24b42e03efed5e095e567e5";
+var pk = "30fe309b023560422c537fdec2a1e3be97bd67253f84aac6a325c5c89f345f89";
 var web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 lotterieLib.web3 = web3;
 
-lotterieLib.lotterieAddress = '0x13150a14d5a50e1138aadfef9e03d0fa3335322e';
+lotterieLib.lotterieAddress = '0x283407f104ddfd7c240d70875f52a1429e9a7f0b';
 
 console.log(lotterieLib.calcCommitment(lotterieLib.lotterieAddress));
 var myContract = new web3.eth.Contract(lotterieLib.lotterieAbi, lotterieLib.lotterieAddress);

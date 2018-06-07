@@ -78,7 +78,7 @@ library LotterieConf {
     if (participationEndMode == ParticipationEndModes.EagerRelative 
         || participationEndMode == ParticipationEndModes.Relative) {
       // max participation additional time at 128 bit (more than enough for a date)
-      if (participationEndValue > 2^128) {
+      if (participationEndValue > 2**128) {
         return false;
       }
     }

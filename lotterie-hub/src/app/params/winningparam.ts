@@ -3,10 +3,7 @@
 export class Winningparam {
 
   static fromObject(id : BigNumber, object: any): Winningparam {
-    let param =  new Winningparam ();
-    param.nbWinners = object.nbWinners;
-    param.nbWinnerMinRatio = object.nbWinnerMinRatio;
-    param.distribution = object.distribution;
+    let param =  {...object};
     param.id = id;
     return param;
   }

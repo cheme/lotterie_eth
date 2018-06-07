@@ -14,7 +14,9 @@
         id: {{ param.id }}
       </a>
   , Dapp auth: {{ param.authorDapp }}
-  ,WinningParam: {{ param.winningParamsId }}
+ ,<a routerLink="/winningparam/{{ param.winningParamsId }}">
+  WinningParam: {{ param.winningParamsId }}
+</a>
   ,Min bid value: {{ param.minBidValue }}
   ,Bidding treshold: {{ param.biddingTreshold }}
   ,Max nb part: {{ param.maxParticipant }}
