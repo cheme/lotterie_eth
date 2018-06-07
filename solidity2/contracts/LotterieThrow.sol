@@ -9,15 +9,15 @@ import "./LotterieIf.sol";
 contract LotterieThrow is LotterieMargins {
 
 
-  event NewParticipation(uint participationId,uint bid);
+  event NewParticipation(uint64 participationId,uint bid);
   // win event
-  event Win(uint participationId, address winner, uint16 position, uint amount);
+  event Win(uint64 participationId, address winner, uint16 position, uint amount);
   // TODO index it and info for list of throw : harder than expected
   // probably need date to limit to a period range (which will be indexed)
   event NewThrow(uint throwId);
 
   // only to log, nothing useful to index, concealed seed could be removed if to costy (sha3 of hiddenseed or simply application of concealed function on seed)
-  event Revealed(uint participationId, uint256 hiddenSeed, uint256 concealedSeed);
+  event Revealed(uint64 participationId, uint256 hiddenSeed, uint256 concealedSeed);
 
 
   function initPhaseParams (uint paramsPhaseId) internal {
@@ -155,7 +155,7 @@ contract LotterieThrow is LotterieMargins {
       thr.results.totalBidValue = thr.results.totalBidValue.add(msg.value);
     }
     thr.numberOfBid += 1;
-    uint participationId = participations.length;
+    uint64 participationId = uint64(participations.length);
     Participation memory part = Participation({
       from : msg.sender,
 //      bid : msg.value,
@@ -168,7 +168,7 @@ contract LotterieThrow is LotterieMargins {
 
   /// note that any user can use it, this is intended
   function revealParticipation (
-    uint participationId,
+    uint64 participationId,
     uint256 hiddenSeed
   ) external forParticipation(participationId,ParticipationState.BidSent,Phase.Participation) {
     Participation storage part = participations[participationId];
@@ -191,7 +191,7 @@ contract LotterieThrow is LotterieMargins {
   }
 
   // should not be use in dapp, log should be used
-  function checkPositionHeavyCost(uint participationId)
+  function checkPositionHeavyCost(uint64 participationId)
    external view returns (uint)
   {
     Participation storage part = participations[participationId];
@@ -217,7 +217,7 @@ contract LotterieThrow is LotterieMargins {
   // startPossibleIx is current position in the last block state winners list
   // position is final calculated position; position is 0 for winner (-1)
   function cashOut (
-    uint participationId,
+    uint64 participationId,
     uint16 startPossibleIx
     //uint16 position
   ) external 
@@ -354,7 +354,7 @@ contract LotterieThrow is LotterieMargins {
  
   // a function to avoid some gas cost in cash out
   function currentIxAmongWinners (
-    uint participationId
+    uint64 participationId
   ) view external returns(uint) {
      require(participationId < participations.length);
      uint result = 0;
@@ -380,7 +380,7 @@ contract LotterieThrow is LotterieMargins {
   // check the wining ix of a participation (after all cashout (phase end))
   // returns position win (0 for loser)
   function positionAtPhaseEnd (
-    uint participationId
+    uint64 participationId
   ) view external returns(uint) {
      require(participationId < participations.length);
      // go through linked list
@@ -428,7 +428,7 @@ contract LotterieThrow is LotterieMargins {
     }
   }*/
 
-  function withdrawWin(uint participationId)
+  function withdrawWin(uint64 participationId)
     public 
     forParticipation(participationId,ParticipationState.Cashout,Phase.End) 
     {

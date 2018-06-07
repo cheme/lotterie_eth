@@ -3,7 +3,7 @@ import BigNumber from "bignumber.js";
 export class Participation {
 
   throwAddress : string;
-  participationId : BigNumber;
+  participationId : number;
 
   // seed from contract
   seed : string;
@@ -16,7 +16,7 @@ export class Participation {
 
   wintowithdraw : boolean = false;
 
-  static fromObject(throwAdd : string, partId : BigNumber, object: any): Participation {
+  static fromObject(throwAdd : string, partId : number, object: any): Participation {
     let participation = {...object};
     participation.throwAddress = throwAdd;
     participation.participationId = partId;

@@ -21,7 +21,7 @@ export class ParticipationDetailComponent implements OnInit {
   @Input() throwLib : any;
   @Input() throwId : string;
   @Input() throwState : number;
-  @Input() participationId : BigNumber;
+  @Input() participationId : number;
 
   @Input() participation : Participation;
 

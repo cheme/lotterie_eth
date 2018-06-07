@@ -19,7 +19,7 @@ const conf1 = {
   participationEndMode : lotterieLib.participationEndModes.EagerRelative, // Eager is a must have
   participationEndValue : 300, // seconds
   cashoutEndMode : lotterieLib.cashoutEndModes.Relative,
-  cashoutEndValue : 3600,
+  cashoutEndValue : 300,
   throwEndMode : lotterieLib.cashoutEndModes.Relative, // best absolute most of the time
   throwEndValue : 300
 }

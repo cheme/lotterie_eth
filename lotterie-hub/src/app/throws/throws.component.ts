@@ -13,7 +13,6 @@ import { map, flatMap } from 'rxjs/operators';
 })
 export class ThrowsComponent implements OnInit {
 
-  // TODO switch to BN
   totalThrows : BigNumber = new BigNumber(0);
 
   managedThrows$ : Observable<Athrow>[] = [];

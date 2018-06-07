@@ -23,7 +23,7 @@ contract LotterieBase is LotterieLib, LotterieParam {
   }
 
  
-  function getParticipation(uint participationId) public view returns(uint,address,uint8) {
+  function getParticipation(uint64 participationId) public view returns(uint,address,uint8) {
     Participation storage part = participations[participationId];
     return (part.seed, part.from, uint8(part.state));
   }
@@ -88,7 +88,7 @@ contract LotterieBase is LotterieLib, LotterieParam {
     bool withdrawned;
     // warning it is not the user winnig but the winning at this position
     uint totalPositionWin;
-    uint participationId;
+    uint64 participationId;
     uint score;
     // winners is stored as a linked list (0 being null)
     uint16 nextWinner;
@@ -104,7 +104,7 @@ contract LotterieBase is LotterieLib, LotterieParam {
 
   
 
-  function challengeParticipation(uint participationId, uint256 hiddenSeed) view external returns(uint,uint) {
+  function challengeParticipation(uint64 participationId, uint256 hiddenSeed) view external returns(uint,uint) {
     Participation storage part = participations[participationId];
     return (part.seed,uint(keccak256(hiddenSeed)));
   }

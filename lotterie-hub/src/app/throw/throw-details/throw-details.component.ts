@@ -50,9 +50,9 @@ export class ThrowDetailsComponent extends ThrowComponentBase {
     let obsArray = [];
     for (let i = 0; i < nbParticipation; ++i) {
       obsArray.push(
-        this.lotterieService.getParticipation(this.thr.throwLib,new BigNumber(i))
+        this.lotterieService.getParticipation(this.thr.throwLib,i)
           .pipe(map((p) => {
-            let participation = Participation.fromObject(this.thr.address, new BigNumber(i), p);
+            let participation = Participation.fromObject(this.thr.address, i, p);
             if (participation.state > 0) {
               participation.score = this.lotterieService.calcScore(finalSeed,participation.revealedSeed);
             }
@@ -95,9 +95,9 @@ export class ThrowDetailsComponent extends ThrowComponentBase {
             flatMap((p) => {
               return zip(
               of(p),
-              this.lotterieService.getParticipation(this.thr.throwLib,new BigNumber(p[1])),
+              this.lotterieService.getParticipation(this.thr.throwLib,p[1]),
               ([withdrawned, pid, score], part) => {
-              let participation = Participation.fromObject(this.thr.address, new BigNumber(pid), part);
+              let participation = Participation.fromObject(this.thr.address, pid, part);
               participation.score = this.lotterieService.stringToBytes(score);
               participation.wintowithdraw = !withdrawned;
               return participation;

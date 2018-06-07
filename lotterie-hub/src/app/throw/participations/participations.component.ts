@@ -27,7 +27,7 @@ export class ParticipationsComponent implements OnInit {
     let nb = Math.min(environment.nbParticipationsShow, last);
     var res = Array(nb);
     for (var i = 0; i < nb; ++i) {
-      res[i] = new BigNumber(last - 1 - i);
+      res[i] = last - 1 - i;
     }
     this.range = res;
   }

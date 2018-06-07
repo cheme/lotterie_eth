@@ -153,8 +153,7 @@ export class LotterieService {
     );
   }
 
-  // TODO remove BN when participationId switch to uint64 in contract
-  public getParticipation(throwLib : any,participationId : BigNumber) : Observable<Object> {
+  public getParticipation(throwLib : any,participationId : number) : Observable<Object> {
     return from(throwLib.methods.getParticipation(participationId).call())
       .pipe(map(p => this.lotterieLib.newParticipation(p)));
   }
@@ -220,7 +219,7 @@ export class LotterieService {
     }
     public revealParticipation(
       throwLib : any,
-      participationId : BigNumber,
+      participationId : number,
       revealedSeed : string 
     ) : Observable<Object> {
       var call = throwLib.methods.revealParticipation(participationId,this.lotterieLib.web3.utils.toHex(revealedSeed));
@@ -233,7 +232,7 @@ export class LotterieService {
     // win position in revealed winners (does not mean we win but we can win if nobody cashout)
     public currentWinPosition(
        throwLib : any,
-      participationId : BigNumber
+      participationId : number 
     ) : Observable<number> {
       return from( throwLib.methods.currentIxAmongWinners(participationId).call());
     }
@@ -241,14 +240,14 @@ export class LotterieService {
     // get position of a participation at phase end or 0 if not in cashout wins
     public positionAtPhaseEnd(
        throwLib : any,
-      participationId : BigNumber
+      participationId : number 
     ) : Observable<number> {
       return from( throwLib.methods.positionAtPhaseEnd(participationId).call());
     }
 
      public registerWin(
        throwLib : any,
-      participationId : BigNumber,
+      participationId : number,
       startix : number,
       nbWinner : number
     ) : Observable<Object> {
@@ -264,7 +263,7 @@ export class LotterieService {
     }
    public withDrawWin(
        throwLib : any,
-      participationId : BigNumber
+      participationId : number 
     ) : Observable<Object> {
       var call = throwLib.methods.withdrawWin(participationId);
       return from(call.estimateGas({from: this.web3.eth.defaultAccount})

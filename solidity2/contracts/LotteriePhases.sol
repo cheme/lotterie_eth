@@ -32,11 +32,11 @@ contract LotteriePhases is LotterieBase {
   }
 
 
-  modifier forParticipation(uint participationId, ParticipationState participationState, Phase throwPhase) {
+  modifier forParticipation(uint64 participationId, ParticipationState participationState, Phase throwPhase) {
     forParticipationInternal(participationId, participationState, throwPhase);
     _;
   }
-  function forParticipationInternal(uint participationId, ParticipationState participationState, Phase throwPhase) internal {
+  function forParticipationInternal(uint64 participationId, ParticipationState participationState, Phase throwPhase) internal {
     require(participations.length > participationId);
     Participation storage part = participations[participationId];
     require(part.state == participationState);
@@ -57,7 +57,7 @@ contract LotteriePhases is LotterieBase {
   }
 
   // TODO assert it is similar cost wise as a macro
-  function calcTotalCashout() internal returns (uint16) {
+  function calcTotalCashout() internal view returns (uint16) {
        uint ratioBidWinner = uint(thr.numberOfBid) * winningParam.nbWinnerMinRatio / 100;
       uint16 rcashout;
       // calculate nbCashout
