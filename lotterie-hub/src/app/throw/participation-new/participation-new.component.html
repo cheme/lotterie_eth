@@ -1,6 +1,18 @@
 <div *ngIf="athrow.calcPhase == 1">
-<label>Bid value:
-  <input [(ngModel)]="bidValue" />
-</label>
-<button *ngIf="!invalidBidValue()" (click)="newParticipation()">Launch a new participation</button>
+<mat-form-field>
+<amount-eth placeholder = "Bid value :" [(ngModel)]="val"></amount-eth>
+<mat-hint>Must be at least {{ minBidValue }} </mat-hint>
+</mat-form-field>
+<!--<label>Bid value:
+  <input placeholder="0" [(ngModel)]="bidValue"/>
+</label>-->
+<button mat-raised-button *ngIf="!invalidBidValue()" (click)="newParticipation()">Launch a new participation</button>
+</div>
+<div>
+<!--
+<mat-form-field>
+<eth-amount placeholder = "Bid value :" [(ngModel)]="tel" ></eth-amount>
+<mat-hint>Must be at least {{ minBidValue }} </mat-hint>
+</mat-form-field>
+-->
 </div>

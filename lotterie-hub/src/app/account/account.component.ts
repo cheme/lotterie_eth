@@ -7,14 +7,13 @@ import { LotterieService } from '../ethereum/lotterie.service'
   styleUrls: ['./account.component.css']
 })
 export class AccountComponent implements OnInit {
-  private account : string = 'undefined';
+  public account : string = 'undefined';
 
-  private test : string = 'nope';
   constructor(
     private lotterieService : LotterieService
   ) { }
+
   ngOnInit() {
-    this.test = this.lotterieService.test();
     // TODO manage hs error case
     this.lotterieService.currentAccount().subscribe((hs) => this.account = hs.toString());
     this.lotterieService.pollCurrentAccount(1500).subscribe((hs) => this.account = hs.toString());

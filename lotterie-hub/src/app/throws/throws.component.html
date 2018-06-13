@@ -1,11 +1,16 @@
 <p>
-  throws works! total nb throws : {{ totalThrows }}
+  Throws! Total nb throws : {{ totalThrows }}
 </p>
-<ul>
-  <li *ngFor="let thr$ of managedThrows$">
+<mat-paginator [length]="totalPagLength"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="getThrows($event)">
+</mat-paginator>
+<mat-grid-list cols="2" rowHeight="2:1">
+  <mat-grid-tile *ngFor="let thr$ of managedThrows$">
   <span  *ngIf="(thr$ | async) as thr">
     <app-throw-details-small [thr]="thr"></app-throw-details-small>
   </span>
-  </li>
-</ul>
-<a routerLink="/newthrow">New throw</a>
+  </mat-grid-tile>
+</mat-grid-list>
+<button mat-raised-button routerLink="/newthrow">New throw</button>

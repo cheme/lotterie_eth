@@ -28,9 +28,6 @@ export class LotterieService {
   private lastpollblock : number; // TODO switch to BN
   // store poll observers if using metamask (until support web3 1.0 event watch)
   private metamaskpoll : Function [] = [];
-  public test(): string {
-    return this.lotterieLib.calcCommitment("0x123456789");
-  }  
 
   private observeEvent(eventname : string, cb) {
     if (this.lotterieLib.web3.currentProvider.isMetaMask) {
@@ -208,7 +205,7 @@ export class LotterieService {
     }
    public newParticipation(
       throwLib : any,
-      bidValue : BigNumber,
+      bidValue : string,
       hiddenSeed : string 
     ) : Observable<Object> {
       var call = throwLib.methods.bid(hiddenSeed);

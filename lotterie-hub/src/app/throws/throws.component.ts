@@ -5,6 +5,8 @@ import { Athrow } from '../throw/athrow.js';
 import { Observable, zip, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { map, flatMap } from 'rxjs/operators';
+import { ScrollDispatcher, CdkScrollable } from '@angular/cdk/scrolling';
+import { PageEvent } from '@angular/material';
 
 @Component({
   selector: 'app-throws',
@@ -16,15 +18,19 @@ export class ThrowsComponent implements OnInit {
   totalThrows : BigNumber = new BigNumber(0);
 
   managedThrows$ : Observable<Athrow>[] = [];
-
+test(b) {
+  console.log("test " + b);
+}
   ngOnInit() {
     this.lotterieService.totalThrows.subscribe((nb) => {
       this.totalThrows = new BigNumber(nb);
-      this.getThrows();
+      this.totalPagLength = nb;
+      this.getThrows(null);
     }); 
     this.lotterieService.observeThrows().subscribe((addresses) => {
       // warning just for testing as it is not concurrency safe : need to call update nb instead
       this.totalThrows = this.totalThrows.plus(1);
+      this.totalPagLength += 1;
       this.managedThrows$.push(this.initAthrow(addresses));
     });
   }
@@ -46,12 +52,28 @@ export class ThrowsComponent implements OnInit {
   }
 
   constructor(
-    private lotterieService : LotterieService
+    private lotterieService : LotterieService,
+    private scroll : ScrollDispatcher,
   ) { }
 
-  getThrows(): void {
-    var id = new BigNumber(this.totalThrows);
-    for (var iter = environment.nbThrowsShow; iter > 0; --iter) {
+  ngAfterViewInit(){
+    this.scroll.scrolled(100).subscribe(()=>{
+      console.log("d"); // TODO check last card position... and infiniscroll (ElementRef.nativeElement.offsetTop)
+    })
+  }
+  totalPagLength = 0;
+  pageSize = environment.nbThrowsShow;
+  pageIndex = 0;
+  pageSizeOptions = [5,10,20,50];
+
+  getThrows(pageEvent : PageEvent | null): void {
+    if (pageEvent) {
+      this.pageSize = pageEvent.pageSize;
+      this.pageIndex = pageEvent.pageIndex;
+    }
+    var id = new BigNumber(this.totalThrows).minus(this.pageIndex * this.pageSize);
+    this.managedThrows$ = [];
+    for (var iter = this.pageSize; iter > 0; --iter) {
       if (id.isGreaterThan(0)) {
           id = id.minus(1);
           this.managedThrows$.push(

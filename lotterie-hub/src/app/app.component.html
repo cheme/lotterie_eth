@@ -1,10 +1,18 @@
-<h1> Damn {{ title }}! </h1>
-<nav>
-  <a routerLink="/throws">Throws</a>
-  <a routerLink="/lotterieparams">Params</a>
-  <a routerLink="/winningparams">WParams</a>
-  <a routerLink="/phaseparams">PParams</a>
-  <app-account></app-account>
-</nav>
+
+<mat-menu #appMenu="matMenu">
+  <a routerLink="/throws" mat-menu-item>Throws</a>
+  <a routerLink="/lotterieparams" mat-menu-item>Params</a>
+  <a routerLink="/winningparams" mat-menu-item>WParams</a>
+  <a routerLink="/phaseparams" mat-menu-item>PParams</a>
+</mat-menu>
+
+<mat-toolbar  color="primary">
+<mat-toolbar-row><span>Damn {{ title }}!</span>
+<span class="example-spacer"></span>
+<app-account></app-account></mat-toolbar-row>
+<mat-toolbar-row>
+  <button mat-button [matMenuTriggerFor]="appMenu">Menu</button>
+</mat-toolbar-row>
+</mat-toolbar>
 <router-outlet></router-outlet>
 <app-messages></app-messages>

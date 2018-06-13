@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  contractAddress: '0xf536f6bf4ef942a0b6c2d943fac8c8bd43ed1fb1',
+  contractAddress: '0x2abc4ea11781eec0a82f3e12856ebd7db49b24cb',
   nbParamsShow: 10,
   nbThrowsShow: 10,
   nbParticipationsShow: 10,

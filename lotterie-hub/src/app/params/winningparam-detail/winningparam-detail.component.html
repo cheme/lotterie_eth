@@ -7,7 +7,7 @@
   <div><span>Nb winners min ration: {{ param.nbWinnerMinRatio }}</span></div>
   <!-- TODO pipe to select values -->
   <div><span>Winning distribution : {{ param.distribution }}</span></div>
-  <button (click)="createNew()">create new</button>
+  <button mat-raised-button (click)="createNew()">create new</button>
 </div>
 <div *ngIf="inline()">
   <div><span>
@@ -30,8 +30,8 @@
   <label>Distribution:
     <input [(ngModel)]="param.distribution" placeholder="0">
   </label>
-  <button (click)="launchCreate()">launch create</button>
+  <button mat-raised-button (click)="launchCreate()">launch create</button>
 </div>
 <div *ngIf="!inline()">
-  <button (click)="goBack()">go back</button>
+  <button mat-raised-button (click)="goBack()">go back</button>
 </div>
