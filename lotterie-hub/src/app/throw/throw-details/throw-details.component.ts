@@ -1,20 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ThrowComponentBase } from '../throw-component-base';
 import { ActivatedRoute } from '@angular/router';
-import { LotterieService } from '../../ethereum/lotterie.service';
+import { LotterieService, ThrowEventPhase, ThrowEventRevealed, ThrowEventNewParticipation, ThrowEventWin } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
 import { Location } from '@angular/common';
 import { Participation } from '../participation';
-import { of, zip, forkJoin } from 'rxjs';
+import { of, zip, forkJoin, Subject } from 'rxjs';
 import { map, flatMap } from 'rxjs/operators';
-import BigNumber from 'bignumber.js';
+import { Bignumber } from '../../eth-components/bignumber';
 
 @Component({
   selector: 'app-throw-details',
   templateUrl: './throw-details.component.html',
   styleUrls: ['./throw-details.component.css']
 })
-export class ThrowDetailsComponent extends ThrowComponentBase {
+export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestroy {
 
  constructor(
     route: ActivatedRoute,
@@ -27,10 +27,43 @@ export class ThrowDetailsComponent extends ThrowComponentBase {
 
   sortedWinners : Array<Participation> = null;
 
+  subParticipations : Subject<boolean> = new Subject();
+  reloadParticipations() : void {
+    this.subParticipations.next(true);
+  }
+  changedPhase : boolean = false;
+  participationNbBadge : number = 0;
+  participationValueBadge : number = 0;
+
   onInitExtend() : void {
     this.updateSortedWinners();
-  }
+    this.lotterieService.observeThrow(this.thr.throwLib).subscribe(thrEvent => {
+      if (thrEvent instanceof ThrowEventPhase) {
+        this.thr.currentPhase = thrEvent.newPhase;
+        this.changedPhase = true;
+      } else if (thrEvent instanceof ThrowEventNewParticipation) {
+        this.thr.numberOfBid += 1;
+        this.participationNbBadge += 1;
+        this.thr.totalBidValue.value = this.thr.totalBidValue.value.plus(new Bignumber(thrEvent.bid));
+        this.thr.totalBidValue = Object.create(this.thr.totalBidValue); // To trigger refresh
+        this.participationValueBadge += 1;
+        // TODO refresh <app-participations>
+      } else if (thrEvent instanceof ThrowEventRevealed) {
+        this.thr.numberOfRevealParticipation += 1;
+        // TODO refresh <app-participations> targetted with ThrowEventRevealed (should give observable to child)
+      } else if (thrEvent instanceof ThrowEventWin) {
+        // impact total claimed value and status of win so <participation-details>
 
+        // almost useless : kiss -> badge the sorted win panel and recalc it 
+        // TODO badge sortedwiners
+        this.updateSortedWinners();
+      }
+      this.recalcPhase();
+    });
+  }
+  ngOnDestroy() : void {
+    this.lotterieService.unObserveThrow(this.thr.address);
+  }
   updateSortedWinners() {
     if (this.thr.calcPhase == 3) {
       // when calcPhase is 3 we do not have additional reveal (this might change with other phase switching)
@@ -63,12 +96,12 @@ export class ThrowDetailsComponent extends ThrowComponentBase {
 
     forkJoin(obsArray).subscribe(participations => {
       participations = participations.filter(p => p.state > 0);
-      participations = participations.sort((p1,p2) => ThrowDetailsComponent.compareArr(p1.score, p2.score,p1.address,p2.address));
+      participations = participations.sort((p1,p2) => ThrowDetailsComponent.compareArr(p1.score, p2.score,p1.participationId,p2.participationId));
       this.sortedWinners = participations;
     })
 
   }
-  private static compareArr(p1 : number[], p2 : number[], add1 : BigNumber, add2 : BigNumber) : number {
+  private static compareArr(p1 : number[], p2 : number[], add1 : number, add2 : number) : number {
     for (var i = 0; i < p1.length; ++i) {
       if (p1[i] < p2[i]) {
         return 1;
@@ -115,5 +148,10 @@ export class ThrowDetailsComponent extends ThrowComponentBase {
     });
 
   }
+  recalcPhase() {
+      // TODO update calcPhase!!
+
+  }
+
 
 }

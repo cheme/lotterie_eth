@@ -8,7 +8,7 @@ import { PhaseparamsComponent } from './phaseparams/phaseparams.component';
 import { PhaseparamDetailComponent } from './phaseparam-detail/phaseparam-detail.component';
 import { LotterieparamDetailComponent } from './lotterieparam-detail/lotterieparam-detail.component';
 import { LotterieparamsComponent } from './lotterieparams/lotterieparams.component';
-import {MatButtonModule} from '@angular/material';
+import {MatButtonModule, MatTableModule, MatSortModule, MatPaginatorModule, MatListModule} from '@angular/material';
 
 @NgModule({
   imports: [
@@ -16,6 +16,10 @@ import {MatButtonModule} from '@angular/material';
     FormsModule,
     RouterModule,
     MatButtonModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    MatListModule,
   ],
   exports: [
     WinningparamDetailComponent,

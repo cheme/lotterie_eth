@@ -1,12 +1,35 @@
 import { Injectable, Inject, OnInit } from '@angular/core';
-import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
-import { Observable, bindNodeCallback, of, from, interval, bindCallback, zip } from 'rxjs';
+import { Observable, bindNodeCallback, of, from, interval, bindCallback, zip, merge } from 'rxjs';
 import { map, flatMap, tap, catchError, filter, take } from 'rxjs/operators';
 import { WEB3 } from './tokens';
 import { LOTTERIELIB } from './tokens';
 //import { isDevMode } from '@angular/core';
 import { environment } from '../../environments/environment';
+
+class ObservePoll {
+  constructor(public eventname : string, public cb : Function, public contract? : any) { }
+  public enabled = true;
+}
+
+export class ThrowEventPhase {
+  constructor(public newPhase : number) { }
+}
+export class ThrowEventNewParticipation {
+  constructor(public participationId : number,public bid : string) {}
+}
+export class ThrowEventRevealed {
+  constructor(public participationId : number, public hiddenSeed : string, public concealedSeed : string) {}
+}
+export class ThrowEventWin {
+  constructor(
+    public participationId : number,
+    public address : string,
+    public position : number,
+    public amount : string
+  ) { }
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,14 +50,24 @@ export class LotterieService {
   }
   private lastpollblock : number; // TODO switch to BN
   // store poll observers if using metamask (until support web3 1.0 event watch)
-  private metamaskpoll : Function [] = [];
+  private metamaskpoll : ObservePoll [] = [];
 
-  private observeEvent(eventname : string, cb) {
+  private observeEvent(eventname : string, cb : Function,contractobj?) {
+    var contract, contractaddress;
+    if (contractobj) {
+      contract = contractobj;
+      contractaddress = contractobj.address;
+    } else {
+      contract = this.lotterieLib.lotterie;
+    }
     if (this.lotterieLib.web3.currentProvider.isMetaMask) {
       return Observable.create ( observer => {
 
-      var pollCall = (startBlock,endBlock) => {
-        this.lotterieLib.lotterie.getPastEvents(eventname,{
+       // TODO pollcall in actual poll function (redundant instantiation of function here)
+       // need to add observer in metamaskpoll(already got contract)
+       var pollCall = (startBlock,endBlock) => {
+
+        contract.getPastEvents(eventname,{
           fromBlock : startBlock,
           toBlock : endBlock
         }, (error, result) => {
@@ -47,13 +80,13 @@ export class LotterieService {
           }
         });
       };
-      this.metamaskpoll.push(pollCall);
+      this.metamaskpoll.push(new ObservePoll(eventname,pollCall,contractaddress));
        
       });
     }
     return Observable.create( observer => {
-      this.lotterieLib.lotterie.events[eventname](
-    // TODO weak ref on observer : gc when out of context??
+      contract.events[eventname](
+        // TODO weak ref on observer : gc when out of context??
         (error, result) => {
           if (error) {
             observer.error(error);
@@ -64,6 +97,21 @@ export class LotterieService {
       )
     });
   }
+  private unObserveEvent(eventname : string, contractaddress?) {
+    if (this.lotterieLib.web3.currentProvider.isMetaMask) {
+      for (var p of this.metamaskpoll) {
+        if (p.enabled && (eventname && eventname === p.eventname)) {
+          if(!contractaddress || (contractaddress && contractaddress === contractaddress['address'])) {
+            p.enabled = false;
+          }
+        }
+        // TODO free mem at some point!!!(gc it)
+      }
+    } else {
+      // for now consider our subscription do not leak
+    }
+  }
+
   // to subscribe on all new throw addresses
   public observeThrows(): Observable<string> {
     return this.observeEvent('NewThrow', (ev) => ev.returnValues.throwAddress);
@@ -75,6 +123,36 @@ export class LotterieService {
     });
     return bindCallback(fncb)();*/
   }
+  public unObserveThrows()  {
+    return this.unObserveEvent('NewThrow');
+  }
+  public observeThrow(lib): Observable<ThrowEventPhase | ThrowEventNewParticipation | ThrowEventRevealed | ThrowEventWin > {
+    return merge<ThrowEventPhase, ThrowEventNewParticipation, ThrowEventRevealed, ThrowEventWin> (
+      this.observeEvent('ChangePhase', (ev) => new ThrowEventPhase(ev.returnValues.newPhase),lib),
+      this.observeEvent('NewParticipation', (ev) => new ThrowEventNewParticipation(
+        ev.returnValues.participationId,
+        ev.returnValues.bid
+      ),lib),
+      this.observeEvent('Revealed', (ev) => new ThrowEventRevealed(
+        ev.returnValues.participationId,
+        ev.returnValues.hiddenSeed,
+        ev.returnValues.concealedSeed
+      ),lib),
+      this.observeEvent('Win', (ev) => new ThrowEventWin(
+        ev.returnValues.participationId,
+        ev.returnValues.address,
+        ev.returnValues.position,
+        ev.returnValues.amount,
+      ),lib)
+    );
+  }
+
+
+ 
+  public unObserveThrow(lib)  {
+    return this.unObserveEvent(null,lib); // all event linked on this lib
+  }
+ 
   public getAccounts(): Observable<string[]> {
     return from(this.web3.eth.getAccounts());
   }
@@ -94,28 +172,28 @@ export class LotterieService {
     return from(this.lotterieLib.lotterie.methods.getLotterieParamsCount().call());
   }
 
-  public getWinningParam(ix : BigNumber): Observable<Object> {
+  public getWinningParam(ix : string): Observable<Object> {
     return from(this.lotterieLib.lotterie.methods.getWinningParams(ix).call()).pipe(
       map(o => this.lotterieLib.newWinningParams(o))
     );
   }
 
-  public getPhaseParam(ix : BigNumber): Observable<Object> {
+  public getPhaseParam(ix : string): Observable<Object> {
     return from(this.lotterieLib.lotterie.methods.getPhaseParams(ix).call()).pipe(
       map(o => this.lotterieLib.newPhaseParams(o))
     );
   }
 
-  public getLotterieParam(ix : BigNumber): Observable<Object> {
+  public getLotterieParam(ix : string): Observable<Object> {
     return from(this.lotterieLib.lotterie.methods.getParams(ix).call()).pipe(
       map(o => this.lotterieLib.newLotterieParams(o))
     );
   }
 
   // TODO remove...?  or put a cache
-  public getLotterieMinValue(ix : BigNumber): Observable<BigNumber> {
+  public getLotterieMinValue(ix : string): Observable<string> {
     return from(this.lotterieLib.lotterie.methods.getParams(ix).call()).pipe(
-      map(o => new BigNumber(this.lotterieLib.newLotterieParams(o)['minBidValue']))
+      map(o => this.lotterieLib.newLotterieParams(o)['minBidValue'])
     );
   }
   // TODO remove...? or put a cache!!
@@ -132,7 +210,7 @@ export class LotterieService {
 
 
 
-  public getThrowAddress(ix : BigNumber): Observable<string> {
+  public getThrowAddress(ix : string): Observable<string> {
     return from(this.lotterieLib.lotterie.methods.getThrowAddress(ix).call());
   }
 
@@ -184,9 +262,9 @@ export class LotterieService {
     }
 
     public initThrow(
-      params : BigNumber,
-      paramsPhaseId : BigNumber,
-      initWinValue : BigNumber,
+      params : string,
+      paramsPhaseId : string,
+      initWinValue : string,
       ownerMargin : number,
       authorContractMargin : number,
       authorDappMargin : number,
@@ -325,7 +403,9 @@ export class LotterieService {
       tap((nb: number) => {
         if (this.lastpollblock != null && this.lastpollblock !== nb) {
           for (var p of this.metamaskpoll) {
-            p(this.lastpollblock + 1, nb);
+            if (p.enabled) {
+              p.cb(this.lastpollblock + 1, nb);
+            }
           }
         }
         this.lastpollblock = nb;

@@ -1,9 +1,9 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { MessageService } from '../../message.service';
 import { LotterieService } from '../../ethereum/lotterie.service';
-import BigNumber from 'bignumber.js';
 import { environment } from '../../../environments/environment';
 import { Location } from '@angular/common';
+import { EthId } from '../../eth-components/eth-id';
 
 @Component({
   selector: 'app-throw-new',
@@ -12,10 +12,10 @@ import { Location } from '@angular/common';
 })
 export class ThrowNewComponent implements OnInit {
 
-  @Input() params : BigNumber;
-  @Input() paramsPhaseId : BigNumber;
+  @Input() params : EthId;
+  @Input() paramsPhaseId : EthId;
 
-  initWinValue : BigNumber;
+  initWinValue : string;
   ownerMargin : number = environment.defaultOwnerMargin;
   authorContractMargin : number = environment.defaultAuthorContractMargin;
   authorDappMargin : number = environment.defaultAuthorDappMargin;
@@ -24,8 +24,8 @@ export class ThrowNewComponent implements OnInit {
   newThrow() {
 
     this.lotterieService.initThrow(
-      this.params,
-      this.paramsPhaseId,
+      this.params.toString(),
+      this.paramsPhaseId.toString(),
       this.initWinValue,
       this.ownerMargin,
       this.authorContractMargin,

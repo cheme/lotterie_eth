@@ -1,6 +1,5 @@
 //import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, OnInit, Input } from '@angular/core';
-import BigNumber from 'bignumber.js';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
@@ -9,6 +8,7 @@ import { LotterieService } from '../../ethereum/lotterie.service';
 import { Lotterieparam } from '../lotterieparam';
 import { ParamDetailsComponentBase } from '../param-details';
 import { Observable } from 'rxjs';
+import { EthId } from '../../eth-components/eth-id';
 
 @Component({
   selector: 'app-lotterieparam-detail',
@@ -17,11 +17,11 @@ import { Observable } from 'rxjs';
 })
 export class LotterieparamDetailComponent extends ParamDetailsComponentBase<Lotterieparam> {
 
-  newParam(id: BigNumber, object: any): Lotterieparam {
+  newParam(id: EthId, object: any): Lotterieparam {
     return Lotterieparam.fromObject(id,object);
   }
-  getParamAt(id: BigNumber): Observable<any> {
-    return this.lotterieService.getLotterieParam(id);
+  getParamAt(id: EthId): Observable<any> {
+    return this.lotterieService.getLotterieParam(id.toString());
   }
 //  @Input() mode : string
 //  @Input() lotterieparam : Lotterieparam

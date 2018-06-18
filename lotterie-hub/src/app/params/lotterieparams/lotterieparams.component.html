@@ -1,4 +1,10 @@
 <h2>Lotterie params</h2>
+<mat-paginator [length]="totalPagLength"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="setPagin($event)"
+              showFirstLastButtons>
+</mat-paginator>
 <ul>
   <li *ngFor="let p$ of params$">
   <span  *ngIf="(p$ | async) as p">

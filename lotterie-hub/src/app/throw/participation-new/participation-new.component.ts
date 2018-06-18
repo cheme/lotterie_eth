@@ -2,7 +2,6 @@ import { Component, OnInit, Input } from '@angular/core';
 import { Athrow } from '../athrow';
 import { LotterieService } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
-import BigNumber from 'bignumber.js';
 import { StorageService } from '../../storage.service';
 import { EthValue } from '../../eth-components/eth-value';
 
@@ -17,9 +16,7 @@ export class ParticipationNewComponent implements OnInit {
 
   loaded : boolean = false;
 
-  minBidValue : BigNumber;
-  bidValue : string; // TODO direct conv to bn from html
-  bidValue2 : string;
+  minBidValue : EthValue;
   hiddenSeed : string;
   revealedSeed : string;
 
@@ -44,10 +41,8 @@ export class ParticipationNewComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.lotterieService.getLotterieMinValue(this.athrow.paramsId).subscribe((nb) => {
-      this.minBidValue = nb;
-      this.bidValue = nb.toString();
-      this.bidValue2 = nb.toString();
+    this.lotterieService.getLotterieMinValue(this.athrow.paramsId.toString()).subscribe((nb) => {
+      this.minBidValue = EthValue.fromString(nb.toString());
       this.loaded = true;
     });
   
@@ -58,7 +53,7 @@ export class ParticipationNewComponent implements OnInit {
   }
 
   invalidBidValue() : boolean {
-    return this._val.value.isLessThan(this.minBidValue);
+    return (!this.minBidValue || this._val.value.isLessThan(this.minBidValue.value));
   }
 
   newParticipation() {

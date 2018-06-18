@@ -1,13 +1,18 @@
- import BigNumber from 'bignumber.js';
+import { EthId } from "../eth-components/eth-id";
 
 export class Winningparam {
 
-  static fromObject(id : BigNumber, object: any): Winningparam {
-    let param =  {...object};
-    param.id = id;
+  static fromObject(id : EthId, object: any): Winningparam {
+    //let param =  {...object};
+    let param =  {
+      id,
+      nbWinners : parseInt(object.nbWinners),
+      nbWinnerMinRatio : parseInt(object.nbWinnerMinRatio),
+      distribution : parseInt(object.distribution),
+    };
     return param;
   }
-    id : BigNumber;
+    id : EthId;
   // TODO how to put constraint on type with angular?? -> here positive less than 255
     nbWinners : number;
     // positive less than 101

@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Winningparam } from '../winningparam';
-import BigNumber from 'bignumber.js';
 import { Observable, of, zip } from 'rxjs';
 import { LotterieService } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
 import { map } from 'rxjs/operators';
 import { ParamsComponentBase } from '../params';
+import { DataSource } from '@angular/cdk/table';
+import { EthId } from '../../eth-components/eth-id';
 
 @Component({
   selector: 'app-winningparams',
@@ -13,6 +14,8 @@ import { ParamsComponentBase } from '../params';
   styleUrls: ['./winningparams.component.css']
 })
 export class WinningparamsComponent extends ParamsComponentBase<Winningparam> {
+  displayedColumns = ['id', 'nbWinners', 'nbWinnerMinRatio', 'distribution'];
+
   constructor(
      lotterieService: LotterieService,
      messageService: MessageService,
@@ -22,10 +25,10 @@ export class WinningparamsComponent extends ParamsComponentBase<Winningparam> {
   getNb(): Observable<string> {
     return this.lotterieService.getNbWinningParams();
   }
-  getParam(id: BigNumber): Observable<any> {
-    return this.lotterieService.getWinningParam(id);
+  getParam(id: EthId): Observable<any> {
+    return this.lotterieService.getWinningParam(id.toString());
   }
-  newParam(id: BigNumber, object: any): Winningparam {
+  newParam(id: EthId, object: any): Winningparam {
     return Winningparam.fromObject(id,object);
   }
 }
@@ -39,7 +42,7 @@ export class WinningparamsComponent extends ParamsComponentBase<Winningparam> {
 
   getWinningParams(): void {
     this.lotterieService.getNbWinningParams().subscribe(nb => {
-      var id = new BigNumber(nb);
+      var id = new Bignumber(nb);
       var res = [];
       for (var iter = 10; iter > 0; --iter) {
         if (id.isGreaterThan(0)) {

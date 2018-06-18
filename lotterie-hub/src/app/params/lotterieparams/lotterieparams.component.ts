@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Lotterieparam } from '../lotterieparam';
-import BigNumber from 'bignumber.js';
 import { Observable, of, zip } from 'rxjs';
 import { LotterieService } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
 import { map } from 'rxjs/operators';
 import { ParamsComponentBase } from '../params';
+import { EthId } from '../../eth-components/eth-id';
 
 
 @Component({
@@ -23,10 +23,10 @@ export class LotterieparamsComponent extends ParamsComponentBase<Lotterieparam> 
   getNb(): Observable<string> {
     return this.lotterieService.getNbLotterieParams();
   }
-  getParam(id: BigNumber): Observable<any> {
-    return this.lotterieService.getLotterieParam(id);
+  getParam(id: EthId): Observable<any> {
+    return this.lotterieService.getLotterieParam(id.toString());
   }
-  newParam(id: BigNumber, object: any): Lotterieparam {
+  newParam(id: EthId, object: any): Lotterieparam {
     return Lotterieparam.fromObject(id,object);
   }
 }
@@ -41,7 +41,7 @@ export class LotterieparamsComponent implements OnInit {
 
   getLotterieParams(): void {
     this.lotterieService.getNbLotterieParams().subscribe(nb => {
-      var id = new BigNumber(nb);
+      var id = new Bignumber(nb);
       var res = [];
       for (var iter = 10; iter > 0; --iter) {
         if (id.isGreaterThan(0)) {

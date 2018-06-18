@@ -1,8 +1,44 @@
 <h2>Winning params</h2>
-<ul>
-  <li *ngFor="let p$ of params$">
+<mat-paginator [length]="totalPagLength"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="setPagin($event)"
+              showFirstLastButtons>
+</mat-paginator>
+
+<mat-nav-list>
+  <mat-list-item *ngFor="let p$ of params$">
   <span  *ngIf="(p$ | async) as p">
     <app-winningparam-detail [param] = "p" [mode] = "'inline'"></app-winningparam-detail>
   </span>
-  </li>
-</ul>
+</mat-list-item>
+</mat-nav-list>
+
+<table mat-table [dataSource]="this" class="mat-elevation-z8" matSort>
+
+    <ng-container matColumnDef="nbWinners">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Nb Winners </th>
+      <td mat-cell *matCellDef="let element"> {{element.nbWinners}} </td>
+    </ng-container>
+  
+    <ng-container matColumnDef="nbWinnerMinRatio">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Min winner ratio </th>
+      <td mat-cell *matCellDef="let element"> {{element.nbWinnerMinRatio}} </td>
+    </ng-container>
+  
+    <ng-container matColumnDef="distribution">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Distribution </th>
+      <td mat-cell *matCellDef="let element"> {{element.distribution}} </td>
+    </ng-container>
+  
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef> ID </th>
+      <td mat-cell *matCellDef="let element">
+        <a routerLink="/winningparam/{{ element.id }}">{{element.id}}</a>
+      </td>
+    </ng-container>
+  
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    
+  </table>

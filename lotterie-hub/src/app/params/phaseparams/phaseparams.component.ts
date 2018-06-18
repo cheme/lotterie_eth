@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Phaseparam } from '../phaseparam';
-import BigNumber from 'bignumber.js';
 import { Observable, of, zip } from 'rxjs';
 import { LotterieService } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
 import { map } from 'rxjs/operators';
 import { ParamsComponentBase } from '../params';
+import { EthId } from '../../eth-components/eth-id';
 
 
 @Component({
@@ -23,10 +23,10 @@ export class PhaseparamsComponent extends ParamsComponentBase<Phaseparam> {
   getNb(): Observable<string> {
     return this.lotterieService.getNbPhaseParams();
   }
-  getParam(id: BigNumber): Observable<any> {
-    return this.lotterieService.getPhaseParam(id);
+  getParam(id: EthId): Observable<any> {
+    return this.lotterieService.getPhaseParam(id.toString());
   }
-  newParam(id: BigNumber, object: any): Phaseparam {
+  newParam(id: EthId, object: any): Phaseparam {
     return Phaseparam.fromObject(id,object);
   }
 }
@@ -42,7 +42,7 @@ export class PhaseparamsComponent implements OnInit {
   // TODO replace by generic method(TODO check generic in typescript)
   getPhaseParams(): void {
     this.lotterieService.getNbPhaseParams().subscribe(nb => {
-      var id = new BigNumber(nb);
+      var id = new Bignumber(nb);
       var res = [];
       for (var iter = 10; iter > 0; --iter) {
         if (id.isGreaterThan(0)) {

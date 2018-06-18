@@ -1,4 +1,6 @@
-import BigNumber from "bignumber.js";
+import { EthId } from "../eth-components/eth-id";
+import { EthValue } from "../eth-components/eth-value";
+import { Bignumber } from "../eth-components/bignumber";
 
 export class Athrow {
 
@@ -8,15 +10,15 @@ export class Athrow {
   throwLib : Object;
 
   // inner fields 
-  paramsId : BigNumber;
-  paramsPhaseId : BigNumber;
+  paramsId : EthId;
+  paramsPhaseId : EthId;
   currentSeed : string;
-  totalBidValue : BigNumber;
-  totalClaimedValue : BigNumber;
+  totalBidValue : EthValue;
+  totalClaimedValue : EthValue;
   numberOfBid : number; // uint64
   numberOfRevealParticipation : number; // uint64
   thrower : string; // address
-  blockNumber : BigNumber;
+  blockNumber : Bignumber;
 
   authorContractMargin : number; // uint32
   authorContractWithdrawned : boolean;
@@ -27,7 +29,7 @@ export class Athrow {
   throwerMargin : number;
   throwerWithdrawned : boolean;
 
-  totalMargin : BigNumber;
+  totalMargin : EthValue;
 
   currentPhase : number;
   calcPhase : number;
@@ -38,17 +40,27 @@ export class Athrow {
     athrow.throwLib = throwLib;
     Athrow.totalMarginInit(athrow);
     athrow.calcPhase = 0;
+    athrow.currentPhase = parseInt(athrow.currentPhase);
+    athrow.paramsId = new EthId(athrow.paramsId);
+    athrow.paramsPhaseId = new EthId(athrow.paramsPhaseId);
+    athrow.totalBidValue = EthValue.fromString(athrow.totalBidValue);
+    athrow.totalClaimedValue = EthValue.fromString(athrow.totalClaimedValue);
+    //athrow.totalMargin = EthValue.fromString(athrow.totalMargin);
+    athrow.blockNumber = new Bignumber(athrow.blockNumber);
+    athrow.numberOfBid = parseInt(athrow.numberOfBid);
+    athrow.numberOfRevealParticipation = parseInt(athrow.numberOfRevealParticipation);
+    athrow.authorContractMargin = parseInt(athrow.authorContractMargin);
+    athrow.authorDappMargin = parseInt(athrow.authorDappMargin);
+    athrow.ownerMargin = parseInt(athrow.ownerMargin);
+    athrow.throwerMargin = parseInt(athrow.throwerMargin);
     return athrow;
   }
  
   static totalMarginInit(t : Athrow) {
-    var sum = new BigNumber(t.authorContractMargin);
-    sum = sum.plus(new BigNumber(t.authorDappMargin));
-    sum = sum.plus(new BigNumber(t.ownerMargin));
-    sum = sum.plus(new BigNumber(t.throwerMargin));
-    t.totalMargin = sum;
-  }
-  static calcPhase(t : Athrow) {
-    t.throwLib
+    var sum = new Bignumber(t.authorContractMargin);
+    sum = sum.plus(new Bignumber(t.authorDappMargin));
+    sum = sum.plus(new Bignumber(t.ownerMargin));
+    sum = sum.plus(new Bignumber(t.throwerMargin));
+    t.totalMargin = EthValue.fromBN(sum);
   }
 }

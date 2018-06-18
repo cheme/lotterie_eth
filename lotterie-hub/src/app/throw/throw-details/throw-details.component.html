@@ -1,12 +1,28 @@
 <div *ngIf="thr">
+    <mat-accordion>
+        <mat-expansion-panel expanded>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Infos
+            </mat-panel-title>
+            <mat-panel-description>
+              Throw general infos
+            </mat-panel-description>
+          </mat-expansion-panel-header>   
   <div>
     <a routerLink="/throw/{{ thr.address }}">
     <span>Address: </span>{{thr.address}}</a>
   </div>
-  <div><span>Registered phase : </span>{{ thr.currentPhase }}</div>
+  <div><span>Registered phase : </span><span
+    matBadge="!" matBadgeHidden="{{ !changedPhase }}" matBadgeColor="primary" (mouseleave)="changedPhase = false"
+    >{{ thr.currentPhase }}&nbsp;&nbsp;</span></div>
   <div><span>Updated phase : </span>{{ thr.calcPhase }}</div>
-  <div><span>Nb: </span>{{thr.numberOfBid}}</div>
-  <div><span>Total: </span>{{thr.totalBidValue}}</div>
+  <div><span>Nb: </span><span 
+    matBadge="{{ participationNbBadge }}" matBadgeHidden="{{ participationNbBadge == 0 }}" matBadgeColor="accent" (mouseleave)="participationNbBadge = 0"
+    >{{thr.numberOfBid}}&nbsp;&nbsp;</span></div>
+  <div><span>Total: </span><span 
+    matBadge="{{ participationValueBadge }}" matBadgeHidden="{{ participationValueBadge == 0 }}" matBadgeColor="warn" (mouseleave)="participationValueBadge = 0"
+    >{{thr.totalBidValue}}&nbsp;&nbsp;</span></div>
   <div><span>Revealed: </span>{{thr.numberOfRevealParticipation}}</div>
   <div><span>Thrower : </span>{{thr.thrower}}</div>
   <div><span>Author Contract Margin : </span>{{thr.authorContractMargin}}</div>
@@ -23,28 +39,64 @@
     <a routerLink="/lotterieparam/{{ thr.paramsId }}">
     <span>Rules: </span>{{thr.paramsId}}</a>
   </div>
-  <div *ngIf="thr.calcPhase > 0">
-    <app-participations [athrow]=thr></app-participations>
-  </div>
-  <!-- TODO put in box -->
-  <div *ngIf="thr.calcPhase > 2">
-    WINNERS
- <li *ngFor="let w of sortedWinners">
+
+</mat-expansion-panel>
+
+   <mat-expansion-panel *ngIf="thr.calcPhase > 0">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Participations <button (click)="reloadParticipations()">reload</button>
+            </mat-panel-title>
+            <mat-panel-description>
+              Current participations 
+            </mat-panel-description>
+          </mat-expansion-panel-header>   
+    <app-participations [athrow]="thr" [subscribeP]="subParticipations"></app-participations>
+  </mat-expansion-panel>
+   <mat-expansion-panel *ngIf="thr.calcPhase > 2">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Winners 
+            </mat-panel-title>
+            <mat-panel-description>
+              Current throw winners 
+            </mat-panel-description>
+          </mat-expansion-panel-header>   
+
+ <ul *ngFor="let w of sortedWinners">
+   <li>
     <app-participation-detail 
       [throwLib]="thr.throwLib"
       [throwId]="thr.address"
       [throwState]="thr.calcPhase"
       [participation]="w"
     ></app-participation-detail>
-  </li>
-  </div>
-
-  <!-- TODO put creation form in a pop or other mat -->
-  <app-throw-new [params]="thr.paramsId"></app-throw-new>
- 
-  <!-- TODO put in box -->
-  <div *ngIf="thr.calcPhase > 0">
+   </li>
+  </ul>
+  </mat-expansion-panel>
+   <mat-expansion-panel *ngIf="thr.calcPhase == 1">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Participate 
+            </mat-panel-title>
+            <mat-panel-description>
+              Add a participation
+            </mat-panel-description>
+          </mat-expansion-panel-header>   
     <app-participation-new [athrow]="thr"></app-participation-new>
-  </div>
-</div>
+    </mat-expansion-panel>
+   <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              New throw 
+            </mat-panel-title>
+            <mat-panel-description>
+              Start a new throw 
+            </mat-panel-description>
+          </mat-expansion-panel-header>   
+  <app-throw-new [params]="thr.paramsId"></app-throw-new>
+ </mat-expansion-panel>
+
+</mat-accordion>
 <button mat-raised-button (click)="goBack()">go back</button>
+</div>

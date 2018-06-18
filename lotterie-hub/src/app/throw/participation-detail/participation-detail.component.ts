@@ -1,5 +1,4 @@
 import { Component, OnInit, Input } from '@angular/core';
-import BigNumber from 'bignumber.js';
 import { ActivatedRoute } from '@angular/router';
 import { LotterieService } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
@@ -26,7 +25,7 @@ export class ParticipationDetailComponent implements OnInit {
   @Input() participation : Participation;
 
   onThrow : boolean = false;
-
+  
   constructor(
     protected route: ActivatedRoute,
     protected lotterieService: LotterieService,

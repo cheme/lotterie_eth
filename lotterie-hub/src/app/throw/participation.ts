@@ -1,4 +1,3 @@
-import BigNumber from "bignumber.js";
 
 export class Participation {
 
@@ -18,6 +17,7 @@ export class Participation {
 
   static fromObject(throwAdd : string, partId : number, object: any): Participation {
     let participation = {...object};
+    participation.state = parseInt(participation.state);
     participation.throwAddress = throwAdd;
     participation.participationId = partId;
     if (participation.state == 0) {

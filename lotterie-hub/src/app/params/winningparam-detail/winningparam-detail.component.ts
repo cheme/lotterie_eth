@@ -1,6 +1,5 @@
 //import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, OnInit, Input } from '@angular/core';
-import BigNumber from 'bignumber.js';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
@@ -9,6 +8,7 @@ import { LotterieService } from '../../ethereum/lotterie.service';
 import { Winningparam } from '../winningparam';
 import { ParamDetailsComponentBase } from '../param-details';
 import { Observable } from 'rxjs';
+import { EthId } from '../../eth-components/eth-id';
 
 @Component({
 //  changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,11 +18,11 @@ import { Observable } from 'rxjs';
 })
 export class WinningparamDetailComponent extends ParamDetailsComponentBase<Winningparam> {
   
-  newParam(id: BigNumber, object: any): Winningparam {
+  newParam(id: EthId, object: any): Winningparam {
     return Winningparam.fromObject(id,object);
   }
-  getParamAt(id: BigNumber): Observable<any> {
-    return this.lotterieService.getWinningParam(id);
+  getParamAt(id: EthId): Observable<any> {
+    return this.lotterieService.getWinningParam(id.toString());
   }
 
   constructor(

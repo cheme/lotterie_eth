@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Athrow } from '../athrow';
 import { environment } from '../../../environments/environment';
-import BigNumber from 'bignumber.js';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-participations',
@@ -11,12 +11,21 @@ import BigNumber from 'bignumber.js';
 export class ParticipationsComponent implements OnInit {
 
   @Input() athrow : Athrow;
+  @Input() subscribeP : Subject<boolean>;
 
-  range : Array<BigNumber>;
+  range : Array<number>;
   constructor() { }
 
   ngOnInit() {
     this.initRange();
+    if (this.subscribeP) {
+      this.subscribeP.subscribe((b) => {
+        if (b) {
+          this.initRange();
+        }
+      });
+      this.subscribeP = null;
+    }
   }
 
   initRange() {
