@@ -4,6 +4,8 @@ import { LotterieService } from '../../ethereum/lotterie.service';
 import { environment } from '../../../environments/environment';
 import { Location } from '@angular/common';
 import { EthId } from '../../eth-components/eth-id';
+import { MatSliderChange } from '@angular/material';
+import { EthValue } from '../../eth-components/eth-value';
 
 @Component({
   selector: 'app-throw-new',
@@ -15,7 +17,7 @@ export class ThrowNewComponent implements OnInit {
   @Input() params : EthId;
   @Input() paramsPhaseId : EthId;
 
-  initWinValue : string;
+  initWinValue : EthValue;
   ownerMargin : number = environment.defaultOwnerMargin;
   authorContractMargin : number = environment.defaultAuthorContractMargin;
   authorDappMargin : number = environment.defaultAuthorDappMargin;
@@ -26,7 +28,7 @@ export class ThrowNewComponent implements OnInit {
     this.lotterieService.initThrow(
       this.params.toString(),
       this.paramsPhaseId.toString(),
-      this.initWinValue,
+      this.initWinValue.fullrepr,
       this.ownerMargin,
       this.authorContractMargin,
       this.authorDappMargin,
@@ -49,5 +51,29 @@ export class ThrowNewComponent implements OnInit {
   goBack(): void {
     this.location.back();
   }
+  static i32ToPercent(i : number) : number {
+    //return (i / (2 ** 32)) * 100;
+    let p = (i / 4294967296) * 100;
+    return parseInt(p.toFixed(0));
 
+
+  }
+  percentOM(value: number | null) : string {
+    if (!value) {
+      return "0";
+    }
+    return (ThrowNewComponent.i32ToPercent(value) + '%');
+  }
+  changeOM(ev: MatSliderChange) {
+    this.ownerMargin = ev.value;
+  }
+  changeACM(ev: MatSliderChange) {
+    this.authorContractMargin = ev.value;
+  }
+  changeADM(ev: MatSliderChange) {
+    this.authorDappMargin = ev.value;
+  }
+  changeTM(ev: MatSliderChange) {
+    this.throwerMargin = ev.value;
+  }
 }

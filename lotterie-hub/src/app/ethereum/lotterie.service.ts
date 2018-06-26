@@ -20,6 +20,7 @@ export class ThrowEventNewParticipation {
 }
 export class ThrowEventRevealed {
   constructor(public participationId : number, public hiddenSeed : string, public concealedSeed : string) {}
+  score? : number[];
 }
 export class ThrowEventWin {
   constructor(
@@ -34,6 +35,21 @@ export class ThrowEventWin {
   providedIn: 'root'
 })
 export class LotterieService {
+  get participationEndModes(): any {
+    return this.lotterieLib.participationEndModes;
+  };
+  get cashoutEndModes(): any {
+    return this.lotterieLib.cashoutEndModes;
+  };
+ 
+  get participationStates(): any {
+    return this.lotterieLib.participationStates;
+  };
+  get phases(): any {
+    return this.lotterieLib.phases;
+  };
+
+
 
   stringToBytes(arg0: string): number[] {
     return this.web3.utils.hexToBytes(this.web3.utils.numberToHex(arg0));
@@ -128,20 +144,20 @@ export class LotterieService {
   }
   public observeThrow(lib): Observable<ThrowEventPhase | ThrowEventNewParticipation | ThrowEventRevealed | ThrowEventWin > {
     return merge<ThrowEventPhase, ThrowEventNewParticipation, ThrowEventRevealed, ThrowEventWin> (
-      this.observeEvent('ChangePhase', (ev) => new ThrowEventPhase(ev.returnValues.newPhase),lib),
+      this.observeEvent('ChangePhase', (ev) => new ThrowEventPhase(parseInt(ev.returnValues.newPhase)),lib),
       this.observeEvent('NewParticipation', (ev) => new ThrowEventNewParticipation(
-        ev.returnValues.participationId,
+        parseInt(ev.returnValues.participationId),
         ev.returnValues.bid
       ),lib),
       this.observeEvent('Revealed', (ev) => new ThrowEventRevealed(
-        ev.returnValues.participationId,
+        parseInt(ev.returnValues.participationId),
         ev.returnValues.hiddenSeed,
         ev.returnValues.concealedSeed
       ),lib),
       this.observeEvent('Win', (ev) => new ThrowEventWin(
-        ev.returnValues.participationId,
+        parseInt(ev.returnValues.participationId),
         ev.returnValues.address,
-        ev.returnValues.position,
+        parseInt(ev.returnValues.position),
         ev.returnValues.amount,
       ),lib)
     );
@@ -160,7 +176,9 @@ export class LotterieService {
   set defaultAccount(account: string) { this.web3.eth.defaultAccount = account; }
 
   get totalThrows(): Observable<number> { 
-    return from(this.lotterieLib.lotterie.methods.getTotalNbThrow().call());
+    return from(this.lotterieLib.lotterie.methods.getTotalNbThrow().call()).pipe(
+      map((i : string) => parseInt(i))
+    );
   }
   public getNbWinningParams(): Observable<string> { // TODO BN instead of string 
     return from(this.lotterieLib.lotterie.methods.getWiningParamsCount().call());
@@ -233,12 +251,26 @@ export class LotterieService {
       .pipe(map(p => this.lotterieLib.newParticipation(p)));
   }
 
+  public getAllRevealedLog(throwLib : any, stBlock : any) : Observable<Array<ThrowEventRevealed>> {
+    return from(throwLib.getPastEvents('Revealed',{
+          fromBlock : stBlock
+        })).pipe(map((evs : any) =>
+         evs.map(ev => 
+         new ThrowEventRevealed(
+           parseInt(ev.returnValues.participationId),
+           ev.returnValues.hiddenSeed,
+           ev.returnValues.concealedSeed
+         ))
+        ));
+  }
   public getFinalWinner(throwLib : any,ix : number) : Observable<[boolean,number,string]> {
     return from(throwLib.methods.getWinner(ix).call());
   }
 
   public calcPhase(lotterieThrowLib : any): Observable<number> {
-    return from(lotterieThrowLib.methods.getPhase().call());
+    return from(lotterieThrowLib.methods.getPhase().call()).pipe(
+      map((i : string) => parseInt(i))
+    );
   }
 
   public launchWinningParamCreation(
@@ -318,6 +350,17 @@ export class LotterieService {
       participationId : number 
     ) : Observable<number> {
       return from( throwLib.methods.positionAtPhaseEnd(participationId).call());
+    }
+    getNextTimeTreshold(throwLib : any): Observable<Date> {
+      return from( throwLib.methods.getNextTimeTreshold().call() ).pipe(
+        map((t : string) => {
+          if (t === "0") {
+            return null;
+          }
+          return new Date(parseInt(t) * 1000);
+        })
+      );
+
     }
 
      public registerWin(

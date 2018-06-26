@@ -15,21 +15,27 @@
   </div>
   <div><span>Registered phase : </span><span
     matBadge="!" matBadgeHidden="{{ !changedPhase }}" matBadgeColor="primary" (mouseleave)="changedPhase = false"
-    >{{ thr.currentPhase }}&nbsp;&nbsp;</span></div>
-  <div><span>Updated phase : </span>{{ thr.calcPhase }}</div>
+    >{{ phaseLabel(thr.currentPhase) }}&nbsp;&nbsp;</span></div>
+  <div><span>Updated phase : </span><span
+    matBadge="!" matBadgeHidden="{{ !calcPhaseBadge }}" matBadgeColor="primary" (mouseleave)="calcPhaseBadge = false"
+    >{{ phaseLabel(thr.calcPhase) }}&nbsp;&nbsp;</span></div>
+  <div *ngIf="nextPhase"><span>Next phase date limit : </span><span
+    >{{ nextPhase }}&nbsp;&nbsp;</span></div>
   <div><span>Nb: </span><span 
     matBadge="{{ participationNbBadge }}" matBadgeHidden="{{ participationNbBadge == 0 }}" matBadgeColor="accent" (mouseleave)="participationNbBadge = 0"
-    >{{thr.numberOfBid}}&nbsp;&nbsp;</span></div>
+    >{{thr.numberOfBid}} <span *ngIf="thr.currentPhase == 1 && maxParticipant"> / {{ maxParticipant }}</span>&nbsp;&nbsp;</span></div>
   <div><span>Total: </span><span 
     matBadge="{{ participationValueBadge }}" matBadgeHidden="{{ participationValueBadge == 0 }}" matBadgeColor="warn" (mouseleave)="participationValueBadge = 0"
     >{{thr.totalBidValue}}&nbsp;&nbsp;</span></div>
-  <div><span>Revealed: </span>{{thr.numberOfRevealParticipation}}</div>
+  <div><span>Revealed: </span><span
+    matBadge="{{ participationRevealBadge }}" matBadgeHidden="{{ participationRevealBadge == 0 }}" matBadgeColor="warn" (mouseleave)="participationRevealBadge = 0"
+    >{{thr.numberOfRevealParticipation}}&nbsp;&nbsp;</span></div>
   <div><span>Thrower : </span>{{thr.thrower}}</div>
-  <div><span>Author Contract Margin : </span>{{thr.authorContractMargin}}</div>
-  <div><span>Author Dapp Margin : </span>{{thr.authorDappMargin}}</div>
-  <div><span>Owner Margin : </span>{{thr.ownerMargin}}</div>
-  <div><span>Thrower Margin : </span>{{thr.throwerMargin}}</div>
-  <div><span>Total Margin : </span>{{ thr.totalMargin }}</div>
+  <div><span>Author Contract Margin : </span>{{ i32ToPercent(thr.authorContractMargin) }}</div>
+  <div><span>Author Dapp Margin : </span>{{ i32ToPercent(thr.authorDappMargin) }}</div>
+  <div><span>Owner Margin : </span>{{ i32ToPercent(thr.ownerMargin) }}</div>
+  <div><span>Thrower Margin : </span>{{ i32ToPercent(thr.throwerMargin) }}</div>
+  <div><span>Total Margin : </span>{{ i32ToPercent(thr.totalMargin) }}</div>
   <div>
     <a routerLink="/phaseparam/{{ thr.paramsPhaseId }}">
     <span>Phases Rules: </span>{{thr.paramsPhaseId}}</a>
@@ -50,12 +56,14 @@
             <mat-panel-description>
               Current participations 
             </mat-panel-description>
-          </mat-expansion-panel-header>   
-    <app-participations [athrow]="thr" [subscribeP]="subParticipations"></app-participations>
+          </mat-expansion-panel-header>
+    <app-participations [athrow]="thr" [subscribeP]="subParticipations" [subscribeThrowEvent]="subThrowEvent"></app-participations>
   </mat-expansion-panel>
    <mat-expansion-panel *ngIf="thr.calcPhase > 2">
           <mat-expansion-panel-header>
-            <mat-panel-title>
+            <mat-panel-title
+    matBadge="{{ winnersBadge }}" matBadgeHidden="{{ winnersBadge == 0 }}" matBadgeColor="accent" (mouseleave)="winnersBadge = 0"
+            >
               Winners 
             </mat-panel-title>
             <mat-panel-description>

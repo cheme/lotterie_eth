@@ -18,6 +18,7 @@ extern crate bincode;
 
 pub mod lotterie;
 pub mod params;
+pub mod vecstorage;
 /*
 pub mod token {
     use parity_hash::{H256, Address};

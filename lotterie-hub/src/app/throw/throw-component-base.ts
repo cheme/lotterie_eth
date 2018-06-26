@@ -37,4 +37,14 @@ export abstract class ThrowComponentBase implements OnInit {
   goBack(): void {
     this.location.back();
   }
+
+  phaseLabel(i : number) : string {
+    return Athrow.phaseLabel(i, this.lotterieService);
+  }
+  i32ToPercent(i : number) : number {
+    //return (i / (2 ** 32)) * 100;
+    let v = (i / 4294967296) * 100;
+    return parseFloat(v.toFixed(2));
+
+  }
 }

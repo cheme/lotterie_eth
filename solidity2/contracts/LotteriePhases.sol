@@ -176,6 +176,14 @@ contract LotteriePhases is LotterieBase {
     return (uint8(calculatedNewPhase));
   }
 
+  function getNextTimeTreshold() external view returns(uint) {
+    if (thr.currentPhase == Phase.Bidding) {
+      return phaseParam.participationStartTreshold;
+    } else {
+      return thr.tmpTime;
+    }
+  }
+
   // do not try switching to phase + 2 due to relative time condition
   function getCurrentPhase() internal view returns(Phase) {
     if (thr.currentPhase == Phase.Bidding) {

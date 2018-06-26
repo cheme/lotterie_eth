@@ -1,13 +1,18 @@
-<p>
-  total nb participation : {{ athrow.numberOfBid }}
-</p>
-<ul *ngIf="athrow.calcPhase > 0">
-  <li *ngFor="let it of range">
+<mat-paginator [length]="totalPagLength"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="initRange($event)">
+</mat-paginator>
+
+<div *ngIf="athrow.calcPhase > 0">
+  <span *ngFor="let it of range">
     <app-participation-detail 
       [throwLib]="athrow.throwLib"
       [throwId]="athrow.address"
       [throwState]="athrow.calcPhase"
-      [participationId]="it"
+      [participationId]="it[0]"
+      [newPart]="it[1]"
+      [subPart]="it[2]"
     ></app-participation-detail>
-  </li>
-</ul>
+  </span>
+</div>

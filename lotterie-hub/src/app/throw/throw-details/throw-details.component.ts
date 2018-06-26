@@ -5,9 +5,11 @@ import { LotterieService, ThrowEventPhase, ThrowEventRevealed, ThrowEventNewPart
 import { MessageService } from '../../message.service';
 import { Location } from '@angular/common';
 import { Participation } from '../participation';
-import { of, zip, forkJoin, Subject } from 'rxjs';
+import { of, zip, forkJoin, Subject, Observable, timer } from 'rxjs';
 import { map, flatMap } from 'rxjs/operators';
 import { Bignumber } from '../../eth-components/bignumber';
+import { Athrow } from '../athrow';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-throw-details',
@@ -28,34 +30,79 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
   sortedWinners : Array<Participation> = null;
 
   subParticipations : Subject<boolean> = new Subject();
+
+  subThrowEvent : Subject<ThrowEventNewParticipation | ThrowEventRevealed> = new Subject();
+
   reloadParticipations() : void {
     this.subParticipations.next(true);
   }
   changedPhase : boolean = false;
+  calcPhaseBadge : boolean = false;
+  winnersBadge : number = 0;
   participationNbBadge : number = 0;
+  participationRevealBadge : number = 0;
   participationValueBadge : number = 0;
+  // for simple race condition mgmt init to true
+  // : useless possible call to calcPhase on start
+  eager : boolean = true;
+  maxParticipant : number = null;
+
+  nextPhase : Date = null;
 
   onInitExtend() : void {
     this.updateSortedWinners();
+    if (this.thr.currentPhase === this.lotterieService.phases.Bidding) {
+    Athrow.withParam(this.thr,(p) => {
+      this.maxParticipant = p.maxParticipant;
+    },this.lotterieService);
+    Athrow.withParamPhase(this.thr,(pp) => {
+      if (pp.participationEndMode === this.lotterieService.participationEndModes.EagerAbsolute
+        || pp.participationEndMode === this.lotterieService.participationEndModes.EagerRelative) {
+        this.eager = true;
+      } else {
+        this.eager = false;
+      }
+    },this.lotterieService);
+    }
+
+    this.nextTimeTresholdSub();
+
     this.lotterieService.observeThrow(this.thr.throwLib).subscribe(thrEvent => {
       if (thrEvent instanceof ThrowEventPhase) {
         this.thr.currentPhase = thrEvent.newPhase;
         this.changedPhase = true;
+        this.lotterieService.getNextTimeTreshold(this.thr.throwLib).subscribe(t => {
+          this.nextPhase = t;
+        });
       } else if (thrEvent instanceof ThrowEventNewParticipation) {
         this.thr.numberOfBid += 1;
         this.participationNbBadge += 1;
         this.thr.totalBidValue.value = this.thr.totalBidValue.value.plus(new Bignumber(thrEvent.bid));
         this.thr.totalBidValue = Object.create(this.thr.totalBidValue); // To trigger refresh
         this.participationValueBadge += 1;
-        // TODO refresh <app-participations>
+        Athrow.withParam(this.thr,p => {
+          if (this.eager && this.thr.numberOfBid >= p.maxParticipant) {
+            // do not switch directly : call meth
+            this.recalcPhase();
+          }
+        },this.lotterieService);
+
+        // send to app-participations
+        this.subThrowEvent.next(thrEvent)
       } else if (thrEvent instanceof ThrowEventRevealed) {
         this.thr.numberOfRevealParticipation += 1;
-        // TODO refresh <app-participations> targetted with ThrowEventRevealed (should give observable to child)
+        this.participationRevealBadge += 1;
+        if (this.thr.numberOfRevealParticipation >= this.thr.numberOfBid) {
+          this.recalcPhase();
+        }
+        // send to app-participations
+        this.subThrowEvent.next(thrEvent)
+
       } else if (thrEvent instanceof ThrowEventWin) {
         // impact total claimed value and status of win so <participation-details>
 
-        // almost useless : kiss -> badge the sorted win panel and recalc it 
-        // TODO badge sortedwiners
+        // almost useless : kiss -> badge the sorted win panel and recalc it
+        this.winnersBadge += 1;
         this.updateSortedWinners();
       }
       this.recalcPhase();
@@ -69,15 +116,51 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
       // when calcPhase is 3 we do not have additional reveal (this might change with other phase switching)
       // so we calc it only once (could not change afterwards)
       if (this.sortedWinners == null) {
-        this.calcWinnersFromParticipations();
+//        this.calcWinnersFromParticipations();
+        this.calcWinnersFromParticipationsLog();
       }
-    } else if (this.thr.calcPhase == 4) {
+    } else if (this.thr.calcPhase > 3) {
         this.getWinnersFromParticipations();
     }
   }
 
+  private calcWinnersFromParticipationsLog() {
+    let finalSeed = this.thr.currentSeed;
+    let nbParticipation = this.thr.numberOfBid;
+    this.lotterieService.getAllRevealedLog(this.thr.throwLib,this.thr.blockNumber.toString()).subscribe(
+      logs => {
+
+        for (let l of logs) {
+          l.score = this.lotterieService.calcScore(finalSeed,l.hiddenSeed);
+        }
+        logs = logs.sort((p1,p2) => ThrowDetailsComponent.compareArr(p1.score, p2.score,p1.participationId,p2.participationId));
+        Athrow.withWinningParam(this.thr,(p) => {
+          let nbWinners = Math.min(this.thr.numberOfBid * p.nbWinnerMinRatio / 100,p.nbWinners);
+
+          if (logs.length > nbWinners) {
+            logs = logs.slice(0,nbWinners);
+          }
+          let obsArray = [];
+          for (let l of logs) {
+            obsArray.push(this.lotterieService.getParticipation(this.thr.throwLib,l.participationId).pipe(
+              map(p => {
+                let participation = Participation.fromObject(this.thr.address, l.participationId, p);
+                participation.score = l.score; 
+                return participation;
+              })
+            ));
+          }
+    forkJoin(obsArray).subscribe(participations => {
+      this.sortedWinners = participations;
+      // TODO switch sortedWinners to array of observable and add pagination
+    })
+
+        },this.lotterieService);
+      }
+    );
+  }
+  // xtra costy get all participation then sort them : use only for debugging
   private calcWinnersFromParticipations() {
-    // xtra costy get all participation TODO switch to log usage to get sorted then query
     let finalSeed = this.thr.currentSeed;
     let nbParticipation = this.thr.numberOfBid;
     let obsArray = [];
@@ -117,6 +200,7 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     }
     return 0;
   }
+
   // TODO move algo (loop) to lotterieService
   private getWinnersFromParticipations() {
     this.lotterieService.getNbFinalWinners(this.thr.throwLib).subscribe((nbWinners) => {
@@ -148,9 +232,28 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     });
 
   }
-  recalcPhase() {
-      // TODO update calcPhase!!
-
+  private recalcPhase() {
+    let thisS = this;
+    this.lotterieService.calcPhase(this.thr.throwLib).subscribe(newPhase => {
+      if (thisS.thr.calcPhase !== newPhase) {
+        thisS.thr.calcPhase = newPhase;
+        thisS.calcPhaseBadge = true;
+        thisS.nextTimeTresholdSub();
+      }
+    });
+  }
+  private nextTimeTresholdSub() {
+    let thisS = this;
+    this.lotterieService.getNextTimeTreshold(this.thr.throwLib).subscribe(function(t) {
+      if (t != null)  {
+      thisS.nextPhase = t;
+      let nextCheck = new Date (t.getTime() + environment.delayBlockDate * 1000);
+      timer(nextCheck).subscribe(() => {
+        thisS.messageService.add("Switch phase timer event happen on " + thisS.thr.address);
+        thisS.recalcPhase();
+      });
+      }
+    });
   }
 
 

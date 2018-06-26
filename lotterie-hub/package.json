@@ -26,6 +26,7 @@
     "big-integer": "^1.6.31",
     "bignumber.js": "^7.2.0",
     "core-js": "^2.5.4",
+    "hammerjs": "^2.0.8",
     "lotterie-solidity": "file:../solidity2",
     "rxjs": "^6.0.0",
     "web3": "^1.0.0-beta.34",

@@ -1,23 +1,46 @@
-<label>Lotterie parameters:
-  <input [(ngModel)]="params" />
-</label>
-<label>Lotterie phase parameters:
-  <input [(ngModel)]="paramsPhaseId" />
-</label>
-<label>Initial winning prize:
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="params" placeholder = "Lotterie parameters"/>
+  <mat-hint>Valid parameter index</mat-hint>
+</mat-form-field>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="paramsPhaseId" placeholder = "Lotterie phase parameters"/>
+  <mat-hint>Valid phase parameter index</mat-hint>
+</mat-form-field>
+</div>
+<div>
+<mat-form-field>
+<amount-eth placeholder = "Initial winning prize" [(ngModel)]="initWinValue"></amount-eth>
+</mat-form-field>
+<!--<label>Initial winning prize:
   <input [(ngModel)]="initWinValue" />
-</label>
-<label>Owner Margin:
-  <input [(ngModel)]="ownerMargin" />
-</label>
-<label>Author contract Margin:
-  <input [(ngModel)]="authorContractMargin" />
-</label>
-<label>Author dapp Margin:
-  <input [(ngModel)]="authorDappMargin" />
-</label>
-<label>Thrower Margin:
-  <input [(ngModel)]="throwerMargin" />
-</label>
+</label>-->
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="ownerMargin" placeholder = "Owner Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeOM($event)"></mat-slider>
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="authorContractMargin" placeholder = "Author contract Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeACM($event)"></mat-slider>
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="authorDappMargin" placeholder = "Author dapp Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeADM($event)"></mat-slider>
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="throwerMargin" placeholder = "Thrower Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeTM($event)"></mat-slider>
+</div>
+<div>
 <button mat-raised-button (click)="newThrow()">Launch a new throw</button>
 <button mat-raised-button (click)="goBack()">go back</button>

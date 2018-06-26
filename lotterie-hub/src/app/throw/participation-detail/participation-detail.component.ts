@@ -1,13 +1,13 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { LotterieService } from '../../ethereum/lotterie.service';
+import { LotterieService, ThrowEventRevealed } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
 import { Location } from '@angular/common';
 import { Athrow } from '../athrow';
 import { Participation } from '../participation';
 import { StorageService } from '../../storage.service';
 import { flatMap, map, filter } from 'rxjs/operators';
-import { zip, of } from 'rxjs';
+import { zip, of, Subject } from 'rxjs';
 
 
 @Component({
@@ -21,9 +21,12 @@ export class ParticipationDetailComponent implements OnInit {
   @Input() throwId : string;
   @Input() throwState : number;
   @Input() participationId : number;
+  @Input() newPart : boolean = false;
 
+  @Input() subPart : Subject<ThrowEventRevealed>;
   @Input() participation : Participation;
 
+  changeState = false;
   onThrow : boolean = false;
   
   constructor(
@@ -43,6 +46,15 @@ export class ParticipationDetailComponent implements OnInit {
     } else {
       this.onThrow = true;
     }
+    if (this.subPart) {
+      this.subPart.subscribe((b) => {
+        if (b) {
+          this.gotAnEvent(b);
+        }
+      });
+      this.subPart = null;
+    }
+ 
     if (this.participation == null) {
     this.lotterieService.getParticipation(this.throwLib,this.participationId)
     .subscribe((p) => {
@@ -101,4 +113,16 @@ export class ParticipationDetailComponent implements OnInit {
         flatMap(position => this.lotterieService.withDrawWin(this.throwLib,this.participation.participationId))
       ).subscribe();
   }
+
+
+  gotAnEvent(ev : ThrowEventRevealed) {
+    console.log("get ev");
+    if (this.participation.state == 0) {
+      this.participation.state = 1;
+      this.changeState = true;
+      this.participation.revealedSeed = ev.hiddenSeed;
+      this.participation.hiddenSeed = ev.concealedSeed;
+    }
+  }
+ 
 }
