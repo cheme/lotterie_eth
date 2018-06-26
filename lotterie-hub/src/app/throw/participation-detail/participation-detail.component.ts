@@ -25,9 +25,9 @@ export class ParticipationDetailComponent implements OnInit {
 
   @Input() subPart : Subject<ThrowEventRevealed>;
   @Input() participation : Participation;
+  @Input() onThrow : boolean = true;
 
   changeState = false;
-  onThrow : boolean = false;
   
   constructor(
     protected route: ActivatedRoute,
@@ -37,14 +37,27 @@ export class ParticipationDetailComponent implements OnInit {
     protected location: Location
   ) { }
 
+  private inStorage : Boolean = null;
+  addToStorage() {
+    this.storageService.addParticipation(this.throwId,this.participation.participationId);
+    this.inStorage = new Boolean(true);
+  }
+  removeFromStorage() {
+    this.storageService.removeParticipation(this.throwId,this.participation.participationId);
+    this.inStorage = new Boolean(false);
+  }
+  isInStorage() : boolean {
+    if (this.inStorage == null) {
+      this.inStorage = new Boolean(this.storageService.hasParticipation(this.throwId,this.participation.participationId));
+    }
+    return this.inStorage.valueOf();
+  }
   checkRevealedSeed(revSead : string) : boolean {
     return revSead != null && this.participation.seed === this.lotterieService.hideSeed(revSead)
   }
   ngOnInit() {
     if (this.throwLib == null) {
       this.throwLib = this.lotterieService.newThrowLib(this.throwId);
-    } else {
-      this.onThrow = true;
     }
     if (this.subPart) {
       this.subPart.subscribe((b) => {
@@ -124,5 +137,10 @@ export class ParticipationDetailComponent implements OnInit {
       this.participation.hiddenSeed = ev.concealedSeed;
     }
   }
- 
+  phaseLabel(i : number) : string {
+    return Athrow.phaseLabel(i, this.lotterieService);
+  }
+  stateLabel(i : number) : string {
+    return Participation.stateLabel(i, this.lotterieService);
+  }
 }

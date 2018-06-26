@@ -36,6 +36,7 @@
   <div><span>Owner Margin : </span>{{ i32ToPercent(thr.ownerMargin) }}</div>
   <div><span>Thrower Margin : </span>{{ i32ToPercent(thr.throwerMargin) }}</div>
   <div><span>Total Margin : </span>{{ i32ToPercent(thr.totalMargin) }}</div>
+  <div *ngIf="thr.calcPhase > 2"><span>Seed : </span>{{ thr.currentSeed }}</div>
   <div>
     <a routerLink="/phaseparam/{{ thr.paramsPhaseId }}">
     <span>Phases Rules: </span>{{thr.paramsPhaseId}}</a>

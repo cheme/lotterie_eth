@@ -12,6 +12,7 @@ import { ParticipationNewComponent } from './participation-new/participation-new
 import {MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatExpansionModule, MatListModule, MatBadgeModule, MatSliderModule, MatInputModule, MatPaginator, MatPaginatorModule} from '@angular/material';
 import { EthereumModule } from '../ethereum/ethereum.module';
 import { EthComponentsModule } from '../eth-components/eth-components.module';
+import { MyBoardComponent } from './my-board/my-board.component';
 
 @NgModule({
   imports: [
@@ -35,6 +36,7 @@ import { EthComponentsModule } from '../eth-components/eth-components.module';
     ThrowDetailsSmallComponent,
     ThrowDetailsComponent,
     ThrowNewComponent,
+    MyBoardComponent,
   ],
   declarations: [
     ThrowDetailsSmallComponent,
@@ -44,6 +46,7 @@ import { EthComponentsModule } from '../eth-components/eth-components.module';
     ParticipationsComponent,
     ParticipationNewComponent,
     DialogNPart,
+    MyBoardComponent,
   ],
   entryComponents: [
     DialogNPart,

@@ -51,6 +51,7 @@ export class LotterieService {
 
 
 
+
   stringToBytes(arg0: string): number[] {
     return this.web3.utils.hexToBytes(this.web3.utils.numberToHex(arg0));
   }
@@ -244,6 +245,12 @@ export class LotterieService {
       from(lotterieThrowLib.methods.getThrowWithdrawInfo().call())
         .pipe(map(t => this.lotterieLib.newThrowWithdraws(t)))
     );
+  }
+
+  public fetchCurrentSeed(throwLib : any): Observable<string> {
+      return from(throwLib.getThrow().call()).pipe(map(t =>
+        this.lotterieLib.newThrow(t).currentSeed
+      ));
   }
 
   public getParticipation(throwLib : any,participationId : number) : Observable<Object> {

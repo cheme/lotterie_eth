@@ -237,6 +237,17 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     this.lotterieService.calcPhase(this.thr.throwLib).subscribe(newPhase => {
       if (thisS.thr.calcPhase !== newPhase) {
         thisS.thr.calcPhase = newPhase;
+        if (newPhase == 3) {
+          this.lotterieService.fetchCurrentSeed(this.thr.throwLib).pipe(
+            map((currentSeed : string) => {
+              this.thr.currentSeed = currentSeed;
+              this.updateSortedWinners();
+            })
+          );
+        }
+        if (newPhase == 4) {
+          this.updateSortedWinners();
+        }
         thisS.calcPhaseBadge = true;
         thisS.nextTimeTresholdSub();
       }

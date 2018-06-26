@@ -1,0 +1,12 @@
+<p>warning this page does not update automatically</p>
+<div *ngFor="let entry$ of participations">
+   <span *ngIf="(entry$[2] | async) as entry">
+    <app-participation-detail 
+      [onThrow]="false"
+      [throwLib]="entry.thr.throwLib"
+      [throwId]="entry.thr.address"
+      [throwState]="entry.thr.calcPhase"
+      [participation]="entry.participation"
+    ></app-participation-detail>
+   </span>
+</div>

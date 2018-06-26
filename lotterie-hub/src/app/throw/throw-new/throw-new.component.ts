@@ -33,9 +33,10 @@ export class ThrowNewComponent implements OnInit {
       this.authorContractMargin,
       this.authorDappMargin,
       this.throwerMargin
-    ).subscribe((recpt) => {
-      console.log("InitThrow sucess" + recpt);
-      this.messageService.add("InitThrow sucess + TODO link it");
+    ).subscribe((recpt : any) => {
+      let thAdd = recpt.events.NewThrow.returnValues.throwAddress;
+      console.log("InitThrow sucess" + thAdd);
+      this.messageService.add("InitThrow sucess : " + thAdd);
     });
 
   }

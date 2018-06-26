@@ -1,28 +1,32 @@
 <mat-card *ngIf="participation">
   <mat-card-header>
+  <mat-card-subtitle *ngIf="!onThrow">
+    <a routerLink="/throw/{{ throwId }}"><span>Throw: </span>{{throwId}}</a>
+  </mat-card-subtitle>
+ 
   <mat-card-title>
-    <div><span
+    <span
       matBadge="!" matBadgeHidden="{{ newPart == false }}"  matBadgeColor="warn" (mouseleave)="newPart = false"
       >{{ participation.participationId }}&nbsp;&nbsp;</span>
-    </div>
   </mat-card-title>
-  </mat-card-header>
+ </mat-card-header>
   <mat-card-content>
-  <div *ngIf="!onThrow"><a routerLink="/throw/{{ throwId }}"><span>Throw: </span>{{throwId}}</a>
-  </div>
 
-  <div *ngIf="!onThrow && throwState > 0"><span>Throw state: </span>{{throwState}}</div>
+  <div *ngIf="!onThrow && throwState > 0"><span>Throw phase: </span>{{phaseLabel(throwState)}}</div>
   <div><span
     matBadge="!" matBadgeHidden="{{ changeState == false }}"  matBadgeColor="warn" (mouseleave)="changeState = false"
-  >Participation state : {{ participation.state }}&nbsp;&nbsp;</span></div>
+  >Participation state : {{ stateLabel(participation.state) }}&nbsp;&nbsp;</span></div>
   <div><span>From : </span>{{ participation.from }}</div>
   <div *ngIf="participation.hiddenSeed" ><span>Hidden Seed: {{ participation.hiddenSeed }}</span></div>
   <div *ngIf="participation.revealedSeed && participation.state > 0" ><span>Revealed Seed: {{ participation.revealedSeed }}</span></div>
   <div *ngIf="participation.revealedSeed && participation.state == 0" ><span>Revealed Seed ready</span></div>
+  <div *ngIf="participation.score && throwState > 2" ><span>Score: {{ participation.score.slice(0,10) }}...</span></div>
   </mat-card-content>
   <mat-card-footer>
   <button mat-raised-button *ngIf="throwState == 2 && participation.state == 0 && participation.revealedSeed" (click)="revealParticipation()">Reveal participation</button>
   <button mat-raised-button *ngIf="throwState == 3 && participation.state == 1" (click)="registerForWin()">Register participation as win</button>
   <button mat-raised-button *ngIf="throwState == 4 && participation.state == 2 && participation.wintowithdraw" (click)="withdrawWin()">Withdraw this win</button>
+  <button mat-raised-button *ngIf="isInStorage()" (click)="removeFromStorage()">Remove from board</button>
+  <button mat-raised-button *ngIf="!isInStorage()" (click)="addToStorage()">Add to board</button>
   </mat-card-footer>
 </mat-card>

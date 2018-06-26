@@ -10,11 +10,13 @@ import { PhaseparamDetailComponent } from './params/phaseparam-detail/phaseparam
 import { LotterieparamDetailComponent } from './params/lotterieparam-detail/lotterieparam-detail.component';
 import { ThrowDetailsComponent } from './throw/throw-details/throw-details.component';
 import { ThrowNewComponent } from './throw/throw-new/throw-new.component';
+import { MyBoardComponent } from './throw/my-board/my-board.component';
 //import { DashboardComponent }   from './dashboard/dashboard.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/throws', pathMatch: 'full' },
   { path: 'throws', component: ThrowsComponent },
+  { path: 'myboard', component: MyBoardComponent },
   { path: 'newthrow', component: ThrowNewComponent },
 //  { path: 'dashboard', component: DashboardComponent },
   { path: 'throw/:address', component: ThrowDetailsComponent },

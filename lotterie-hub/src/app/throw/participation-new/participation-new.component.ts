@@ -43,6 +43,7 @@ export class ParticipationNewComponent implements OnInit {
   ngOnInit() {
     this.lotterieService.getLotterieMinValue(this.athrow.paramsId.toString()).subscribe((nb) => {
       this.minBidValue = EthValue.fromString(nb.toString());
+      this._val = this.minBidValue;
       this.loaded = true;
     });
   
@@ -69,9 +70,13 @@ export class ParticipationNewComponent implements OnInit {
         this.athrow.throwLib,
         this._val.fullrepr,
         hiddenS
-      ).subscribe(() => {
-          this.messageService.add("New bid emitted");
-        })
+      ).subscribe((ev : any) => {
+
+        let partId = ev.events.NewParticipation.returnValues.participationId;
+        this.messageService.add("New bid emitted : " + partId);
+        this.storageService.addParticipation(this.athrow.address, partId); 
+
+      })
     })
   }
 

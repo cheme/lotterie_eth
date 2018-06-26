@@ -9,7 +9,7 @@
   <div><span>Total claimed value : </span>{{thr.totalClaimedValue}}</div>
   <div><span>Thrower : </span>{{thr.thrower}}</div>
   <div><span>Total Margin : </span>{{ thr.totalMargin }}</div>
-  <div *ngIf="thr.calcPhase != 0"><span>Phase : </span>{{ thr.calcPhase }}</div>
+  <div *ngIf="thr.calcPhase != 0"><span>Phase : </span>{{ phaseLabel(thr.calcPhase) }}</div>
 
   <div> <!-- TODO deploy details in box -->
     <a routerLink="/phaseparam/{{ thr.paramsPhaseId }}">
