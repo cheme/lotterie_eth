@@ -3,13 +3,13 @@ import { Observable, of, zip, forkJoin, ObservableInput, Subject } from 'rxjs';
 import { LotterieService } from '../ethereum/lotterie.service';
 import { MessageService } from '../message.service';
 import { map, flatMap } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
 import { DataSource } from '@angular/cdk/table';
 import { CollectionViewer } from '@angular/cdk/collections';
 import { PageEvent } from '@angular/material';
 import { FnParam } from '@angular/compiler/src/output/output_ast';
 import { EthId } from '../eth-components/eth-id';
 import { Bignumber } from '../eth-components/bignumber';
+import { StorageService } from '../storage.service';
 
 
 export abstract class ParamsComponentBase<PARAM> extends DataSource<PARAM> implements OnInit {
@@ -18,7 +18,7 @@ export abstract class ParamsComponentBase<PARAM> extends DataSource<PARAM> imple
   paginatorChange$ = new Subject<void>();
 
   totalPagLength = 0;
-  pageSize = environment.nbParamsShow;
+  pageSize;
   pageIndex = 0;
   pageSizeOptions = [5,10,20,50];
 
@@ -43,8 +43,10 @@ export abstract class ParamsComponentBase<PARAM> extends DataSource<PARAM> imple
   constructor(
     protected lotterieService: LotterieService,
     protected messageService: MessageService,
+    protected storageService: StorageService,
   ) {
     super();
+    this.pageSize = storageService.environment.nbParamsShow;
   }
    
   abstract newParam(id: EthId, object: any): PARAM;
@@ -74,7 +76,6 @@ export abstract class ParamsComponentBase<PARAM> extends DataSource<PARAM> imple
               of(id),
               this.getParam(EthId.fromBN(id)),
               (ido,ps) => {
-                console.log(ido);
                 return this.newParam(EthId.fromBN(ido),ps)
               }
             ));

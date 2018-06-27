@@ -7,7 +7,7 @@ import { environment } from '../environments/environment';
   providedIn: 'root'
 })
 export class StorageService {
-
+  public environment : any = null;
   constructor() { 
     if (this.db == null) {
       this.instantiateDb().then(db => this.db = db);
@@ -15,18 +15,25 @@ export class StorageService {
     if (this.participations == null) {
       this.allParticipations();
     }
+    if (this.favorites == null) {
+      this.allFavorites();
+    }
+    if (this.environment == null) {
+      this.loadEnvironment();
+    }
 
   }
 
   private db : IDBDatabase;
   private participations : [string,number][];
+  private favorites : string[];
 
   private instantiateDb() : Promise<IDBDatabase> {
     return new Promise(function(resolve,reject) {
     var request = window.indexedDB.open(environment.dbName, 1);
    
     request.onerror = function(event) {
-      console.log("error: ");
+      console.error("error instantiating db");
       reject(event);
     };
     request.onupgradeneeded = function(event) {
@@ -37,7 +44,6 @@ export class StorageService {
     };
     request.onsuccess = function(event) {
       var db = request.result;
-      console.log("success: "+ db);
       resolve(db);
     };
     });
@@ -104,5 +110,60 @@ export class StorageService {
     let ix = this.participations.findIndex((el) => el[1] === pId && el[0] === thrId);
     return ix != -1;
   }
+  public addFavorite(thrId : string) {
+    if (!this.hasFavorite(thrId)) {
+      this.favorites.push(thrId);
+      localStorage.setItem('myFavorites',JSON.stringify(this.favorites));
+    }
+  }
+  public removeFavorite(thrId: string) {
+    let ix = this.favorites.findIndex((el) => el === thrId);
+    if (ix >= 0) {
+      this.favorites.splice(ix,1);
+      localStorage.setItem('myFavorites',JSON.stringify(this.favorites));
+    }
+  }
+  public allFavorites() : string[] {
+    let v = localStorage.getItem('myFavorites');
+    if (v == null) {
+      this.favorites = [];
+    } else {
+      this.favorites = JSON.parse(v);
+    }
+    return this.favorites;
+  }
+ 
+  public hasFavorite(thrId : string) : boolean {
+    let ix = this.favorites.findIndex((el) => el === thrId);
+    return ix != -1;
+  }
    
+  public loadEnvironment() : any {
+    let v = localStorage.getItem('environment');
+    if (v == null) {
+      this.environment = Object.assign(environment);
+    } else {
+      this.environment = JSON.parse(v);
+    }
+  }
+  static staticGetEnvt(): any {
+    let v = localStorage.getItem('environment');
+    let r;
+    if (v == null) {
+      r = environment;
+    } else {
+      r = JSON.parse(v);
+    }
+    return r;
+  }
+
+
+  public resetEnvironment() : any {
+    localStorage.removeItem('environment');
+    this.loadEnvironment();
+  }
+
+  public saveEnvironment() : any {
+    localStorage.setItem('environment', JSON.stringify(this.environment));
+  }
 }

@@ -4,11 +4,20 @@
           <mat-expansion-panel-header>
             <mat-panel-title>
               Infos
+
             </mat-panel-title>
             <mat-panel-description>
-              Throw general infos
+              Throw general infos&nbsp;
             </mat-panel-description>
           </mat-expansion-panel-header>   
+<mat-slide-toggle 
+    color='primary'
+    [checked]="favorite"
+    (change)="changeFavorite($event)"
+>Favorite</mat-slide-toggle>
+
+
+
   <div>
     <a routerLink="/throw/{{ thr.address }}">
     <span>Address: </span>{{thr.address}}</a>
@@ -52,12 +61,13 @@
    <mat-expansion-panel *ngIf="thr.calcPhase > 0">
           <mat-expansion-panel-header>
             <mat-panel-title>
-              Participations <button (click)="reloadParticipations()">reload</button>
+              Participations
             </mat-panel-title>
             <mat-panel-description>
-              Current participations 
+              Current participations
             </mat-panel-description>
           </mat-expansion-panel-header>
+    <button mat-raised-button (click)="reloadParticipations()">reload</button>
     <app-participations [athrow]="thr" [subscribeP]="subParticipations" [subscribeThrowEvent]="subThrowEvent"></app-participations>
   </mat-expansion-panel>
    <mat-expansion-panel *ngIf="thr.calcPhase > 2">
@@ -107,5 +117,6 @@
  </mat-expansion-panel>
 
 </mat-accordion>
+
 <button mat-raised-button (click)="goBack()">go back</button>
 </div>

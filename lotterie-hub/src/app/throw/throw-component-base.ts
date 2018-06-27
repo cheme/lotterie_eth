@@ -4,9 +4,30 @@ import { ActivatedRoute } from "@angular/router";
 import { LotterieService } from "../ethereum/lotterie.service";
 import { MessageService } from "../message.service";
 import { Location } from '@angular/common';
+import { StorageService } from "../storage.service";
+import { MatSlideToggleChange } from "@angular/material";
 
 export abstract class ThrowComponentBase implements OnInit {
 
+  private _favorite : Boolean = null;
+  private initFavorite() {
+    if (this._favorite == null) {
+      this._favorite = new Boolean(this.storageService.hasFavorite(this.thr.address));
+    }
+  }
+  get favorite() : boolean {
+    this.initFavorite();
+    return this._favorite.valueOf();
+  }
+  public changeFavorite(ev : MatSlideToggleChange) {
+    if (ev.checked) {
+      this.storageService.addFavorite(this.thr.address);
+      this._favorite = new Boolean(true);
+    } else {
+      this.storageService.removeFavorite(this.thr.address);
+      this._favorite = new Boolean(false);
+    }
+  }
     @Input() thr : Athrow;
 
     abstract onInitExtend() : void;
@@ -15,6 +36,7 @@ export abstract class ThrowComponentBase implements OnInit {
       protected route: ActivatedRoute,
       protected lotterieService: LotterieService,
       protected messageService: MessageService,
+      protected storageService: StorageService,
       protected location: Location
     ) { }
 
@@ -22,15 +44,10 @@ export abstract class ThrowComponentBase implements OnInit {
       const addressstring = this.route.snapshot.paramMap.get('address');
       if (addressstring == null) {
       } else {
-          this.lotterieService.getAthrow(addressstring)
-          .subscribe(([lib,objThr,objWith]) => {
-            this.thr = Athrow.fromObject(addressstring, lib,objThr,objWith);
-            this.lotterieService.calcPhase(this.thr.throwLib)
-            .subscribe(p => {
-              this.thr.calcPhase = p;
-              this.onInitExtend();
-            });
-          });
+        Athrow.initAthrow(addressstring, this.lotterieService, (thr) => {
+          this.thr = thr;
+          this.onInitExtend()
+        }).subscribe();
       }
     }
 

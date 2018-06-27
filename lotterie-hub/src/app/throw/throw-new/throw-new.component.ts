@@ -1,11 +1,11 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { MessageService } from '../../message.service';
 import { LotterieService } from '../../ethereum/lotterie.service';
-import { environment } from '../../../environments/environment';
 import { Location } from '@angular/common';
 import { EthId } from '../../eth-components/eth-id';
 import { MatSliderChange } from '@angular/material';
 import { EthValue } from '../../eth-components/eth-value';
+import { StorageService } from '../../storage.service';
 
 @Component({
   selector: 'app-throw-new',
@@ -18,10 +18,10 @@ export class ThrowNewComponent implements OnInit {
   @Input() paramsPhaseId : EthId;
 
   initWinValue : EthValue;
-  ownerMargin : number = environment.defaultOwnerMargin;
-  authorContractMargin : number = environment.defaultAuthorContractMargin;
-  authorDappMargin : number = environment.defaultAuthorDappMargin;
-  throwerMargin : number = environment.defaultThrowerMargin;
+  ownerMargin : number;
+  authorContractMargin : number;
+  authorDappMargin : number;
+  throwerMargin : number;
 
   newThrow() {
 
@@ -44,8 +44,16 @@ export class ThrowNewComponent implements OnInit {
   constructor(
     private lotterieService: LotterieService,
     private messageService: MessageService,
+    private storageService: StorageService,
     private location: Location
-  ) { }
+  ) {
+  this.ownerMargin = this.storageService.environment.defaultOwnerMargin;
+  this.authorContractMargin = this.storageService.environment.defaultAuthorContractMargin;
+  this.authorDappMargin = this.storageService.environment.defaultAuthorDappMargin;
+  this.throwerMargin = this.storageService.environment.defaultThrowerMargin;
+
+
+   }
  
   ngOnInit() {
   }
@@ -56,8 +64,6 @@ export class ThrowNewComponent implements OnInit {
     //return (i / (2 ** 32)) * 100;
     let p = (i / 4294967296) * 100;
     return parseInt(p.toFixed(0));
-
-
   }
   percentOM(value: number | null) : string {
     if (!value) {

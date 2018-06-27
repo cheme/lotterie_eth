@@ -9,7 +9,7 @@ import { of, zip, forkJoin, Subject, Observable, timer } from 'rxjs';
 import { map, flatMap } from 'rxjs/operators';
 import { Bignumber } from '../../eth-components/bignumber';
 import { Athrow } from '../athrow';
-import { environment } from '../../../environments/environment';
+import { StorageService } from '../../storage.service';
 
 @Component({
   selector: 'app-throw-details',
@@ -22,9 +22,10 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     route: ActivatedRoute,
     lotterieService: LotterieService,
     messageService: MessageService,
+    storageService: StorageService,
     location: Location
   ) {
-    super(route,lotterieService,messageService,location);
+    super(route,lotterieService,messageService,storageService,location);
   }
 
   sortedWinners : Array<Participation> = null;
@@ -258,7 +259,7 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     this.lotterieService.getNextTimeTreshold(this.thr.throwLib).subscribe(function(t) {
       if (t != null)  {
       thisS.nextPhase = t;
-      let nextCheck = new Date (t.getTime() + environment.delayBlockDate * 1000);
+      let nextCheck = new Date (t.getTime() + this.storageService.environment.delayBlockDate * 1000);
       timer(nextCheck).subscribe(() => {
         thisS.messageService.add("Switch phase timer event happen on " + thisS.thr.address);
         thisS.recalcPhase();

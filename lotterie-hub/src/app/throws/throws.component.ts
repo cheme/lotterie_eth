@@ -2,11 +2,11 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { LotterieService } from '../ethereum/lotterie.service'
 import { Athrow } from '../throw/athrow.js';
 import { Observable, zip, of } from 'rxjs';
-import { environment } from '../../environments/environment';
 import { map, flatMap } from 'rxjs/operators';
-import { ScrollDispatcher, CdkScrollable } from '@angular/cdk/scrolling';
+//import { ScrollDispatcher, CdkScrollable } from '@angular/cdk/scrolling';
 import { PageEvent } from '@angular/material';
 import { Bignumber } from '../eth-components/bignumber';
+import { StorageService } from '../storage.service';
 
 @Component({
   selector: 'app-throws',
@@ -38,34 +38,26 @@ ngOnInit() {
   }
 
 
-  // TODO redundant code to merge with throwbasecomponent? or put in athrow class
   initAthrow(addresses : string) : Observable<Athrow> {
-    return zip(
-      of(addresses),
-      this.lotterieService.getAthrow(addresses),
-      (ad,[lib,objectThr,objectWithdr]) => {
-        var at =  Athrow.fromObject(ad, lib, objectThr,objectWithdr);
-        this.lotterieService.calcPhase(at.throwLib)
-        .subscribe(p => {
-          at.calcPhase = p
-        });
-        return at;
-      }
-    );
+    return Athrow.initAthrow(addresses, this.lotterieService);
   }
 
   constructor(
     private lotterieService : LotterieService,
-    private scroll : ScrollDispatcher,
-  ) { }
+    private storageService : StorageService,
+//    private scroll : ScrollDispatcher,
+  ) {
+
+     this.pageSize = this.storageService.environment.nbThrowsShow;
+   }
 
   ngAfterViewInit(){
-    this.scroll.scrolled(100).subscribe(()=>{
+/*    this.scroll.scrolled(100).subscribe(()=>{
       console.log("d"); // TODO check last card position... and infiniscroll (ElementRef.nativeElement.offsetTop)
-    })
+    })*/
   }
   totalPagLength = 0;
-  pageSize = environment.nbThrowsShow;
+  pageSize;
   pageIndex = 0;
   pageSizeOptions = [5,10,20,50];
 

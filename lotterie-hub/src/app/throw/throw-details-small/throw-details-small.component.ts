@@ -7,6 +7,7 @@ import { Location } from '@angular/common';
 import { Athrow } from '../athrow';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { ThrowNewComponent } from '../throw-new/throw-new.component';
+import { StorageService } from '../../storage.service';
 
 @Component({
   selector: 'app-throw-details-small',
@@ -21,10 +22,11 @@ export class ThrowDetailsSmallComponent extends ThrowComponentBase {
     route: ActivatedRoute,
     lotterieService: LotterieService,
     messageService: MessageService,
+    storageService: StorageService,
     location: Location,
     public dialog: MatDialog,
   ) {
-    super(route,lotterieService,messageService,location);
+    super(route,lotterieService,messageService,storageService,location);
   }
 
   openDialog(): void {

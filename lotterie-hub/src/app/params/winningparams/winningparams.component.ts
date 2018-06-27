@@ -7,6 +7,7 @@ import { map } from 'rxjs/operators';
 import { ParamsComponentBase } from '../params';
 import { DataSource } from '@angular/cdk/table';
 import { EthId } from '../../eth-components/eth-id';
+import { StorageService } from '../../storage.service';
 
 @Component({
   selector: 'app-winningparams',
@@ -19,8 +20,9 @@ export class WinningparamsComponent extends ParamsComponentBase<Winningparam> {
   constructor(
      lotterieService: LotterieService,
      messageService: MessageService,
+     storageService: StorageService,
   ) {
-    super(lotterieService,messageService);
+    super(lotterieService,messageService,storageService);
   }
   getNb(): Observable<string> {
     return this.lotterieService.getNbWinningParams();

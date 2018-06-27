@@ -6,6 +6,7 @@ import { MessageService } from '../../message.service';
 import { map } from 'rxjs/operators';
 import { ParamsComponentBase } from '../params';
 import { EthId } from '../../eth-components/eth-id';
+import { StorageService } from '../../storage.service';
 
 
 @Component({
@@ -17,8 +18,9 @@ export class LotterieparamsComponent extends ParamsComponentBase<Lotterieparam> 
   constructor(
      lotterieService: LotterieService,
      messageService: MessageService,
+     storageService: StorageService,
   ) {
-    super(lotterieService,messageService);
+    super(lotterieService,messageService,storageService);
   }
   getNb(): Observable<string> {
     return this.lotterieService.getNbLotterieParams();

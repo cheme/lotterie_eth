@@ -11,13 +11,17 @@ import { LotterieparamDetailComponent } from './params/lotterieparam-detail/lott
 import { ThrowDetailsComponent } from './throw/throw-details/throw-details.component';
 import { ThrowNewComponent } from './throw/throw-new/throw-new.component';
 import { MyBoardComponent } from './throw/my-board/my-board.component';
+import { MyFavoritesComponent } from './throw/my-favorites/my-favorites.component';
+import { LottEnvironmentComponent } from './lott-environment/lott-environment.component';
 //import { DashboardComponent }   from './dashboard/dashboard.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/throws', pathMatch: 'full' },
   { path: 'throws', component: ThrowsComponent },
   { path: 'myboard', component: MyBoardComponent },
+  { path: 'myfavorites', component: MyFavoritesComponent },
   { path: 'newthrow', component: ThrowNewComponent },
+  { path: 'prefs', component: LottEnvironmentComponent },
 //  { path: 'dashboard', component: DashboardComponent },
   { path: 'throw/:address', component: ThrowDetailsComponent },
   { path: 'winningparams', component: WinningparamsComponent },

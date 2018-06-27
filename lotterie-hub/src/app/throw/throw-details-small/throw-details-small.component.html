@@ -22,7 +22,12 @@
   </div>
 </mat-card-content>
 <mat-card-actions>
-  <button mat-button>Favorite</button><!-- TODO list fav -->
+  <mat-slide-toggle 
+    color='primary'
+    [checked]="favorite"
+    (change)="changeFavorite($event)"
+  >Favorite</mat-slide-toggle>
+
   <span *ngIf="thr.calcPhase > 0">
     <button mat-button (click)="openDialog()">Participate</button>
 <!--    <app-participation-new [athrow]="thr"></app-participation-new> -->

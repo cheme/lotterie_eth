@@ -1,0 +1,33 @@
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="env.contractAddress" placeholder = "Lotterie contract"/>
+  <mat-hint>Lotterie main contract address as hex string (starting by 0x)</mat-hint>
+</mat-form-field>
+<div>
+  <br/>
+<mat-form-field>
+  <input matInput [(ngModel)]="env.defaultOwnerMargin" placeholder = "Default Owner Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeOM($event)"></mat-slider>
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="env.defaultAuthorContractMargin" placeholder = "Default Author contract Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeACM($event)"></mat-slider>
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="env.defaultAuthorDappMargin" placeholder = "Default Author Dapp Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeADM($event)"></mat-slider>
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="env.defaultThrowerMargin" placeholder = "Default Thrower Margin"/>
+</mat-form-field>
+<mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeTM($event)"></mat-slider>
+</div>
+<div>
+<button mat-raised-button (click)="savePrefs()">Save preferences</button>
+<button mat-raised-button (click)="resetToDefault()">Reset to default</button>

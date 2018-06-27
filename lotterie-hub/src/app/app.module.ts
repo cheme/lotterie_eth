@@ -12,7 +12,9 @@ import { MessagesComponent } from './messages/messages.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 //import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {ScrollDispatchModule} from '@angular/cdk/scrolling';
-import {MatPaginatorModule, MatButtonModule, MatGridListModule, MatCard, MatCardModule, MatMenuModule, MatToolbarModule} from '@angular/material';
+import {MatPaginatorModule, MatButtonModule, MatGridListModule, MatCard, MatCardModule, MatMenuModule, MatToolbarModule, MatFormFieldModule, MatSliderModule, MatInputModule} from '@angular/material';
+import { LottEnvironmentComponent } from './lott-environment/lott-environment.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -21,6 +23,7 @@ import {MatPaginatorModule, MatButtonModule, MatGridListModule, MatCard, MatCard
     AccountComponent,
     ThrowsComponent,
     MessagesComponent,
+    LottEnvironmentComponent,
   ],
   imports: [
     BrowserModule,
@@ -28,13 +31,16 @@ import {MatPaginatorModule, MatButtonModule, MatGridListModule, MatCard, MatCard
     //NoopAnimationsModule,
     AppRoutingModule,
     ThrowModule,
-    //ParamsModule,
+    FormsModule,
     MatButtonModule,
     MatGridListModule,
     ScrollDispatchModule,
     MatPaginatorModule,
     MatMenuModule,
     MatToolbarModule,
+    MatFormFieldModule,
+    MatSliderModule,
+    MatInputModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

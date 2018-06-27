@@ -5,6 +5,7 @@ import { Winningparam } from "../params/winningparam";
 import { Lotterieparam } from "../params/lotterieparam";
 import { Phaseparam } from "../params/phaseparam";
 import { LotterieService } from "../ethereum/lotterie.service";
+import { Observable, zip, of } from "rxjs";
 
 export class Athrow {
 
@@ -43,6 +44,25 @@ export class Athrow {
   private paramPhase : Phaseparam;
   private param : Lotterieparam;
   private paramWinning : Winningparam;
+
+  public static initAthrow(addresses : string, lotterieService : LotterieService,cb? :Function) : Observable<Athrow> {
+    return zip(
+      of(addresses),
+      lotterieService.getAthrow(addresses),
+      (ad,[lib,objectThr,objectWithdr]) => {
+        var at =  Athrow.fromObject(ad, lib, objectThr,objectWithdr);
+        lotterieService.calcPhase(at.throwLib)
+        .subscribe(p => {
+          at.calcPhase = p;
+          if (cb != null) {
+            cb(at);
+          }
+        });
+        return at;
+      }
+    );
+  }
+
   public static phaseLabel(phaseid : number, lotterieService : LotterieService) : string {
     let i = 0;
     for (let k in lotterieService.phases) {

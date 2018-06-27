@@ -1,9 +1,9 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Athrow } from '../athrow';
-import { environment } from '../../../environments/environment';
 import { Subject } from 'rxjs';
 import { ThrowEventNewParticipation, ThrowEventRevealed } from '../../ethereum/lotterie.service';
 import { PageEvent } from '@angular/material';
+import { StorageService } from '../../storage.service';
 
 @Component({
   selector: 'app-participations',
@@ -17,7 +17,7 @@ export class ParticipationsComponent implements OnInit {
   @Input() subscribeThrowEvent : Subject<ThrowEventNewParticipation | ThrowEventRevealed>;
 
   range : Array<[number,boolean, Subject<ThrowEventRevealed>]>;
-  constructor() { }
+  constructor(protected storageService : StorageService) { }
 
   ngOnInit() {
     this.initRange();
@@ -74,7 +74,7 @@ export class ParticipationsComponent implements OnInit {
 
   // pagination
   totalPagLength = 0;
-  pageSize = environment.nbParticipationsShow;
+  pageSize = this.storageService.environment.nbParticipationsShow;
   pageIndex = 0;
   pageSizeOptions = [3,5,10,15];
 
