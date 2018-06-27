@@ -37,6 +37,7 @@ export class ThrowNewComponent implements OnInit {
       let thAdd = recpt.events.NewThrow.returnValues.throwAddress;
       console.log("InitThrow sucess" + thAdd);
       this.messageService.add("InitThrow sucess : " + thAdd);
+      this.storageService.addFavorite(thAdd);
     });
 
   }
