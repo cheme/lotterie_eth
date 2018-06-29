@@ -4,6 +4,7 @@ pragma solidity ^0.4.23;
 import "./zeppelin/ownership/Ownable.sol";
 import "./LotterieThrowEther.sol";
 import "./LotterieThrow223.sol";
+import "./LotterieThrow20.sol";
 import "./LotterieThrow.sol";
 import "./LotterieThrowProxy.sol";
 import "./LotterieParams.sol";
@@ -18,6 +19,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
   address throwTemplate;
   address throwTemplate223;
+  address throwTemplate20;
 
   bool blockTemplates;
 
@@ -31,6 +33,12 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
     throwTemplate223 = newTemplate;
     emit NewThrowTemplate(newTemplate,1);
   }
+  function setThrow20Template(address newTemplate) external onlyOwner {
+    require(blockTemplates == false);
+    throwTemplate20 = newTemplate;
+    emit NewThrowTemplate(newTemplate,2);
+  }
+
 
 
   // if contract templates ok, block it (no template update possible)
@@ -57,7 +65,8 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   constructor(
     address _authorContract,
     address _throwTemplate,
-    address _throwTemplate223
+    address _throwTemplate223,
+    address _throwTemplate20
   )
   Author(_authorContract)
   public
@@ -65,8 +74,10 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
      blockTemplates = false;
      throwTemplate = _throwTemplate;
      throwTemplate223 = _throwTemplate223;
+     throwTemplate20 = _throwTemplate20;
      emit NewThrowTemplate(_throwTemplate,0);
      emit NewThrowTemplate(_throwTemplate223,1);
+     emit NewThrowTemplate(_throwTemplate20,2);
   }
 
   function getAuthorContract()  external returns(address) {
@@ -221,6 +232,66 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
     allthrows.push(thr);
 
     emit NewThrow(address(thr),1);
+  }
+  function initThrow20 (
+    bool waitValue,
+    address token,
+    uint paramsId,
+    uint paramsPhaseId,
+
+    uint32 ownerMargin,
+    uint32 authorContractMargin,
+    uint32 authorDappMargin,
+    uint32 throwerMargin
+
+  ) external payable {
+    require(LC.validParticipationSwitch(
+      params[paramsId].maxParticipant,
+      params[paramsId].biddingTreshold,
+      phaseParams[paramsPhaseId].participationStartTreshold
+    ));
+    require(LC.validWithdrawMargins(
+      ownerMargin,
+      authorContractMargin,
+      authorDappMargin,
+      throwerMargin));
+
+    address thr_proxy;
+    address thr_template = throwTemplate20;
+    assembly {
+      let contractCode_init := mload(0x40) // free memory ptr
+
+      let contractCode := contractCode_init
+           
+     
+       mstore(add(contractCode, 0x0b), thr_template)
+       mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773)
+       mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000)
+            
+       thr_proxy := create(0, contractCode_init, 60)
+            
+       if iszero(extcodesize(thr_proxy)) {
+         revert(0, 0)
+       }
+    }
+    //LotterieThrowProxy thr_proxy = new LotterieThrowProxy();
+    LotterieThrow20 thr = LotterieThrow20(address(thr_proxy));
+
+ 
+    thr.deffered_constructor(
+      waitValue,
+      token,
+      paramsId,
+      paramsPhaseId,
+
+      ownerMargin,
+      authorContractMargin,
+      authorDappMargin,
+      throwerMargin
+    );
+    allthrows.push(thr);
+
+    emit NewThrow(address(thr),2);
   }
  
   // warning this function should not be use outside of testing 
