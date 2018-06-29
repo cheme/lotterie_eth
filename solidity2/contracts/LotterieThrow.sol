@@ -72,13 +72,9 @@ contract LotterieThrow is LotterieMargins {
    winningParam.distribution = LC.WinningDistribution(dis);
   }
 
-  constructor() 
-  public 
-   { }
+  function internal_deffered_constructor(
 
-
-  function deffered_constructor(
-
+    uint amount,
     uint paramsId,
     uint paramsPhaseId,
 
@@ -87,8 +83,7 @@ contract LotterieThrow is LotterieMargins {
     uint32 authorDappMargin,
     uint32 throwerMargin
   ) 
-  public
-  payable
+  internal 
   {
     // warn Construct must be 0 (default value)
     require(thr.currentPhase == Phase.Construct);
@@ -124,7 +119,7 @@ contract LotterieThrow is LotterieMargins {
 
     }),
       results : LotterieResult({
-      totalBidValue : msg.value,
+      totalBidValue : amount,
       totalClaimedValue : 0,
       firstWinner : 255,
       totalCashout : 0
@@ -144,27 +139,29 @@ contract LotterieThrow is LotterieMargins {
     thr.withdraws.ownerWithdrawned, thr.withdraws.authorContractWithdrawned, thr.withdraws.authorDappWithdrawned, thr.withdraws.throwerWithdrawned);
   }
 
-
-  function bid (
-    uint commitmentSeed
-  ) external payable forThrowStorage(Phase.Bidding) {
-    // TODO this storage access is done in modifier, does compiler optimize it?
-    // TODO diff with a function call for doing this check
-    require(msg.value >= param.minBidValue);
-    if (msg.value > 0) {
-      thr.results.totalBidValue = thr.results.totalBidValue.add(msg.value);
+  // bid logic without payment processing
+  function internal_bid (
+    address _from,
+    uint commitmentSeed,
+    uint amount
+  ) internal forThrowStorage(Phase.Bidding) {
+    require(amount >= param.minBidValue);
+    if (amount > 0) {
+      thr.results.totalBidValue = thr.results.totalBidValue.add(amount);
     }
     thr.numberOfBid += 1;
     uint64 participationId = uint64(participations.length);
     Participation memory part = Participation({
-      from : msg.sender,
-//      bid : msg.value,
+      from : _from,
+//      bid : amount,
       seed : commitmentSeed,
       state : ParticipationState.BidSent
     });
     participations.push(part);
-    emit NewParticipation(participationId,msg.value);
+    emit NewParticipation(participationId,amount);
   }
+
+
 
   /// note that any user can use it, this is intended
   function revealParticipation (
@@ -410,7 +407,8 @@ contract LotterieThrow is LotterieMargins {
     uint amount = thr.results.totalBidValue.sub(thr.results.totalClaimedValue);
     if (amount != 0) {
       thr.results.totalClaimedValue += amount;
-      msg.sender.transfer(amount);
+      //msg.sender.transfer(amount);
+      withdrawAmount(amount);
     }
   }
 
@@ -424,7 +422,8 @@ contract LotterieThrow is LotterieMargins {
     uint amount = thr.results.totalBidValue.sub(thr.results.totalClaimedValue);
     if (amount != 0) {
       thr.results.totalClaimedValue += amount;
-      msg.sender.transfer(amount);
+      //msg.sender.transfer(amount);
+      withdrawAmount(amount);
     }
   }*/
 
@@ -452,7 +451,8 @@ contract LotterieThrow is LotterieMargins {
          w.withdrawned = true;
          if (amount > 0) {
            thr.results.totalClaimedValue += amount;
-           msg.sender.transfer(amount);
+          // msg.sender.transfer(amount);
+           withdrawAmount(amount);
          }
          emit Win(participationId, msg.sender, uint16(result) + 1, amount);
          break;

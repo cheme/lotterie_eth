@@ -5,7 +5,8 @@ const truffleAssert = require('truffle-assertions');
 
 var Lotterie = artifacts.require("./Lotterie.sol");
 var LotterieThrow = artifacts.require("./LotterieThrow.sol");
-var LotterieThrowTemplate = artifacts.require("./LotterieThrow.sol");
+var LotterieThrowTemplate = artifacts.require("./LotterieThrowEther.sol");
+var LotterieThrowTemplate223 = artifacts.require("./LotterieThrow223.sol");
 var LotterieConf = artifacts.require("./LotterieConf.sol");
 const conf1 = {
   dosalt : true,
@@ -68,7 +69,8 @@ it("sc", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, template223.address, { from : account_owner });
 //    var lotterie = new Lotterie('0xc82621b796c427f673b64d0e1a8f888c214ba44e');
     console.log("lotterie add:" + lotterie.address);
     var account_contract_dapp = accounts[2];

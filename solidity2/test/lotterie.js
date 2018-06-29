@@ -3,11 +3,18 @@
 
 import lotterieLib from '../index.js';
 
+const w3abi = require ('web3-eth-abi');
 const truffleAssert = require('truffle-assertions');
 
 var Lotterie = artifacts.require("./Lotterie.sol");
-var LotterieThrow = artifacts.require("./LotterieThrow.sol");
-var LotterieThrowTemplate = artifacts.require("./LotterieThrow.sol");
+var LotterieThrow = artifacts.require("./LotterieThrowEther.sol");
+var LotterieThrow223 = artifacts.require("./LotterieThrow223.sol");
+var LotterieThrowTemplate223 = artifacts.require("./LotterieThrow223.sol");
+var LotterieThrowTemplate = artifacts.require("./LotterieThrowEther.sol");
+
+var ERC223Test = artifacts.require("./ERC223Test.sol");
+var ERC223ForTruffle = artifacts.require("./ERC223ForTruffle.sol");
+
 var LotterieConf = artifacts.require("./LotterieConf.sol");
 // lotterilib calc commitment with web3 0.2
 function calcCommitment(hexstring) {
@@ -126,11 +133,12 @@ contract('Lotterie', function(accounts) {
   });*/
 
 
-  it("should add params", async function() {
+  dis("should add params", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(account_contract_author, template.address);
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, template223.address);
     var nbWinners = 5;
     var nbWinnerMinRatio = 50; // less than 10 participant we apply ratio 
     var nbparam = await lotterie.getWiningParamsCount.call();
@@ -158,11 +166,12 @@ contract('Lotterie', function(accounts) {
   });
 
 
-  it("should withdraw for some account", async function() {
+  dis("should withdraw for some account", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, template223.address, { from : account_owner });
     var account_contract_dapp = accounts[2];
     var account_thrower = accounts[3];
     var account_bidder = accounts[4];
@@ -195,10 +204,12 @@ contract('Lotterie', function(accounts) {
     truffleAssert.eventEmitted(result, 'NewThrow',  function(ev) {
       return true;
     });
-    var ltax = await lotterie.getThrowAddress.call(0);
-    assert.equal(ltax,result.logs[0].args.throwAddress)
-    var lotteriethrow = LotterieThrow.at(ltax);
 
+    var ltax = await lotterie.getThrowAddress.call(0);
+
+    assert.equal(ltax,result.logs[0].args.throwAddress)
+
+    var lotteriethrow = LotterieThrow.at(ltax);
 
     var phase = await lotteriethrow.getPhase.call();
     assert.equal(phase, lotterieLib.phases.Bidding);
@@ -272,11 +283,12 @@ contract('Lotterie', function(accounts) {
 
   });
 
-  it("should withdraw all", async function() {
+  dis("should withdraw all", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, template223.address, { from : account_owner });
     var account_contract_dapp = accounts[2];
     var account_thrower = accounts[3];
     var account_bidder = accounts[4];
@@ -311,11 +323,13 @@ contract('Lotterie', function(accounts) {
     });
   });
 
-  it("should not allow margin over 100%", async function() {
+  dis("should not allow margin over 100%", async function() {
     var account_one = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(account_contract_author, template.address);
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, template223.address);
+ 
     var account_contract_dapp = accounts[2];
 
     await configuration(lotterie,account_contract_dapp,conf1);
@@ -334,9 +348,10 @@ contract('Lotterie', function(accounts) {
     ));
   });
 
-  it("calculate correct commitments", async function() {
+  dis("calculate correct commitments", async function() {
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(accounts[1],template.address);
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(accounts[1],template.address,template223.address);
     var checkit = async function(hexval) {
       var jscalc = calcCommitment(hexval);
       var chaincalc = await lotterie.checkCommitment.call(hexval);
@@ -350,9 +365,10 @@ contract('Lotterie', function(accounts) {
     checkit("0x5cee5c91812f9cf35e8b05c524993810a78f25fd7e87ae61008433d43e27bb0");
   });
 
-  it("calculate correct scores", async function() {
+  dis("calculate correct scores", async function() {
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(accounts[1],template.address);
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(accounts[1],template.address,template223.address);
     var checkit = async function(hexval1,hexval2) {
       var jscalc = lotterieLib.calcScore(hexval1,hexval2);
       var chaincalc = await lotterie.checkScore.call(hexval1,hexval2);
@@ -365,7 +381,7 @@ contract('Lotterie', function(accounts) {
 
 
   // TODO test a lot more than the name : split it using scenario1 functions
-  it("switch phases on user tresholds", async function() {
+  dis("switch phases on user tresholds", async function() {
   //dis("switch phases on user tresholds", async function() {
       
     var myConf = Object.assign({}, conf1);
@@ -378,7 +394,8 @@ contract('Lotterie', function(accounts) {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
-    var lotterie = await Lotterie.new(account_contract_author, template.address, { from : account_owner });
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, template223.address, { from : account_owner });
     console.log("lotterie add:" + lotterie.address);
     var account_contract_dapp = accounts[2];
     var account_bidder1 = accounts[3];
@@ -607,6 +624,148 @@ contract('Lotterie', function(accounts) {
     await tr_log( lotteriethrow.emptyOffThrow({ from : account_owner }), true);
   });
 
+  it("supports erc223", async function() {
+  //dis("switch phases on user tresholds", async function() {
+      
+    var myConf = Object.assign({}, conf1);
+    myConf.maxParticipant = 5;
+    //myConf.nbWinners = 4;
+    myConf.nbWinnerMinRatio = 80; // 4 winner (ratio applying)
+    // warn need to pass 4 cashout during those 3 secs, might be enough on most testing confs
+    myConf.cashoutEndValue = 3;
+    myConf.throwEndValue = 5;
+    var account_owner = accounts[0];
+    var account_contract_author = accounts[1];
+    var template = await LotterieThrowTemplate.new();
+    var template223 = await LotterieThrowTemplate223.new();
+    var lotterie = await Lotterie.new(account_contract_author, template.address, template223.address, { from : account_owner });
+    console.log("lotterie add:" + lotterie.address);
+    var account_contract_dapp = accounts[2];
+    var account_bidder1 = accounts[3];
+    var account_bidder2 = accounts[4];
+    var account_bidder3 = accounts[5];
+
+    var accountParts = [];
+
+    myConf.minBidValue = web3.toWei(0,"ether");
+    await configuration(lotterie,account_contract_dapp,myConf);
+
+    var erc223 = await ERC223Test.new(1000000, { from : account_owner });
+    var erc223t = ERC223ForTruffle.at(erc223.address);
+    assert.equal(web3.toHex(await erc223.balanceOf(account_owner)), web3.toHex(1000 * 1000));
+
+
+    await tr_log( lotterie.initThrow223 (false,erc223.address,0,0,0,0,0,0, ), true);
+
+          // one 1000 3 digit token to account_owner
+    var ltax = await lotterie.getThrowAddress.call(0);
+    var lotteriethrow = LotterieThrow223.at(ltax);
+    var m = await lotteriethrow.mode.call();
+    assert.equal(m[0], 1);
+    assert.equal(m[1], erc223.address);
+    var thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
+    assert.equal(web3.toHex(thr.totalBidValue), web3.toHex(0));
+    assert.equal(thr.currentPhase, "1");
+
+
+    await tr_log( lotterie.initThrow223 (true,erc223.address,0,0,0,0,0,0, { from : account_bidder3 }), true);
+    ltax = await lotterie.getThrowAddress.call(1);
+    lotteriethrow = LotterieThrow223.at(ltax);
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
+    assert.equal(thr.currentPhase, "0");
+    // check we cannot init twice
+    assertRevert(lotteriethrow.deffered_constructor(false,erc223.address,0,0,0,0,0,0, { from : account_bidder3 }), true );
+    var bidencoded = w3abi.encodeFunctionCall(
+            _.find(LotterieThrow223.abi, { name: 'initPrize' }),
+            []);
+    await erc223.transfer(account_bidder2, 1000, { from : account_owner });
+    await erc223.transfer(account_bidder3, 500, { from : account_owner });
+    // only thrower to init prize
+    assertRevert( erc223t.transfer(lotteriethrow.address, '500', bidencoded, { from : account_bidder2 }), true);
+    await tr_log( erc223t.transfer(lotteriethrow.address, '500', bidencoded, { from : account_bidder3 }), true);
+    
+ 
+
+    // a standard bid at 0 value
+    await tr_log( lotteriethrow.bid(calcCommitment('0x0'), { from : account_bidder1 }), true );
+    accountParts.push(account_bidder1);
+//          console.log(_.find(LotterieThrow223.abi, { name: 'bid' }));
+    bidencoded = w3abi.encodeFunctionCall(
+            _.find(LotterieThrow223.abi, { name: 'bid' }),
+            [calcCommitment('0x1111111111111111111111111111111111')]);
+    await tr_log( erc223t.transfer(lotteriethrow.address, '1000', bidencoded, { from : account_bidder2 }), true);
+    thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
+    assert.equal(web3.toHex(thr.totalBidValue), web3.toHex(500 + 1000));
+    assert.equal(web3.toHex(await erc223.balanceOf(account_bidder2)), web3.toHex(0));
+    
+    accountParts.push(account_bidder2);
+    await tr_log( lotteriethrow.bid(calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    accountParts.push(account_bidder2);
+    await tr_log( lotteriethrow.bid(calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    accountParts.push(account_bidder2);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Bidding);
+    await tr_log( lotteriethrow.bid(calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue }), true );
+    accountParts.push(account_bidder3);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Participation);
+    // reveal
+    var thrBlock = thr.blockNumber;
+
+    await tr_log(lotteriethrow.revealParticipation(0,0), true);
+    await tr_log( lotteriethrow.revealParticipation(3,3), true);
+    await tr_log( lotteriethrow.revealParticipation(4,4), true);
+    await tr_log( lotteriethrow.revealParticipation(1,'0x1111111111111111111111111111111111'), true);
+    await tr_log( lotteriethrow.revealParticipation(2,2), true);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Cashout);
+    // get postition by heavy cost call (still less costy thant previous method
+
+    // iterate on participation
+    for (var i = 0; i < 5; ++i) {
+      // for test only
+      var ix = await lotteriethrow.currentIxAmongWinners.call(i);
+      // TODO only winner?
+    //var posNb0 = await lotteriethrow.checkPositionHeavyCost.call(0);
+      await tr_log( lotteriethrow.cashOut(i, ix), true);
+    }
+    var nbwin = await lotteriethrow.nbWinners.call();
+    assert.equal(nbwin,4);
+    assert.equal(web3.toHex(await lotteriethrow.linkedWinnersLength.call()),4);
+    // TODO additional user trying to insert (in a non salt conf it will be easier)
+    await dirtyPause(3);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.End);
+    // register win and withdraw
+          // let one win amount to test end phase empty
+    for (var j = 0; j < (nbwin - 1); ++j) {
+      var w = lotterieLib.newWinnerArray(await lotteriethrow.getWinner.call(j));
+      var i = w.participationId;
+
+      var initBalance = parseInt(await erc223.balanceOf(accountParts[i]));
+            console.log("pid : " + i);
+            console.log("initb : " + i);
+      var result = await lotteriethrow.withdrawWin(i, { from : accountParts[i] });
+      tr_log2(result, true);
+      truffleAssert.eventEmitted(result, 'Win',  function(ev) {
+        var result = web3.toHex(ev.participationId) === web3.toHex(i);
+        if (result) {
+            console.log("pid2 : " + i);
+            assert.isAbove(ev.position, 0);
+            assert.isAbove(ev.amount, 0);
+            assert.equal(ev.winner, accountParts[i]);
+        }
+        return result;
+      });
+
+      assert.equal(web3.toHex(await erc223.balanceOf(accountParts[i])), web3.toHex(initBalance + ((1000+500)/4)));
+    }
+    await dirtyPause(5);
+    assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Off);
+    var thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
+    assertRevert(lotteriethrow.emptyOffThrow({ from : account_contract_dapp }));
+//    await tr_log( lotterie.recalculateState(0,lotterieLib.phases.Off), true);
+    var initBalance = parseInt(await erc223.balanceOf(account_owner));
+    await tr_log( lotteriethrow.emptyOffThrow({ from : account_owner }), true);
+    assert.equal(web3.toHex(await erc223.balanceOf(account_owner)), web3.toHex(initBalance + ((1000+500)/4)));
+    
+  });
 });
 
 async function assertRevert(pr) {
@@ -638,3 +797,12 @@ async function dirtyPause(nbsecs) {
   }
 }
 async function dis(a,b){}
+function hexToBytes(hex) {
+    if (hex.startsWith('0x')) {
+      hex = hex.substr(2);
+    }
+    for (var bytes = [], c = 0; c < hex.length; c += 2)
+    bytes.push(parseInt(hex.substr(c, 2), 16));
+    return bytes;
+}
+

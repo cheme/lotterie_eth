@@ -2,6 +2,8 @@ pragma solidity ^0.4.23;
 //pragma experimental ABIEncoderV2;
 
 import "./zeppelin/ownership/Ownable.sol";
+import "./LotterieThrowEther.sol";
+import "./LotterieThrow223.sol";
 import "./LotterieThrow.sol";
 import "./LotterieThrowProxy.sol";
 import "./LotterieParams.sol";
@@ -12,20 +14,35 @@ import "./LotterieIf.sol";
 contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
 
-  event NewThrowTemplate(address throwTemplateAddress);
+  event NewThrowTemplate(address throwTemplateAddress,uint8);
 
   address throwTemplate;
+  address throwTemplate223;
 
+  bool blockTemplates;
 
   function setThrowTemplate(address newTemplate) external onlyOwner {
+    require(blockTemplates == false);
     throwTemplate = newTemplate;
-    emit NewThrowTemplate(newTemplate);
+    emit NewThrowTemplate(newTemplate,0);
+  }
+  function setThrow223Template(address newTemplate) external onlyOwner {
+    require(blockTemplates == false);
+    throwTemplate223 = newTemplate;
+    emit NewThrowTemplate(newTemplate,1);
   }
 
-  event NewThrow(address throwAddress);
+
+  // if contract templates ok, block it (no template update possible)
+  function doBlockTemplates() external onlyOwner {
+    blockTemplates = true;
+  }
+
+  event NewThrow(address throwAddress,uint8 mode);
 
 
  
+  // any kind of throw
   LotterieThrow [] public allthrows;
 
   function getTotalNbThrow() view external returns (uint) {
@@ -39,13 +56,17 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
   constructor(
     address _authorContract,
-    address _throwTemplate
+    address _throwTemplate,
+    address _throwTemplate223
   )
   Author(_authorContract)
   public
   {
+     blockTemplates = false;
      throwTemplate = _throwTemplate;
-     emit NewThrowTemplate(_throwTemplate);
+     throwTemplate223 = _throwTemplate223;
+     emit NewThrowTemplate(_throwTemplate,0);
+     emit NewThrowTemplate(_throwTemplate223,1);
   }
 
   function getAuthorContract()  external returns(address) {
@@ -122,8 +143,9 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
          revert(0, 0)
        }
     }
+
     //LotterieThrowProxy thr_proxy = new LotterieThrowProxy();
-    LotterieThrow thr = LotterieThrow(address(thr_proxy));
+    LotterieThrowEther thr = LotterieThrowEther(address(thr_proxy));
 
  
     thr.deffered_constructor.value(msg.value)(
@@ -137,8 +159,70 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
     );
     allthrows.push(thr);
 
-    emit NewThrow(address(thr));
+    emit NewThrow(address(thr),0);
   }
+
+  function initThrow223 (
+    bool waitValue,
+    address token,
+    uint paramsId,
+    uint paramsPhaseId,
+
+    uint32 ownerMargin,
+    uint32 authorContractMargin,
+    uint32 authorDappMargin,
+    uint32 throwerMargin
+
+  ) external payable {
+    require(LC.validParticipationSwitch(
+      params[paramsId].maxParticipant,
+      params[paramsId].biddingTreshold,
+      phaseParams[paramsPhaseId].participationStartTreshold
+    ));
+    require(LC.validWithdrawMargins(
+      ownerMargin,
+      authorContractMargin,
+      authorDappMargin,
+      throwerMargin));
+
+    address thr_proxy;
+    address thr_template = throwTemplate223;
+    assembly {
+      let contractCode_init := mload(0x40) // free memory ptr
+
+      let contractCode := contractCode_init
+           
+     
+       mstore(add(contractCode, 0x0b), thr_template)
+       mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773)
+       mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000)
+            
+       thr_proxy := create(0, contractCode_init, 60)
+            
+       if iszero(extcodesize(thr_proxy)) {
+         revert(0, 0)
+       }
+    }
+    //LotterieThrowProxy thr_proxy = new LotterieThrowProxy();
+    LotterieThrow223 thr = LotterieThrow223(address(thr_proxy));
+
+ 
+    thr.deffered_constructor(
+      waitValue,
+      token,
+      paramsId,
+      paramsPhaseId,
+
+      ownerMargin,
+      authorContractMargin,
+      authorDappMargin,
+      throwerMargin
+    );
+    allthrows.push(thr);
+
+    emit NewThrow(address(thr),1);
+  }
+ 
   // warning this function should not be use outside of testing 
   // (especially not for calculing bid commitment when using non local ethereum instance)
   function checkCommitment(uint256 hiddenSeed) pure external returns(uint) {

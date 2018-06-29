@@ -1,7 +1,7 @@
 //import Web3 from 'web3';
 
 var lotterieContract = require('./build/contracts/Lotterie.json');
-var lotterieThrowContract = require('./build/contracts/LotterieThrow.json');
+var lotterieThrowContract = require('./build/contracts/LotterieThrowEther.json');
 
 var lotterieLib = {
   lotterieAbi : lotterieContract.abi,

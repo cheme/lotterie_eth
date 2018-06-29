@@ -1,0 +1,3 @@
+[submodule "solidity2/contracts/ERC223-token-standard"]
+	path = solidity2/contracts/ERC223-token-standard
+	url = https://github.com/Dexaran/ERC223-token-standard.git

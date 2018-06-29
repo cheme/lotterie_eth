@@ -3,10 +3,11 @@ pragma solidity ^0.4.23;
 
 import "./Thrower.sol";
 import "./FromLotterie.sol";
+import "./LotteriePayment.sol";
 import { LotterieConf as LC } from "./LotterieConf.sol";
 import "./LotteriePhases.sol";
 
-contract LotterieMargins is Thrower, LotteriePhases, FromLotterie {
+contract LotterieMargins is Thrower, LotteriePhases, FromLotterie, LotteriePayment {
 
 
   // for debugging
@@ -24,7 +25,8 @@ contract LotterieMargins is Thrower, LotteriePhases, FromLotterie {
       if (amount > 0) {
         thr.withdraws.ownerWithdrawned = true;
         thr.results.totalClaimedValue += amount;
-        msg.sender.transfer(amount);
+//        msg.sender.transfer(amount);
+        withdrawAmount(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
       }
@@ -41,7 +43,8 @@ contract LotterieMargins is Thrower, LotteriePhases, FromLotterie {
       if (amount > 0) {
         thr.withdraws.authorContractWithdrawned = true;
         thr.results.totalClaimedValue += amount;
-        msg.sender.transfer(amount);
+        //msg.sender.transfer(amount);
+        withdrawAmount(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
       }
@@ -58,7 +61,8 @@ contract LotterieMargins is Thrower, LotteriePhases, FromLotterie {
       if (amount > 0) {
         thr.withdraws.throwerWithdrawned = true;
         thr.results.totalClaimedValue += amount;
-        msg.sender.transfer(amount);
+        //msg.sender.transfer(amount);
+        withdrawAmount(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
       }
@@ -75,7 +79,8 @@ contract LotterieMargins is Thrower, LotteriePhases, FromLotterie {
       if (amount > 0) {
         thr.withdraws.authorDappWithdrawned = true;
         thr.results.totalClaimedValue += amount;
-        msg.sender.transfer(amount);
+        //msg.sender.transfer(amount);
+        withdrawAmount(amount);
         emit Withdraw(msg.sender, amount);
         return amount;
       }
