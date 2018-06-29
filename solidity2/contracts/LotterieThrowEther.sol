@@ -18,7 +18,7 @@ contract LotterieThrowEther is LotterieThrow {
   function withdrawAmount(uint amount) internal {
     msg.sender.transfer(amount);
   }
-  function deffered_constructor(
+  function deffered_constructor (
     uint paramsId,
     uint paramsPhaseId,
     uint32 ownerMargin,

@@ -1,3 +1,4 @@
+// keep 223 version with costy delegatecall for possible future reuse (currently it is simple enough to avoid dcall
 
 pragma solidity ^0.4.23;
 
@@ -9,12 +10,19 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
 
   ERC223Interface token;
   bool waitingInitValue = false;
+  uint private currentAmount = 0;
+  address private currentFrom = 0;
 
   function bid (
     uint commitmentSeed
   ) public {
     // require(msg.value == 0);
-    internal_bid(msg.sender,commitmentSeed,0);
+    if (currentAmount == 0) {
+      internal_bid(msg.sender,commitmentSeed,0);
+    } else {
+      internal_bid(currentFrom,commitmentSeed,currentAmount);
+      currentAmount = 0;
+    }
   }
 
   function mode() view public returns(uint8,address) {
@@ -30,42 +38,10 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
     require(_value != 0);
     require(msg.sender == address(token));
     // corner case of possible phase switch (but if right call should not happen)
-    if(thr.currentPhase == Phase.Bidding) {
-      uint commitmentSeed;
-      if (_data.length == 36) {
-        // check signature of bid call
-        require(_data[0] == 69 &&
-                _data[1] == 74 &&
-                _data[2] == 42 &&
-                _data[3] == 179);
-        commitmentSeed = bytesToUInt256(4, _data);
-      } else {
-        // direct bid parameter usage
-        require(_data.length == 32);
-        commitmentSeed = bytesToUInt256(0, _data);
-      }
-      internal_bid(_from,commitmentSeed,_value);
-    } else {
-      require(thr.currentPhase == Phase.Construct);
-      if (_data.length == 4) {
-        require(_data[0] == 56 &&
-                _data[1] == 55 &&
-                _data[2] == 57 &&
-                _data[3] == 159);
-      } else {
-        require(_data.length == 0);
-      }
-      require(_from == thrower);
-      thr.results.totalBidValue = _value;
-      thr.currentPhase = Phase.Bidding;
-    }
-  }
-
-  function bytesToUInt256(uint _offst, bytes memory _input) internal pure returns (uint256 _output) {
-        
-        assembly {
-            _output := mload(add(_input, _offst))
-        }
+    require(thr.currentPhase == Phase.Bidding || thr.currentPhase == Phase.Construct);
+    currentAmount = _value;
+    currentFrom = _from;
+    require(address(this).delegatecall(_data));
   }
 
   function deffered_constructor(
@@ -102,7 +78,10 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
   )
   public
   {
-    require(false);// only to generate a proto
+    require(currentFrom == thrower);
+    thr.currentPhase = Phase.Bidding;
+    thr.results.totalBidValue = currentAmount;
+    currentAmount = 0;
   }
 
 

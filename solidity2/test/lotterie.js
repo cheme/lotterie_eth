@@ -678,6 +678,7 @@ contract('Lotterie', function(accounts) {
     var bidencoded = w3abi.encodeFunctionCall(
             _.find(LotterieThrow223.abi, { name: 'initPrize' }),
             []);
+//          console.log(hexToBytes(bidencoded));
     await erc223.transfer(account_bidder2, 1000, { from : account_owner });
     await erc223.transfer(account_bidder3, 500, { from : account_owner });
     // only thrower to init prize
