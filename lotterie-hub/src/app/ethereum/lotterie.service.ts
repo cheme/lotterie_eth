@@ -198,8 +198,14 @@ export class LotterieService {
   }
 
   public getPhaseParam(ix : string): Observable<Object> {
-    return from(this.lotterieLib.lotterie.methods.getPhaseParams(ix).call()).pipe(
-      map(o => this.lotterieLib.newPhaseParams(o))
+    return zip(
+      from(this.lotterieLib.lotterie.methods.getPhaseParams1(ix).call()),
+      from(this.lotterieLib.lotterie.methods.getPhaseParams2(ix).call()),
+      (p1,p2) => {
+        let p1o = this.lotterieLib.newPhaseParams1(p1);
+        let p2o = this.lotterieLib.newPhaseParams2(p2);
+        return {...p1o, ...p2o};
+      }
     );
   }
 
@@ -309,7 +315,9 @@ export class LotterieService {
       authorDappMargin : number,
       throwerMargin : number
     ) : Observable<Object> {
+      var nbErc721 = 0;
       var call = this.lotterieLib.lotterie.methods.initThrow(
+        0,
         params,
         paramsPhaseId,
         ownerMargin,

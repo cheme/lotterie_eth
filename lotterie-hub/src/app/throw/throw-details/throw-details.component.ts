@@ -239,15 +239,15 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
       if (thisS.thr.calcPhase !== newPhase) {
         thisS.thr.calcPhase = newPhase;
         if (newPhase == 3) {
-          this.lotterieService.fetchCurrentSeed(this.thr.throwLib).pipe(
+          this.lotterieService.fetchCurrentSeed(thisS.thr.throwLib).pipe(
             map((currentSeed : string) => {
-              this.thr.currentSeed = currentSeed;
-              this.updateSortedWinners();
+              thisS.thr.currentSeed = currentSeed;
+              thisS.updateSortedWinners();
             })
           );
         }
         if (newPhase == 4) {
-          this.updateSortedWinners();
+          thisS.updateSortedWinners();
         }
         thisS.calcPhaseBadge = true;
         thisS.nextTimeTresholdSub();
@@ -259,7 +259,7 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     this.lotterieService.getNextTimeTreshold(this.thr.throwLib).subscribe(function(t) {
       if (t != null)  {
       thisS.nextPhase = t;
-      let nextCheck = new Date (t.getTime() + this.storageService.environment.delayBlockDate * 1000);
+      let nextCheck = new Date (t.getTime() + thisS.storageService.environment.delayBlockDate * 1000);
       timer(nextCheck).subscribe(() => {
         thisS.messageService.add("Switch phase timer event happen on " + thisS.thr.address);
         thisS.recalcPhase();

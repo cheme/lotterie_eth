@@ -42,17 +42,23 @@ var lotterieLib = {
       doSalt : 5
     });
   },
-  newPhaseParams : function(arr) {
+  newPhaseParams1 : function(arr) {
     return this.arrayAccessor(arr, {
       participationStartTreshold : 0,
       participationEndValue : 1,
-      cashoutEndValue : 2,
-      throwEndValue : 3,
-      participationEndMode : 4,
-      cashoutEndMode : 5,
-      throwEndMode : 6
+      participationStartMode : 2,
+      participationEndMode : 3
     });
   },
+  newPhaseParams2 : function(arr) {
+    return this.arrayAccessor(arr, {
+      cashoutEndValue : 0,
+      throwEndValue : 1,
+      cashoutEndMode : 2,
+      throwEndMode : 3
+    });
+  },
+
   newThrow : function(arr) {
     return this.arrayAccessor(arr, {
       paramsId : 0,

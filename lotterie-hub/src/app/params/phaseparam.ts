@@ -5,6 +5,7 @@ export class Phaseparam {
   static fromObject(id : EthId, object: any): Phaseparam {
     let param =  {...object};
     param.id = id;
+    param.participationStartMode = parseInt(param.participationStartMode);
     param.participationEndMode = parseInt(param.participationEndMode);
     param.cashoutEndMode = parseInt(param.cashoutEndMode);
     param.throwEndMode = parseInt(param.throwEndMode);
@@ -12,6 +13,7 @@ export class Phaseparam {
   }
  
   id : EthId;
+  participationStartMode : number;
   participationStartTreshold : string;
   participationEndValue : string;
   cashoutEndValue : string;
