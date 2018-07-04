@@ -873,12 +873,12 @@ contract('Lotterie', function(accounts) {
     assert.equal(web3.toHex(await erc20.balanceOf(account_bidder2)), web3.toHex(0));
     
     accountParts.push(account_bidder2);
-    await tr_log( lotteriethrow.bid(calcCommitment('0x2'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(calcCommitment('0x2'), { from : account_bidder2 }), true );
     accountParts.push(account_bidder2);
-    await tr_log( lotteriethrow.bid(calcCommitment('0x3'), { from : account_bidder2 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(calcCommitment('0x3'), { from : account_bidder2 }), true );
     accountParts.push(account_bidder2);
     assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Bidding);
-    await tr_log( lotteriethrow.bid(calcCommitment('0x4'), { from : account_bidder3 , value : myConf.minBidValue }), true );
+    await tr_log( lotteriethrow.bid(calcCommitment('0x4'), { from : account_bidder3 }), true );
     accountParts.push(account_bidder3);
     assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Participation);
     // reveal

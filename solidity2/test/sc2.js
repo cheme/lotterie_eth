@@ -19,11 +19,10 @@ contract('Lotterie sc2', function(accounts) {
       
     var account_owner = accounts[0];
     console.log("account:" + account_owner);
-    //var erc223 = await ERC223Test.new("100000000000", { from : account_owner });
-    var erc223 = await ERC223Test.new(10, { from : account_owner });
+    var erc223 = await ERC223Test.new("1000000000000000000", { from : account_owner });
+
     console.log("erc223:" + erc223.address);
-    //var erc20 = await ERC20Test.new("10000000000000", { from : account_owner });
-    var erc20 = await ERC20Test.new(100, { from : account_owner });
+    var erc20 = await ERC20Test.new("5000000000000000000", { from : account_owner });
     console.log("erc20:" + erc20.address);
     var erc721 = await ERC721Test.new({ from : account_owner });
     console.log("erc721:" + erc721.address);

@@ -1,5 +1,17 @@
 <div *ngIf="thr">
     <mat-accordion>
+   <mat-expansion-panel *ngIf="thr.currentPhase == 0">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Initialize 
+            </mat-panel-title>
+            <mat-panel-description>
+              Initialize throw value
+            </mat-panel-description>
+          </mat-expansion-panel-header>   
+    <app-erc-value [athrow]="thr"></app-erc-value>
+    </mat-expansion-panel>
+ 
         <mat-expansion-panel expanded>
           <mat-expansion-panel-header>
             <mat-panel-title>
@@ -16,7 +28,12 @@
     (change)="changeFavorite($event)"
 >Favorite</mat-slide-toggle>
 
-
+  <div *ngIf="thr.bidType != 0 || thr.nbErc721 != 0 || (thr.nbErc721Construct != 0 && thr.currentPhase == 0)">
+    <span>Ercs : </span>
+    <span *ngIf="thr.bidType == 1">223</span>
+    <span *ngIf="thr.bidType == 2">20</span>
+    <span *ngIf="thr.nbErc721 > 0 || (thr.nbErc721Construct > 0 && thr.currentPhase == 0)"> 721</span>
+ </div>
 
   <div>
     <a routerLink="/throw/{{ thr.address }}">

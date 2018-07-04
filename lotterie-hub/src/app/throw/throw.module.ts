@@ -14,6 +14,7 @@ import { EthereumModule } from '../ethereum/ethereum.module';
 import { EthComponentsModule } from '../eth-components/eth-components.module';
 import { MyBoardComponent } from './my-board/my-board.component';
 import { MyFavoritesComponent } from './my-favorites/my-favorites.component';
+import { ErcValueComponent } from './erc-value/erc-value.component';
 
 @NgModule({
   imports: [
@@ -55,6 +56,7 @@ import { MyFavoritesComponent } from './my-favorites/my-favorites.component';
     DialogNPart,
     MyBoardComponent,
     MyFavoritesComponent,
+    ErcValueComponent,
   ],
   entryComponents: [
     DialogNPart,

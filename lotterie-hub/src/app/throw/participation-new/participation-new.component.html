@@ -9,6 +9,8 @@
   <input placeholder="0" [(ngModel)]="bidValue"/>
 </label>-->
 <button mat-raised-button *ngIf="!invalidBidValue()" (click)="newParticipation()">Launch a new participation</button>
+<mat-hint *ngIf="athrow.bidType == 2">Two consecutive transactions will need to be accepted (allow transfer then start)</mat-hint>
+
 </div>
 <div>
 <!--

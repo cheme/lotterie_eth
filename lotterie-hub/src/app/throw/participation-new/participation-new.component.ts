@@ -51,6 +51,7 @@ export class ParticipationNewComponent implements OnInit {
       }
     }
   }
+  protected withMinValue = true;
   ngOnInit() {
     if (!this.athrow.bidType || this.athrow.bidType == 0) {
       this.units = EthUnits;
@@ -63,12 +64,14 @@ export class ParticipationNewComponent implements OnInit {
     this.updateValUnit(v);
     this._val = v;
  
+    if (this.withMinValue) {
     this.lotterieService.getLotterieMinValue(this.athrow.paramsId.toString()).subscribe((nb) => {
       var v = EthValue.fromString(nb.toString());
       this.updateValUnit(v);
       this.minBidValue = v;
       this._val = this.minBidValue;
     });
+    }
   }
   regenerateSeeds() {
       this.revealedSeed = this.lotterieService.genNewSeed();
@@ -93,6 +96,7 @@ export class ParticipationNewComponent implements OnInit {
         this._val.fullrepr,
         hiddenS
       );
+      this.newParticipationInternal(q,hiddenS,revealedS);
     } else if (this.athrow.bidType == 1) {
       // 223
       q = this.lotterieService.newParticipation223(
@@ -101,19 +105,37 @@ export class ParticipationNewComponent implements OnInit {
         this._val.fullrepr,
         hiddenS
       );
+      this.newParticipationInternal(q,hiddenS,revealedS);
 
     } else if (this.athrow.bidType == 2) {
+
+      this.lotterieService.allowBid20(
+        this.athrow.throwLib,
+        this.athrow.tokenLib,
+        this._val.fullrepr
+      ).subscribe((ev : any) => {
+        this.messageService.add("bidd allowed from erc20, starting effective bid");
+        q = this.lotterieService.newParticipation20(
+          this.athrow.throwLib,
+          this.athrow.tokenLib,
+          hiddenS
+        );
+        this.newParticipationInternal(q,hiddenS,revealedS);
+      });
+
     };
+  }
+  
+  newParticipationInternal(q,hiddenS,revealedS) {
     this.storageService.writeVal(hiddenS,revealedS).then(() => {
       this.messageService.add("writen seeds");
-    q.subscribe((ev : any) => {
-
+      q.subscribe((ev : any) => {
         let partId = ev.events.NewParticipation.returnValues.participationId;
         this.messageService.add("New bid emitted : " + partId);
         this.storageService.addParticipation(this.athrow.address, partId); 
-
       })
     })
   }
+
 
 }

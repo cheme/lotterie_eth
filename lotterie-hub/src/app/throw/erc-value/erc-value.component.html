@@ -1,0 +1,12 @@
+<div *ngIf="athrow.currentPhase == 0 && athrow.bidType != 0">
+  <span *ngIf="units != null">
+<mat-form-field>
+<amount-eth  placeholder = "Bid value :" [units]="units" [(ngModel)]="val"></amount-eth>
+</mat-form-field>
+</span>
+<button mat-raised-button (click)="initErcValue()">Launch a new participation</button>
+<mat-hint *ngIf="athrow.bidType == 2">Two consecutive transactions will need to be accepted (allow transfer then start)</mat-hint>
+
+</div>
+<div>
+</div>

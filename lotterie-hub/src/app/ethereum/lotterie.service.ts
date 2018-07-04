@@ -489,9 +489,64 @@ export class LotterieService {
       var call = tokenLib.methods.transfer(throwLib._address, bidValue, data);
       return from(call.estimateGas({from: this.web3.eth.defaultAccount})
         .then((gas) => {
-                   console.log("deb");
-                   call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000});
+          return call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000, value : 0});
         }));
+    }
+   public initPrize223(
+      throwLib : any,
+      tokenLib : any,
+      bidValue : string
+    ) : Observable<Object> {
+      var data = throwLib.methods.initPrize().encodeABI();
+      var call = tokenLib.methods.transfer(throwLib._address, bidValue, data);
+      return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+        .then((gas) => {
+          return call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000, value : 0});
+        }));
+    }
+ 
+    public allowBid20(
+      throwLib : any,
+      tokenLib : any,
+      bidValue : string,
+    ) : Observable<Object> {
+
+      var call1 = tokenLib.methods.approve(throwLib._address, bidValue);
+      return from(
+        call1.estimateGas({from: this.web3.eth.defaultAccount})
+        .then((gas) => {
+          return call1.send({from: this.web3.eth.defaultAccount, gas: gas + 2000, value : 0});
+        })
+      );
+    }
+ 
+    public newParticipation20(
+      throwLib : any,
+      tokenLib : any,
+      hiddenSeed : string 
+    ) : Observable<Object> {
+
+      var call2 = throwLib.methods.bid(hiddenSeed);
+      return from(
+        call2.estimateGas({from: this.web3.eth.defaultAccount})
+        .then((gas) => {
+          // there is especially big errors in evaluate so start with big gas value
+          return call2.send({from: this.web3.eth.defaultAccount, gas: Math.floor(gas * 1.2), value : 0});
+        })
+      );
+    }
+    public initPrize20(
+      throwLib : any,
+      tokenLib : any
+    ) : Observable<Object> {
+
+      var call2 = throwLib.methods.initPrize();
+      return from(
+        call2.estimateGas({from: this.web3.eth.defaultAccount})
+        .then((gas) => {
+          return call2.send({from: this.web3.eth.defaultAccount, gas: Math.floor(gas * 1.2), value : 0});
+        })
+      );
     }
  
     public revealParticipation(
