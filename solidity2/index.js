@@ -2,10 +2,21 @@
 
 var lotterieContract = require('./build/contracts/Lotterie.json');
 var lotterieThrowContract = require('./build/contracts/LotterieThrowEther.json');
+var lotterieThrowContract20 = require('./build/contracts/LotterieThrow20.json');
+var lotterieThrowContract223 = require('./build/contracts/LotterieThrow223.json');
+var erc721Contract = require('./build/contracts/ERC721.json');
+var erc20Contract = require('./build/contracts/ERC20L.json');
+var erc223Contract = require('./build/contracts/ERC223L.json');
+
 
 var lotterieLib = {
   lotterieAbi : lotterieContract.abi,
   lotterieThrowAbi : lotterieThrowContract.abi,
+  lotterieThrow20Abi : lotterieThrowContract20.abi,
+  lotterieThrow223Abi : lotterieThrowContract223.abi,
+  Erc223Abi : erc223Contract.abi,
+  Erc20Abi : erc20Contract.abi,
+  Erc721Abi : erc721Contract.abi,
  // no web3 function until web3 1.0 in truffle  web3 : 1,//new Web3(), // empty provider
   arrayAccessor : function(arr,conf) {
     var result = {};

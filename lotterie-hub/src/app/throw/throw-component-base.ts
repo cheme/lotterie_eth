@@ -9,6 +9,7 @@ import { MatSlideToggleChange } from "@angular/material";
 
 export abstract class ThrowComponentBase implements OnInit {
 
+
   private _favorite : Boolean = null;
   private initFavorite() {
     if (this._favorite == null) {

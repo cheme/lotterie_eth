@@ -31,21 +31,17 @@ export class MyBoardComponent implements OnInit {
   public participations : [string,number,Observable<Entry>][];
   ngOnInit() {
     this.participations = this.storageService.allParticipations().map(([thrId,pId]) => {
-      // TODO local map of throw +calcPhase to avoid a lot of calls
-      let ob = this.lotterieService.getAthrow(thrId).pipe(
-        flatMap(([lib,objThr,objWith]) => {
-            let thr = Athrow.fromObject(thrId, lib,objThr,objWith);
-            return zip(
-              this.lotterieService.calcPhase(thr.throwLib),
-              this.lotterieService.getParticipation(thr.throwLib,pId),
-              (cp,ob) => {
-                thr.calcPhase = cp;
-                let participation = Participation.fromObject(thrId, pId, ob);
-                return new Entry(participation,thr); 
-              }
-            );
-        })
-      );
+
+    // TODO local map of throw to avoid a lot of calls
+    let ob = Athrow.initAthrow(thrId, this.lotterieService).pipe(
+      flatMap(thr => 
+        this.lotterieService.getParticipation(thr.throwLib,pId).pipe(
+          map(ob => {
+            let participation = Participation.fromObject(thrId, pId, ob);
+            return new Entry(participation,thr); 
+          })))
+    );
+
       return [thrId,pId,ob] as [string,number,Observable<Entry>];
     });
   }

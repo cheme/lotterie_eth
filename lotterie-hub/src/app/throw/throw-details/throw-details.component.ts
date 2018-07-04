@@ -28,6 +28,7 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     super(route,lotterieService,messageService,storageService,location);
   }
 
+  calcSortedWinners : Array<Participation> = null;
   sortedWinners : Array<Participation> = null;
 
   subParticipations : Subject<boolean> = new Subject();
@@ -112,16 +113,18 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
   ngOnDestroy() : void {
     this.lotterieService.unObserveThrow(this.thr.address);
   }
+
   updateSortedWinners() {
-    if (this.thr.calcPhase == 3) {
+    if (this.thr.calcPhase > 2) {
       // when calcPhase is 3 we do not have additional reveal (this might change with other phase switching)
       // so we calc it only once (could not change afterwards)
-      if (this.sortedWinners == null) {
-//        this.calcWinnersFromParticipations();
+      if (this.calcSortedWinners == null) {
+        // this.calcWinnersFromParticipations();
         this.calcWinnersFromParticipationsLog();
       }
-    } else if (this.thr.calcPhase > 3) {
-        this.getWinnersFromParticipations();
+    }
+    if (this.thr.calcPhase > 3) {
+      this.getWinnersFromParticipations();
     }
   }
 
@@ -151,10 +154,10 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
               })
             ));
           }
-    forkJoin(obsArray).subscribe(participations => {
-      this.sortedWinners = participations;
-      // TODO switch sortedWinners to array of observable and add pagination
-    })
+      forkJoin(obsArray).subscribe(participations => {
+        this.calcSortedWinners = participations;
+        // TODO switch sortedWinners to array of observable and add pagination
+      })
 
         },this.lotterieService);
       }

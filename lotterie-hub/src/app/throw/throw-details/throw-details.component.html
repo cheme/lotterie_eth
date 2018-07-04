@@ -81,8 +81,11 @@
               Current throw winners 
             </mat-panel-description>
           </mat-expansion-panel-header>   
-
- <ul *ngFor="let w of sortedWinners">
+<mat-tab-group>
+  <mat-tab *ngIf="thr.calcPhase > 3">
+    <ng-template mat-tab-label *ngIf="thr.calcPhase == 4">Registered</ng-template>
+    <ng-template mat-tab-label *ngIf="thr.calcPhase > 5">Final</ng-template>
+  <ul *ngFor="let w of sortedWinners">
    <li>
     <app-participation-detail 
       [throwLib]="thr.throwLib"
@@ -92,6 +95,21 @@
     ></app-participation-detail>
    </li>
   </ul>
+  </mat-tab>
+  <mat-tab label="Calculated" *ngIf="thr.calcPhase > 2">
+  <ul *ngFor="let w of calcSortedWinners">
+   <li>
+    <app-participation-detail 
+      [throwLib]="thr.throwLib"
+      [throwId]="thr.address"
+      [throwState]="thr.calcPhase"
+      [participation]="w"
+    ></app-participation-detail>
+   </li>
+  </ul>
+  </mat-tab>
+
+</mat-tab-group>
   </mat-expansion-panel>
    <mat-expansion-panel *ngIf="thr.calcPhase == 1">
           <mat-expansion-panel-header>

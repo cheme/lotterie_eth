@@ -1,8 +1,38 @@
 <div>
 <mat-form-field>
+  <mat-select [(ngModel)]="throwMode" placeholder="Type of bid">
+    <mat-option value="0" selected>Ether</mat-option>
+    <mat-option value="1">ERC 223</mat-option>
+    <mat-option value="2">ERC 20</mat-option>
+  </mat-select>
+  <mat-hint *ngIf="throwMode == 1">Two transactions (initThrow and transfer value) will be send</mat-hint>
+  <mat-hint *ngIf="throwMode == 2">Three transactions (initThrow, allow transfer, and initPrize) will be send</mat-hint>
+</mat-form-field>
+</div>
+<br/>
+<br/>
+<div *ngIf="throwMode != 0">
+<mat-form-field>
+  <input matInput [(ngModel)]="tokenAddress" placeholder="Token address"/>
+</mat-form-field>
+</div>
+<div *ngIf="yourTokenBalance">
+  Current balance is {{ yourTokenBalance.toString() }}, transfer would be done in another step if with initial value is checked.
+  <br/>
+</div>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="nb721" placeholder="Nb ERC721 prizes" type="number"/>
+  <mat-hint>{{ nb721 }} additional transactions will be required to add 721 prizes</mat-hint>
+</mat-form-field>
+</div>
+<br/>
+<div>
+<mat-form-field>
   <input matInput [(ngModel)]="params" placeholder = "Lotterie parameters"/>
   <mat-hint>Valid parameter index</mat-hint>
 </mat-form-field>
+</div>
 <div>
 <mat-form-field>
   <input matInput [(ngModel)]="paramsPhaseId" placeholder = "Lotterie phase parameters"/>
@@ -10,9 +40,18 @@
 </mat-form-field>
 </div>
 <div>
+<div *ngIf="throwMode == 0">
 <mat-form-field>
-<amount-eth placeholder = "Initial winning prize" [(ngModel)]="initWinValue"></amount-eth>
+<amount-eth placeholder = "Initial winning prize" [units]="units" [(ngModel)]="initWinValue"></amount-eth>
 </mat-form-field>
+</div>
+<div *ngIf="throwMode != 0">
+<mat-checkbox
+    [(ngModel)]="withInitialValue">
+    With initial value 
+</mat-checkbox>
+</div>
+
 <!--<label>Initial winning prize:
   <input [(ngModel)]="initWinValue" />
 </label>-->

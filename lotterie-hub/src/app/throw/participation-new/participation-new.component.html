@@ -1,8 +1,10 @@
 <div *ngIf="athrow.calcPhase == 1">
+  <span *ngIf="units != null">
 <mat-form-field>
-<amount-eth placeholder = "Bid value :" [(ngModel)]="val"></amount-eth>
+<amount-eth  placeholder = "Bid value :" [units]="units" [(ngModel)]="val"></amount-eth>
 <mat-hint>Must be at least {{ minBidValue }} </mat-hint>
 </mat-form-field>
+</span>
 <!--<label>Bid value:
   <input placeholder="0" [(ngModel)]="bidValue"/>
 </label>-->

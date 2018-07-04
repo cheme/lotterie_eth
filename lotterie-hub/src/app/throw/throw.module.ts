@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { ParticipationDetailComponent } from './participation-detail/participation-detail.component';
 import { ParticipationsComponent } from './participations/participations.component';
 import { ParticipationNewComponent } from './participation-new/participation-new.component';
-import {MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatExpansionModule, MatListModule, MatBadgeModule, MatSliderModule, MatInputModule, MatPaginator, MatPaginatorModule, MatSlideToggleModule, MatGridListModule} from '@angular/material';
+import {MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatExpansionModule, MatListModule, MatBadgeModule, MatSliderModule, MatInputModule, MatPaginator, MatPaginatorModule, MatSlideToggleModule, MatGridListModule, MatTabsModule, MatSelectModule, MatCheckboxModule} from '@angular/material';
 import { EthereumModule } from '../ethereum/ethereum.module';
 import { EthComponentsModule } from '../eth-components/eth-components.module';
 import { MyBoardComponent } from './my-board/my-board.component';
@@ -34,6 +34,9 @@ import { MyFavoritesComponent } from './my-favorites/my-favorites.component';
     MatPaginatorModule,
     MatSlideToggleModule,
     MatGridListModule,
+    MatTabsModule,
+    MatSelectModule,
+    MatCheckboxModule,
   ],
   exports: [
     ThrowDetailsSmallComponent,

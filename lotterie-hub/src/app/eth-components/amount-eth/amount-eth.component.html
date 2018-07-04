@@ -2,7 +2,7 @@
     <input class="count" formControlName="count" size="3" type="string" (keyup)="countchange($event)">
     <span>&nbsp;</span>
     <select class="unit" placeholder="Unit" formControlName="unit" (change)="unitchange($event)">
-      <option *ngFor="let uk of units" value="{{uk[0]}}">{{uk[1].id}}</option>
+      <option *ngFor="let uk of unitsiter" value="{{uk[0]}}">{{uk[1].id}}</option>
     </select>
     <span>&nbsp;</span>
     <mat-checkbox matTooltip="Limit to 3 digits" id="checkBox" formControlName="doesLink" (change)="linkchange($event)"></mat-checkbox><!-- TODO replace by material linked icon -->

@@ -1,11 +1,11 @@
 
 import {FocusMonitor} from '@angular/cdk/a11y';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
-import {Component, ElementRef, Input, OnDestroy, forwardRef, Optional, Self} from '@angular/core';
+import {Component, ElementRef, Input, OnInit, OnDestroy, forwardRef, Optional, Self} from '@angular/core';
 import {FormBuilder, FormGroup, ControlValueAccessor, NgControl} from '@angular/forms';
 import {MatFormFieldControl} from '@angular/material';
 import {Subject} from 'rxjs';
-import { EthUnits, EthValue } from '../eth-value';
+import { EthValue } from '../eth-value';
 
 
 
@@ -86,11 +86,27 @@ export class AmountEthComponent implements MatFormFieldControl<EthValue>, OnDest
   }
   private _disabled = false;
 
+  private _units : any;
+  public unitsiter;
+  @Input()
+  get units() {
+    return this._units;
+  }
+  set units(uns : any) {
+    if (uns) {
+      this._units = uns;
+      this.unitsiter = Object.entries(uns);
+    }
+  }
+
   @Input()
   get value(): EthValue | null {
+    if (!this.units) {
+      return null;
+    }
     let n = this.parts.value;
     if (n.count.length > 0 && n.unit.length > 0) {
-      return new EthValue(parseInt(n.count), n.unit);
+      return new EthValue(this._units,parseInt(n.count), n.unit);
     }
     return null;
   }
@@ -143,10 +159,8 @@ export class AmountEthComponent implements MatFormFieldControl<EthValue>, OnDest
  
   }
 
-  units = Object.entries(EthUnits);
-
   updateValue() {
-    let ev = new EthValue(this.parts.value.count,this.parts.value.unit,this.parts.value.doesLink);
+    let ev = new EthValue(this._units,this.parts.value.count,this.parts.value.unit,this.parts.value.doesLink);
     this.value = ev;
   }
   countchange(event : KeyboardEvent) {

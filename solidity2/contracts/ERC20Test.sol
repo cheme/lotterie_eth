@@ -11,7 +11,7 @@ contract ERC20Test is StandardToken {
    return ('T');
  }
  function decimals() constant returns (uint8 _decimals) {
-   return (3);
+   return (5);
  }
  constructor(uint amount) {
    totalSupply_ = amount;

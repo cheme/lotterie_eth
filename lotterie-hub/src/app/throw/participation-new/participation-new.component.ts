@@ -3,7 +3,8 @@ import { Athrow } from '../athrow';
 import { LotterieService } from '../../ethereum/lotterie.service';
 import { MessageService } from '../../message.service';
 import { StorageService } from '../../storage.service';
-import { EthValue } from '../../eth-components/eth-value';
+import { EthValue, EthUnits, UTokenUnits } from '../../eth-components/eth-value';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-participation-new',
@@ -13,8 +14,8 @@ import { EthValue } from '../../eth-components/eth-value';
 export class ParticipationNewComponent implements OnInit {
 
   @Input() athrow : Athrow;
+  public units : any = null;
 
-  loaded : boolean = false;
 
   minBidValue : EthValue;
   hiddenSeed : string;
@@ -32,21 +33,42 @@ export class ParticipationNewComponent implements OnInit {
   get val() : EthValue {
     return this._val;
   }
-  _val : EthValue = EthValue.empty();
+  _val : EthValue;
 
   constructor(
     protected lotterieService : LotterieService,
     protected messageService : MessageService,
     protected storageService : StorageService
-  ) { }
+  ) { 
+ }
+  private updateValUnit (val) {
+    if (this.athrow.bidType > 0) {
+      if (this.athrow.tokenName) {
+        val.setTokenInfos(this.athrow.tokenName,this.athrow.tokenSymbol,this.athrow.tokenDecimals);
 
+      } else {
+        val.undefinedToken();
+      }
+    }
+  }
   ngOnInit() {
+    if (!this.athrow.bidType || this.athrow.bidType == 0) {
+      this.units = EthUnits;
+    } else if (this.athrow.tokenName) {
+      this.units = EthValue.buildUnit(this.athrow.tokenName,this.athrow.tokenDecimals);
+    } else {
+      this.units = UTokenUnits;
+    }
+    var v = EthValue.empty();
+    this.updateValUnit(v);
+    this._val = v;
+ 
     this.lotterieService.getLotterieMinValue(this.athrow.paramsId.toString()).subscribe((nb) => {
-      this.minBidValue = EthValue.fromString(nb.toString());
+      var v = EthValue.fromString(nb.toString());
+      this.updateValUnit(v);
+      this.minBidValue = v;
       this._val = this.minBidValue;
-      this.loaded = true;
     });
-  
   }
   regenerateSeeds() {
       this.revealedSeed = this.lotterieService.genNewSeed();
@@ -64,13 +86,27 @@ export class ParticipationNewComponent implements OnInit {
     }
     let hiddenS = this.hiddenSeed;
     let revealedS = this.revealedSeed;
-    this.storageService.writeVal(hiddenS,revealedS).then(() => {
-      this.messageService.add("writen seeds");
-      this.lotterieService.newParticipation(
+    var q;
+    if (this.athrow.bidType == 0) {
+      q = this.lotterieService.newParticipation(
         this.athrow.throwLib,
         this._val.fullrepr,
         hiddenS
-      ).subscribe((ev : any) => {
+      );
+    } else if (this.athrow.bidType == 1) {
+      // 223
+      q = this.lotterieService.newParticipation223(
+        this.athrow.throwLib,
+        this.athrow.tokenLib,
+        this._val.fullrepr,
+        hiddenS
+      );
+
+    } else if (this.athrow.bidType == 2) {
+    };
+    this.storageService.writeVal(hiddenS,revealedS).then(() => {
+      this.messageService.add("writen seeds");
+    q.subscribe((ev : any) => {
 
         let partId = ev.events.NewParticipation.returnValues.participationId;
         this.messageService.add("New bid emitted : " + partId);

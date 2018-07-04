@@ -35,6 +35,81 @@ export class ThrowEventWin {
   providedIn: 'root'
 })
 export class LotterieService {
+  public newErc223Lib(addres: string): any {
+    return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.Erc223Abi, addres);
+  }
+  public newErc721Lib(addres: string): any {
+    return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.Erc721Abi, addres);
+  }
+  public newErc20Lib(addres: string): any {
+    return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.Erc20Abi, addres);
+  }
+
+  public getErcBalance(ercLib: any): Observable<string> {
+    return from(ercLib.methods.balanceOf(this.defaultAccount).call());
+  }
+  public getTokenInfos(ercLib: any): Observable<[string,string,number]> {
+    // TODO use a cache (ercLib should be cached to (put address as parameter))
+    return zip(
+      from(ercLib.methods.name().call()),
+      from(ercLib.methods.symbol().call()),
+      from(ercLib.methods.decimals().call()),
+      (n,s,d) => {
+        return [n,s,parseInt(d)] as [string,string,number];
+      }
+    );
+  }
+  private map223 = {};
+  private map20 = {};
+  private map721 = {};
+  public getInfo223(tokaddress: string): Observable<[any,string,string,number]> {
+    if (this.map223[tokaddress] != null) {
+      let i = this.map223[tokaddress]
+      return of([i.lib,i.name,i.symbol,i.decimals] as [any,string,string,number]);
+    }
+    let lib = this.newErc223Lib(tokaddress);
+    return this.getTokenInfos(lib).pipe(
+      map(([name,symbol,decimals]) => {
+        this.map223[tokaddress] = {
+          lib,
+          name,
+          symbol,
+          decimals
+        };
+        return [lib,name,symbol,decimals] as [any,string,string,number];
+      }),
+    );
+  }
+  public getInfo20(tokaddress: string): Observable<[any,string,string,number]> {
+    if (this.map20[tokaddress] != null) {
+      let i = this.map20[tokaddress]
+      return of([i.lib,i.name,i.symbol,i.decimals] as [any,string,string,number]);
+    }
+    let lib = this.newErc20Lib(tokaddress);
+    return this.getTokenInfos(lib).pipe(
+      map(([name,symbol,decimals]) => {
+        this.map20[tokaddress] = {
+          lib,
+          name,
+          symbol,
+          decimals
+        };
+        return [lib,name,symbol,decimals] as [any,string,string,number];
+      }),
+    );
+ 
+  }
+
+  public newThrowLib(addres : string) : any {
+    return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.lotterieThrowAbi, addres);
+  }
+  public newThrowLib20(addres : string) : any {
+    return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.lotterieThrow20Abi, addres);
+  }
+  public newThrowLib223(addres : string) : any {
+    return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.lotterieThrow223Abi, addres);
+  }
+
   get participationEndModes(): any {
     return this.lotterieLib.participationEndModes;
   };
@@ -239,11 +314,7 @@ export class LotterieService {
     return from(this.lotterieLib.lotterie.methods.getThrowAddress(ix).call());
   }
 
-  public newThrowLib(addres : string) : any {
-      return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.lotterieThrowAbi, addres);
-  }
-  public getAthrow(addres : string): Observable<[any,any,any]> {
-    var lotterieThrowLib = this.newThrowLib(addres);
+ private getAthrowInner(lotterieThrowLib : any, addres : string): Observable<[any,any,any]> {
     return zip(
       of(lotterieThrowLib),
       from(lotterieThrowLib.methods.getThrow().call())
@@ -252,6 +323,23 @@ export class LotterieService {
         .pipe(map(t => this.lotterieLib.newThrowWithdraws(t)))
     );
   }
+
+ public getAthrow(addres : string): Observable<[any,any,any]> {
+    var lotterieThrowLib = this.newThrowLib(addres);
+    return this.getAthrowInner(lotterieThrowLib,addres);
+ }
+
+  public getAthrow223(addres : string): Observable<[any,any,any]> {
+    var lotterieThrowLib = this.newThrowLib223(addres);
+    return this.getAthrowInner(lotterieThrowLib,addres);
+
+  }
+  public getAthrow20(addres : string): Observable<[any,any,any]> {
+    var lotterieThrowLib = this.newThrowLib20(addres);
+    return this.getAthrowInner(lotterieThrowLib,addres);
+  }
+
+
 
   public fetchCurrentSeed(throwLib : any): Observable<string> {
       return from(throwLib.getThrow().call()).pipe(map(t =>
@@ -307,6 +395,7 @@ export class LotterieService {
     }
 
     public initThrow(
+      nbErc721 : number,
       params : string,
       paramsPhaseId : string,
       initWinValue : string,
@@ -315,9 +404,8 @@ export class LotterieService {
       authorDappMargin : number,
       throwerMargin : number
     ) : Observable<Object> {
-      var nbErc721 = 0;
       var call = this.lotterieLib.lotterie.methods.initThrow(
-        0,
+        nbErc721,
         params,
         paramsPhaseId,
         ownerMargin,
@@ -328,6 +416,57 @@ export class LotterieService {
         .then((gas) => 
                    call.send({from: this.web3.eth.defaultAccount, gas: gas, value: initWinValue})));
     }
+    public initThrow223(
+      waiting : boolean,
+      tokaddress : string,
+      nbErc721 : number,
+      params : string,
+      paramsPhaseId : string,
+      ownerMargin : number,
+      authorContractMargin : number,
+      authorDappMargin : number,
+      throwerMargin : number
+    ) : Observable<Object> {
+      var call = this.lotterieLib.lotterie.methods.initThrow223(
+        waiting,
+        nbErc721,
+        tokaddress,
+        params,
+        paramsPhaseId,
+        ownerMargin,
+        authorContractMargin,
+        authorDappMargin,
+        throwerMargin);
+      return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+        .then((gas) => 
+                   call.send({from: this.web3.eth.defaultAccount, gas: gas})));
+    }
+    public initThrow20(
+      waiting : boolean,
+      tokaddress : string,
+      nbErc721 : number,
+      params : string,
+      paramsPhaseId : string,
+      ownerMargin : number,
+      authorContractMargin : number,
+      authorDappMargin : number,
+      throwerMargin : number
+    ) : Observable<Object> {
+      var call = this.lotterieLib.lotterie.methods.initThrow20(
+        waiting,
+        nbErc721,
+        tokaddress,
+        params,
+        paramsPhaseId,
+        ownerMargin,
+        authorContractMargin,
+        authorDappMargin,
+        throwerMargin);
+      return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+        .then((gas) => 
+                   call.send({from: this.web3.eth.defaultAccount, gas: gas})));
+    }
+
    public newParticipation(
       throwLib : any,
       bidValue : string,
@@ -339,6 +478,22 @@ export class LotterieService {
                    call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000, value: bidValue})));
                    // TODO check why I need those additional 2k
     }
+
+   public newParticipation223(
+      throwLib : any,
+      tokenLib : any,
+      bidValue : string,
+      hiddenSeed : string 
+    ) : Observable<Object> {
+      var data = throwLib.methods.bid(hiddenSeed).encodeABI();
+      var call = tokenLib.methods.transfer(throwLib._address, bidValue, data);
+      return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+        .then((gas) => {
+                   console.log("deb");
+                   call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000});
+        }));
+    }
+ 
     public revealParticipation(
       throwLib : any,
       participationId : number,
@@ -351,58 +506,81 @@ export class LotterieService {
     }
  
 
-    // win position in revealed winners (does not mean we win but we can win if nobody cashout)
-    public currentWinPosition(
-       throwLib : any,
-      participationId : number 
-    ) : Observable<number> {
-      return from( throwLib.methods.currentIxAmongWinners(participationId).call());
-    }
+  // win position in revealed winners (does not mean we win but we can win if nobody cashout)
+  public currentWinPosition(
+    throwLib : any,
+    participationId : number 
+  ) : Observable<number> {
+    return from( throwLib.methods.currentIxAmongWinners(participationId).call());
+  }
     
-    // get position of a participation at phase end or 0 if not in cashout wins
-    public positionAtPhaseEnd(
-       throwLib : any,
-      participationId : number 
-    ) : Observable<number> {
-      return from( throwLib.methods.positionAtPhaseEnd(participationId).call());
-    }
-    getNextTimeTreshold(throwLib : any): Observable<Date> {
-      return from( throwLib.methods.getNextTimeTreshold().call() ).pipe(
-        map((t : string) => {
-          if (t === "0") {
-            return null;
-          }
-          return new Date(parseInt(t) * 1000);
-        })
-      );
+  // get position of a participation at phase end or 0 if not in cashout wins
+  public positionAtPhaseEnd(
+    throwLib : any,
+    participationId : number 
+  ) : Observable<number> {
+    return from( throwLib.methods.positionAtPhaseEnd(participationId).call());
+  }
 
-    }
+  getNextTimeTreshold(throwLib : any): Observable<Date> {
+    return from( throwLib.methods.getNextTimeTreshold().call() ).pipe(
+      map((t : string) => {
+        if (t === "0") {
+          return null;
+        }
+        return new Date(parseInt(t) * 1000);
+      })
+    );
 
-     public registerWin(
-       throwLib : any,
-      participationId : number,
-      startix : number,
-      nbWinner : number
-    ) : Observable<Object> {
-      var call = throwLib.methods.cashOut(participationId,startix);
-      // TODO put absolute position in participation when calculated and use this action only from absolute otherwhise add action to calculate absolute from logs!!! (manual trigger)
-      // then replace nbWinner here in gas cost calculation (TODO method from log in lotterieService to get position??)
-      // TODO log without additional cost and with additional costs
-      var possibleAdditionalIteration = nbWinner - (startix + 1);
-      var additionalIterCost = 0;
-      return from(call.estimateGas({from: this.web3.eth.defaultAccount})
-        .then((gas) => 
-                   call.send({from: this.web3.eth.defaultAccount, gas: gas + 5000 + (additionalIterCost * possibleAdditionalIteration) })));
-    }
-   public withDrawWin(
-       throwLib : any,
-      participationId : number 
-    ) : Observable<Object> {
-      var call = throwLib.methods.withdrawWin(participationId);
-      return from(call.estimateGas({from: this.web3.eth.defaultAccount})
-        .then((gas) => 
-                   call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000 })));
-    }
+  }
+
+public registerWin(
+  throwLib : any,
+  participationId : number,
+  startix : number,
+  nbWinner : number
+) : Observable<Object> {
+  var call = throwLib.methods.cashOut(participationId,startix);
+  // TODO put absolute position in participation when calculated and use this action only from absolute otherwhise add action to calculate absolute from logs!!! (manual trigger)
+  // then replace nbWinner here in gas cost calculation (TODO method from log in lotterieService to get position??)
+  // TODO log without additional cost and with additional costs
+  var possibleAdditionalIteration = nbWinner - (startix + 1);
+  var additionalIterCost = 0;
+  return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+    .then((gas) => 
+              call.send({from: this.web3.eth.defaultAccount, gas: gas + 5000 + (additionalIterCost * possibleAdditionalIteration) })));
+ }
+
+ public withDrawWin(
+     throwLib : any,
+    participationId : number 
+  ) : Observable<Object> {
+    var call = throwLib.methods.withdrawWin(participationId);
+    return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+      .then((gas) => 
+                 call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000 })));
+  }
+
+  nbERC721Construct(throwLib: any): Observable<number> {
+    return from( throwLib.methods.nbERC721().call() ).pipe(
+      map((n: string) => parseInt(n)),
+    );
+  }
+  nbERC721(throwLib: any): Observable<number> {
+    return from( throwLib.methods.nbErc721Prizes().call() ).pipe(
+      map((n: string) => parseInt(n)),
+    );
+  }
+ 
+  
+  getModeThrow(address: string): Observable<[number, string]> {
+    return from( this.lotterieLib.web3.eth.call({to : address, data : '0x295a5212'}) ).pipe(
+      map((nc: any) => {
+        let n = this.lotterieLib.web3.eth.abi.decodeParameters
+         ([{"name": "","type": "uint8"},{"name": "","type": "address"}], nc);
+        return [parseInt(n[0]),n[1]] as [number, string];}),
+    );
+  }
 
   public currentAccount(): Observable<string | Error> {
     if (this.web3.eth.defaultAccount) {
