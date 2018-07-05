@@ -2,11 +2,11 @@
 
 pragma solidity ^0.4.23;
 
-import "./LotterieThrow.sol";
+import "./LotterieThrow721.sol";
 import './ERC223-token-standard/token/ERC223/ERC223_interface.sol';
 import './ERC223-token-standard/token/ERC223/ERC223_receiving_contract.sol';
 
-contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
+contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
 
   ERC223Interface token;
   bool waitingInitValue = false;
@@ -46,6 +46,7 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
 
   function deffered_constructor(
     bool waitValue,
+    uint16 nb721,
     address _token,
     uint paramsId,
     uint paramsPhaseId,
@@ -61,6 +62,7 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
 
     internal_deffered_constructor(
       0,
+      nb721,
       paramsId,
       paramsPhaseId,
       ownerMargin,

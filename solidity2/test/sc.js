@@ -4,7 +4,6 @@ import lotterieLib from '../index.js';
 const truffleAssert = require('truffle-assertions');
 
 var Lotterie = artifacts.require("./Lotterie.sol");
-var LotterieThrow = artifacts.require("./LotterieThrow.sol");
 var LotterieThrowTemplate = artifacts.require("./LotterieThrowEther.sol");
 var LotterieThrowTemplate223 = artifacts.require("./LotterieThrow223.sol");
 var LotterieThrowTemplate20 = artifacts.require("./LotterieThrow20.sol");
@@ -16,6 +15,7 @@ const conf1 = {
   distribution : lotterieLib.winningDistribution.Equal,
   minBidValue : web3.toWei(0.001,"ether"),
   biddingTreshold : web3.toWei(1,"ether"), // do not allow more than a ether (100 participant at min value)
+  participationStartMode : lotterieLib.cashoutEndModes.Relative, // best absolute most of the time
   participationStartTreshold : 0, // no time switch (absolute)
   maxParticipant : 50, // 50 participant start
   participationEndMode : lotterieLib.participationEndModes.EagerRelative, // Eager is a must have
@@ -29,6 +29,7 @@ async function configuration(lotterie,account_contract_dapp,c) {
     var res = await lotterie.addWinningParams(c.nbWinners,c.nbWinnerMinRatio,c.distribution);
     assert.equal(res.error, null);
     var res = await lotterie.addPhaseParams(
+      c.participationStartMode,
       c.participationStartTreshold,
       c.participationEndMode,
       c.participationEndValue,
@@ -82,7 +83,7 @@ it("sc", async function() {
 
     var accountParts = [];
     await configuration(lotterie,account_contract_dapp,myConf);
-    await lotterie.initThrow(0,0,0,0,0,0);
+    await lotterie.initThrow(0,0,0,0,0,0,0);
 
   });
 

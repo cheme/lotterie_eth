@@ -63,14 +63,19 @@ library LotterieConf {
     uint participationEndValue;
     uint cashoutEndValue;
     uint throwEndValue;
+    CashoutEndMode participationStartMode;
     // u8
     ParticipationEndModes participationEndMode;
     // bool
     CashoutEndMode cashoutEndMode;
     CashoutEndMode throwEndMode;
   }
-  function validParticipationSwitch(uint64 maxParticipant, uint biddingTreshold, uint participationStartTreshold) public view returns(bool) {
-     return (maxParticipant != 0 || biddingTreshold != 0 || participationStartTreshold > now);
+  function validParticipationSwitch(uint64 maxParticipant, uint biddingTreshold, CashoutEndMode participationStartMode, uint participationStartTreshold) public view returns(bool) {
+     return (
+     maxParticipant != 0 || 
+     biddingTreshold != 0 || 
+     (participationStartMode == CashoutEndMode.Relative && participationStartTreshold > 0) || 
+     (participationStartMode == CashoutEndMode.Absolute && participationStartTreshold > now));
   }
 
   function validCashoutSwitch(ParticipationEndModes participationEndMode, uint participationEndValue) public pure returns(bool) {

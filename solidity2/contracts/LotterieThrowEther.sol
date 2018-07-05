@@ -1,10 +1,10 @@
 
 pragma solidity ^0.4.23;
 
-import "./LotterieThrow.sol";
+import "./LotterieThrow721.sol";
 
 
-contract LotterieThrowEther is LotterieThrow {
+contract LotterieThrowEther is LotterieThrow721 {
   function bid (
     uint commitmentSeed
   ) external payable  {
@@ -19,6 +19,7 @@ contract LotterieThrowEther is LotterieThrow {
     msg.sender.transfer(amount);
   }
   function deffered_constructor (
+    uint16 nb721,
     uint paramsId,
     uint paramsPhaseId,
     uint32 ownerMargin,
@@ -31,6 +32,7 @@ contract LotterieThrowEther is LotterieThrow {
   {
     internal_deffered_constructor(
       msg.value,
+      nb721,
       paramsId,
       paramsPhaseId,
       ownerMargin,
@@ -40,4 +42,7 @@ contract LotterieThrowEther is LotterieThrow {
     );
   }
 
+  function otherConditionConstruct() internal returns (bool) {
+    return (false);
+  }
 }

@@ -1,14 +1,14 @@
 
 pragma solidity ^0.4.23;
 
-import "./LotterieThrow.sol";
+import "./LotterieThrow721.sol";
 import './ERC223-token-standard/token/ERC223/ERC223_interface.sol';
 import './ERC223-token-standard/token/ERC223/ERC223_receiving_contract.sol';
 
-contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
+contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
 
   ERC223Interface token;
-  bool waitingInitValue = false;
+  uint8 waitingInitValue = 0;
 
   function bid (
     uint commitmentSeed
@@ -47,6 +47,8 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
       internal_bid(_from,commitmentSeed,_value);
     } else {
       require(thr.currentPhase == Phase.Construct);
+      require(waitingInitValue == 1);
+      require(_from == thrower);
       if (_data.length == 4) {
         require(_data[0] == 56 &&
                 _data[1] == 55 &&
@@ -55,9 +57,14 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
       } else {
         require(_data.length == 0);
       }
-      require(_from == thrower);
       thr.results.totalBidValue = _value;
-      thr.currentPhase = Phase.Bidding;
+
+      if (0 == nbERC721) {
+        thr.currentPhase = Phase.Bidding;
+      } else {
+        waitingInitValue = 2;
+      }
+
     }
   }
 
@@ -70,6 +77,7 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
 
   function deffered_constructor(
     bool waitValue,
+    uint16 nb721,
     address _token,
     uint paramsId,
     uint paramsPhaseId,
@@ -80,11 +88,17 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
   ) 
   public
   {
-    require(waitingInitValue == false);
+    require(waitingInitValue == 0);
     token = ERC223Interface(_token);
+    if (waitValue) {
+      waitingInitValue = 1;
+    } else {
+      waitingInitValue = 2;
+    }
 
     internal_deffered_constructor(
       0,
+      nb721,
       paramsId,
       paramsPhaseId,
       ownerMargin,
@@ -92,11 +106,11 @@ contract LotterieThrow223 is LotterieThrow, ERC223ReceivingContract {
       authorDappMargin,
       throwerMargin
     );
-    if (waitValue) {
-      thr.currentPhase = Phase.Construct;
-      waitingInitValue = true;
-    }
   }
+  function otherConditionConstruct() internal returns (bool) {
+    return (waitingInitValue == 1);
+  }
+
 
   function initPrize(
   )

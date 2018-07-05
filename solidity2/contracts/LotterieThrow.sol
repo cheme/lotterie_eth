@@ -3,7 +3,6 @@ pragma solidity ^0.4.23;
 
 import "./LotterieMargins.sol";
 import "./FromLotterie.sol";
-import "./LotterieIf.sol";
 
 // Contract for Lotterie
 contract LotterieThrow is LotterieMargins {
@@ -21,33 +20,30 @@ contract LotterieThrow is LotterieMargins {
 
 
   function initPhaseParams (uint paramsPhaseId) internal {
-    uint8 pem;
-    uint8 cem;
+    uint8 m1;
+    uint8 m2;
    ( phaseParam.participationStartTreshold,
      phaseParam.participationEndValue,
+     m1,
+     m2
+     )
+     = lotterie.getPhaseParams1(paramsPhaseId);
+
+   phaseParam.participationStartMode =
+     LC.CashoutEndMode(m1);
+   phaseParam.participationEndMode = 
+     LC.ParticipationEndModes(m2);
+   (
      phaseParam.cashoutEndValue,
      phaseParam.throwEndValue,
-     pem,
-     cem,
-     )
-     = lotterie.getPhaseParams(paramsPhaseId);
+     m1,
+     m2)
+     = lotterie.getPhaseParams2(paramsPhaseId);
 
-   phaseParam.participationEndMode = 
-     LC.ParticipationEndModes(pem);
    phaseParam.cashoutEndMode = 
-     LC.CashoutEndMode(cem);
-   ( ,
-     ,
-     ,
-     ,
-     ,
-     ,
-     cem
-     )
-     = lotterie.getPhaseParams(paramsPhaseId);
-
+     LC.CashoutEndMode(m1);
    phaseParam.throwEndMode =
-     LC.CashoutEndMode(cem);
+     LC.CashoutEndMode(m2);
   }
 
   function initParams (uint paramsId) internal {
@@ -70,63 +66,6 @@ contract LotterieThrow is LotterieMargins {
    )
    = lotterie.getWinningParams(winningParamsId);
    winningParam.distribution = LC.WinningDistribution(dis);
-  }
-
-  function internal_deffered_constructor(
-
-    uint amount,
-    uint paramsId,
-    uint paramsPhaseId,
-
-    uint32 ownerMargin,
-    uint32 authorContractMargin,
-    uint32 authorDappMargin,
-    uint32 throwerMargin
-  ) 
-  internal 
-  {
-    // warn Construct must be 0 (default value)
-    require(thr.currentPhase == Phase.Construct);
-    // only from lotterie main contract -> NO
-    //require(address(lotterie) == msg.sender);
-    //FromLotterie()
-    lotterie = LotterieIf(msg.sender);
-    //Thrower(tx.origin)
-    thrower = tx.origin;
-    initParams(paramsId);
-    initPhaseParams(paramsPhaseId);
-
-    thr = LThrow({
-      paramsId : paramsId,
-      paramsPhaseId : paramsPhaseId,
-      blockNumber : block.number,
-      numberOfBid : 0,
-      numberOfRevealParticipation : 0,
-      currentSeed : 0,
-      tmpTime : 0,
-      currentPhase : Phase.Bidding,
-      withdraws : LC.LotterieWithdraw({
-      winningBase : 0,
-      ownerMargin : ownerMargin,
-      authorContractMargin : authorContractMargin,
-      authorDappMargin : authorDappMargin,
-      throwerMargin : throwerMargin,
-
-      ownerWithdrawned : false,
-      authorContractWithdrawned : false,
-      authorDappWithdrawned : false,
-      throwerWithdrawned : false
-
-    }),
-      results : LotterieResult({
-      totalBidValue : amount,
-      totalClaimedValue : 0,
-      firstWinner : 255,
-      totalCashout : 0
-      })
-    });
-
-  
   }
 
 
@@ -436,32 +375,38 @@ contract LotterieThrow is LotterieMargins {
 
      require(msg.sender == part.from);
 
+     uint result = getWinningPos(participationId);
+     // actual withdraw
+     withdrawWinValue(participationId, result);
+  }
+
+  function withdrawWinValue(uint64 participationId, uint result) internal {
+     uint amount = winners[result].totalPositionWin;
+     require(winners[result].withdrawned == false);
+     winners[result].withdrawned = true;
+     if (amount > 0) {
+       thr.results.totalClaimedValue += amount;
+       // msg.sender.transfer(amount);
+       withdrawAmount(amount);
+     }
+     emit Win(participationId, msg.sender, uint16(result) + 1, amount);
+  }
+
+  function getWinningPos(uint64 participationId) internal returns (uint) {
 
      uint16 ptr = thr.results.firstWinner;
-
-
      uint result = 0;
      for (; ptr != 255 && result < thr.results.totalCashout; ++result) {
        require(ptr < winners.length);
        Winner storage w = winners[ptr];
        if (w.participationId == participationId) {
-         // actual withdraw
-         uint amount = winners[result].totalPositionWin;
-         require(w.withdrawned == false);
-         w.withdrawned = true;
-         if (amount > 0) {
-           thr.results.totalClaimedValue += amount;
-          // msg.sender.transfer(amount);
-           withdrawAmount(amount);
-         }
-         emit Win(participationId, msg.sender, uint16(result) + 1, amount);
-         break;
+         return(result);
        }
        ptr = w.nextWinner;
      }
      // fail if not found
-     require(result != thr.results.totalCashout);
+     require(false);
   }
 
-
+ 
 }

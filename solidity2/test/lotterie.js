@@ -14,6 +14,7 @@ var LotterieThrowTemplate223 = artifacts.require("./LotterieThrow223.sol");
 var LotterieThrowTemplate20 = artifacts.require("./LotterieThrow20.sol");
 var LotterieThrowTemplate = artifacts.require("./LotterieThrowEther.sol");
 
+var ERC721Test = artifacts.require("./ERC721Test.sol");
 var ERC223Test = artifacts.require("./ERC223Test.sol");
 var ERC20Test = artifacts.require("./ERC20Test.sol");
 var ERC223ForTruffle = artifacts.require("./ERC223ForTruffle.sol");
@@ -35,6 +36,7 @@ const conf1 = {
   distribution : lotterieLib.winningDistribution.Equal,
   minBidValue : web3.toWei(0.001,"ether"),
   biddingTreshold : web3.toWei(1,"ether"), // do not allow more than a ether (100 participant at min value)
+  participationStartMode : lotterieLib.cashoutEndModes.Relative, // no time switch (absolute)
   participationStartTreshold : 0, // no time switch (absolute)
   maxParticipant : 50, // 50 participant start
   participationEndMode : lotterieLib.participationEndModes.EagerRelative, // Eager is a must have
@@ -48,6 +50,7 @@ async function configuration(lotterie,account_contract_dapp,c) {
     var res = await lotterie.addWinningParams(c.nbWinners,c.nbWinnerMinRatio,c.distribution);
     assert.equal(res.error, null);
     var res = await lotterie.addPhaseParams(
+      c.participationStartMode,
       c.participationStartTreshold,
       c.participationEndMode,
       c.participationEndValue,
@@ -199,6 +202,7 @@ contract('Lotterie', function(accounts) {
     var result = await lotterie.initThrow (
      0,
      0,
+     0,
      ownerMargin,
      authorContractMargin,
      authorDappMargin,
@@ -310,6 +314,7 @@ contract('Lotterie', function(accounts) {
     var res = await lotterie.initThrow (
      0,
      0,
+     0,
      ownerMargin,
      authorContractMargin,
      authorDappMargin,
@@ -346,6 +351,7 @@ contract('Lotterie', function(accounts) {
     var authorDappMargin = 2**32 / 4; // ~25%
     var throwerMargin = 2**32 / 3; // ~33%
     assertRevert(lotterie.initThrow (
+     0,
      0,
      0,
      ownerMargin,
@@ -414,7 +420,7 @@ contract('Lotterie', function(accounts) {
 
     var accountParts = [];
     await configuration(lotterie,account_contract_dapp,myConf);
-    await tr_log( lotterie.initThrow (0,0,0,0,0,0, {value:10000}), true);
+    await tr_log( lotterie.initThrow (0,0,0,0,0,0,0, {value:10000}), true);
 
     var ltax = await lotterie.getThrowAddress.call(0);
     var lotteriethrow = LotterieThrow.at(ltax);
@@ -666,7 +672,7 @@ contract('Lotterie', function(accounts) {
     assert.equal(web3.toHex(await erc223.balanceOf(account_owner)), web3.toHex(1000 * 1000));
 
 
-    await tr_log( lotterie.initThrow223 (false,erc223.address,0,0,0,0,0,0, ), true);
+    await tr_log( lotterie.initThrow223 (false,0,erc223.address,0,0,0,0,0,0, ), true);
 
           // one 1000 3 digit token to account_owner
     var ltax = await lotterie.getThrowAddress.call(0);
@@ -679,13 +685,14 @@ contract('Lotterie', function(accounts) {
     assert.equal(thr.currentPhase, "1");
 
 
-    await tr_log( lotterie.initThrow223 (true,erc223.address,0,0,0,0,0,0, { from : account_bidder3 }), true);
+    await tr_log( lotterie.initThrow223 (true,0,erc223.address,0,0,0,0,0,0, { from : account_bidder3 }), true);
     ltax = await lotterie.getThrowAddress.call(1);
     lotteriethrow = LotterieThrow223.at(ltax);
     thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(thr.currentPhase, "0");
     // check we cannot init twice
-    assertRevert(lotteriethrow.deffered_constructor(false,erc223.address,0,0,0,0,0,0, { from : account_bidder3 }), true );
+
+    assertRevert(lotteriethrow.deffered_constructor(false,0,erc223.address,0,0,0,0,0,0, { from : account_bidder3 }), true );
     var bidencoded = w3abi.encodeFunctionCall(
             _.find(LotterieThrow223.abi, { name: 'initPrize' }),
             []);
@@ -809,7 +816,7 @@ contract('Lotterie', function(accounts) {
     assert.equal(web3.toHex(await erc20.balanceOf(account_owner)), web3.toHex(1000 * 1000));
 
 
-    await tr_log( lotterie.initThrow20 (false,erc20.address,0,0,0,0,0,0, ), true);
+    await tr_log( lotterie.initThrow20 (false,0,erc20.address,0,0,0,0,0,0, ), true);
 
           // one 1000 3 digit token to account_owner
     var ltax = await lotterie.getThrowAddress.call(0);
@@ -822,13 +829,16 @@ contract('Lotterie', function(accounts) {
     assert.equal(thr.currentPhase, "1");
 
 
-    await tr_log( lotterie.initThrow20 (true,erc20.address,0,0,0,0,0,0, { from : account_bidder3 }), true);
+    // init721 test with thrower
+    var erc721 = await ERC721Test.new({ from : account_bidder3 });
+    await tr_log( lotterie.initThrow20 (true,3,erc20.address,0,0,0,0,0,0, { from : account_bidder3 }), true);
     ltax = await lotterie.getThrowAddress.call(1);
     lotteriethrow = LotterieThrow20.at(ltax);
     thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(thr.currentPhase, "0");
+
     // check we cannot init twice
-    assertRevert(lotteriethrow.deffered_constructor(false,erc20.address,0,0,0,0,0,0, { from : account_bidder3 }), true );
+    assertRevert(lotteriethrow.deffered_constructor(false,0,erc20.address,0,0,0,0,0,0, { from : account_bidder3 }), true );
     await erc20.transfer(account_bidder2, 1000, { from : account_owner });
     await erc20.transfer(account_bidder3, 500, { from : account_owner });
     // only thrower to init prize
@@ -838,6 +848,13 @@ contract('Lotterie', function(accounts) {
     await tr_log(lotteriethrow.initPrize({ from : account_bidder3 }), true)
     
  
+    assert(await erc721.ownerOf(2) ==  account_bidder3);
+    // init 3 721 tokens
+    await tr_log(erc721.safeTransferFrom(account_bidder3, lotteriethrow.address, 2, { from : account_bidder3 }), true);
+    await tr_log(erc721.safeTransferFrom(account_bidder3, lotteriethrow.address, 3, { from : account_bidder3 }), true);
+    await tr_log(erc721.safeTransferFrom(account_bidder3, lotteriethrow.address, 4, { from : account_bidder3 }), true);
+    assertRevert(erc721.safeTransferFrom(account_bidder3, lotteriethrow.address, 1, { from : account_bidder3 }), true);
+    
 
     // a standard bid at 0 value
     await tr_log( lotteriethrow.bid(calcCommitment('0x0'), { from : account_bidder1 }), true );
@@ -892,7 +909,18 @@ contract('Lotterie', function(accounts) {
       var initBalance = parseInt(await erc20.balanceOf(accountParts[i]));
             console.log("pid : " + i);
             console.log("initb : " + i);
-      var result = await lotteriethrow.withdrawWin(i, { from : accountParts[i] });
+      var result;
+      if (j == 0) {
+        result = await lotteriethrow.withdrawAllWin(i, { from : accountParts[i] });
+        assert.equal(await erc721.ownerOf(2), accountParts[i]);
+      } else if (j == 1) {
+        result = await lotteriethrow.withdraw721(i, { from : accountParts[i] });
+        tr_log2(result, true);
+        assert.equal(await erc721.ownerOf(3), accountParts[i]);
+        result = await lotteriethrow.withdrawWin(i, { from : accountParts[i] });
+      } else {
+        result = await lotteriethrow.withdrawWin(i, { from : accountParts[i] });
+      }
       tr_log2(result, true);
       truffleAssert.eventEmitted(result, 'Win',  function(ev) {
         var result = web3.toHex(ev.participationId) === web3.toHex(i);
@@ -914,6 +942,8 @@ contract('Lotterie', function(accounts) {
 //    await tr_log( lotterie.recalculateState(0,lotterieLib.phases.Off), true);
     var initBalance = parseInt(await erc20.balanceOf(account_owner));
     await tr_log( lotteriethrow.emptyOffThrow({ from : account_owner }), true);
+    await tr_log( lotteriethrow.off721(2,{ from : account_owner }), true);
+    assert.equal(await erc721.ownerOf(4), account_owner);
     assert.equal(web3.toHex(await erc20.balanceOf(account_owner)), web3.toHex(initBalance + ((1000+500)/4)));
 
   });

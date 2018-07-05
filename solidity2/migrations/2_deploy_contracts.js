@@ -8,12 +8,12 @@ const LotterieAuthor = '0x0000000000000000000000000000000000000000';
 
 module.exports = function(deployer) {
   deployer.deploy(LotterieConf);
-  deployer.link(LotterieConf, LotterieThrowEther);
-  deployer.link(LotterieConf, LotterieThrow223);
   deployer.link(LotterieConf, LotterieThrow20);
-  deployer.deploy(LotterieThrowEther);
-  deployer.deploy(LotterieThrow223);
   deployer.deploy(LotterieThrow20);
+  deployer.link(LotterieConf, LotterieThrow223);
+  deployer.deploy(LotterieThrow223);
+  deployer.link(LotterieConf, LotterieThrowEther);
+  deployer.deploy(LotterieThrowEther);
   deployer.link(LotterieConf, Lotterie);
   deployer.deploy(Lotterie,LotterieAuthor,LotterieAuthor,LotterieAuthor,LotterieAuthor); // TODO way to get the throw template addresses!!!
 };

@@ -5,7 +5,7 @@ import "./zeppelin/ownership/Ownable.sol";
 import "./LotterieThrowEther.sol";
 import "./LotterieThrow223.sol";
 import "./LotterieThrow20.sol";
-import "./LotterieThrow.sol";
+import "./LotterieThrow721.sol";
 import "./LotterieThrowProxy.sol";
 import "./LotterieParams.sol";
 import "./Author.sol";
@@ -51,7 +51,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
  
   // any kind of throw
-  LotterieThrow [] public allthrows;
+  LotterieThrow721 [] public allthrows;
 
   function getTotalNbThrow() view external returns (uint) {
     return allthrows.length;
@@ -92,6 +92,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   // start a thow
   // @payable value is added as inital win value (that way you can do free lotterie with something to win with minBidValue to 0 and not participating)
   function initThrow (
+    uint16 nb721,
     uint paramsId,
     uint paramsPhaseId,
 
@@ -104,6 +105,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
     require(LC.validParticipationSwitch(
       params[paramsId].maxParticipant,
       params[paramsId].biddingTreshold,
+      phaseParams[paramsPhaseId].participationStartMode,
       phaseParams[paramsPhaseId].participationStartTreshold
     ));
     require(LC.validWithdrawMargins(
@@ -160,6 +162,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
  
     thr.deffered_constructor.value(msg.value)(
+      nb721,
       paramsId,
       paramsPhaseId,
 
@@ -175,6 +178,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
   function initThrow223 (
     bool waitValue,
+    uint16 nb721,
     address token,
     uint paramsId,
     uint paramsPhaseId,
@@ -188,6 +192,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
     require(LC.validParticipationSwitch(
       params[paramsId].maxParticipant,
       params[paramsId].biddingTreshold,
+      phaseParams[paramsPhaseId].participationStartMode,
       phaseParams[paramsPhaseId].participationStartTreshold
     ));
     require(LC.validWithdrawMargins(
@@ -220,6 +225,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
  
     thr.deffered_constructor(
       waitValue,
+      nb721,
       token,
       paramsId,
       paramsPhaseId,
@@ -235,6 +241,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   }
   function initThrow20 (
     bool waitValue,
+    uint16 nb721,
     address token,
     uint paramsId,
     uint paramsPhaseId,
@@ -248,6 +255,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
     require(LC.validParticipationSwitch(
       params[paramsId].maxParticipant,
       params[paramsId].biddingTreshold,
+      phaseParams[paramsPhaseId].participationStartMode,
       phaseParams[paramsPhaseId].participationStartTreshold
     ));
     require(LC.validWithdrawMargins(
@@ -280,6 +288,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
  
     thr.deffered_constructor(
       waitValue,
+      nb721,
       token,
       paramsId,
       paramsPhaseId,
@@ -319,26 +328,33 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
 
 
-  function getPhaseParams(uint ix) external returns(
-    uint,
-    uint,
+  function getPhaseParams1(uint ix) external returns(
     uint,
     uint,
     uint8,
-    uint8,
-    uint8 
-
+    uint8
   ) {
     return (
       phaseParams[ix].participationStartTreshold,
       phaseParams[ix].participationEndValue,
+      uint8(phaseParams[ix].participationStartMode),
+      uint8(phaseParams[ix].participationEndMode)
+    );
+  }
+  function getPhaseParams2(uint ix) external returns(
+    uint,
+    uint,
+    uint8,
+    uint8
+  ) {
+    return (
       phaseParams[ix].cashoutEndValue,
       phaseParams[ix].throwEndValue,
-      uint8(phaseParams[ix].participationEndMode),
       uint8(phaseParams[ix].cashoutEndMode),
       uint8(phaseParams[ix].throwEndMode)
     );
   }
+
 
   function getParams(uint ix) external returns(
     address,

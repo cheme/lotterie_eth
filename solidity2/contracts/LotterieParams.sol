@@ -55,7 +55,7 @@ contract LotterieParams  {
 
 
   function addPhaseParams (
-
+    uint8 participationStartMode,
     uint participationStartTreshold,
 
     uint8 participationEndMode,
@@ -72,6 +72,7 @@ contract LotterieParams  {
     require(LC.validOffSwitch(LC.CashoutEndMode(throwEndMode), throwEndValue));
 
     LC.LotteriePhaseParams memory phaseParam = LC.LotteriePhaseParams({
+        participationStartMode : LC.CashoutEndMode(participationStartMode),
         participationStartTreshold : participationStartTreshold,
         participationEndMode : LC.ParticipationEndModes(participationEndMode),
         participationEndValue : participationEndValue,

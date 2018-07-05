@@ -148,7 +148,8 @@ lotterieLib.defaultConf = {
     distribution : lotterieLib.winningDistribution.Equal,
     minBidValue : 0, //lotterieLib.web3.utils.toWei("0.001","ether"),
     biddingTreshold : 0, //  lotterieLib.web3.utils.toWei("1","ether"), // do not allow more than a ether (100 participant at min value)
-    participationStartTreshold : 50, // 50 participant start
+    participationStartMode : lotterieLib.cashoutEndModes.Relative, // 50 participant start
+    participationStartTreshold : 0,
     maxParticipant : 50, // 50 participant start
     participationEndMode : lotterieLib.participationEndModes.EagerRelative, // Eager is a must have
     participationEndValue : 3600, // one hour

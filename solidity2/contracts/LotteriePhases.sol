@@ -137,7 +137,7 @@ contract LotteriePhases is LotterieBase {
       return true;
     }
     if (phaseParam.participationStartTreshold > 0) {
-      if (now >= phaseParam.participationStartTreshold) {
+      if (now >= thr.tmpTime) {
         return true;
       }
     }
@@ -177,11 +177,7 @@ contract LotteriePhases is LotterieBase {
   }
 
   function getNextTimeTreshold() external view returns(uint) {
-    if (thr.currentPhase == Phase.Bidding) {
-      return phaseParam.participationStartTreshold;
-    } else {
-      return thr.tmpTime;
-    }
+    return thr.tmpTime;
   }
 
   // do not try switching to phase + 2 due to relative time condition
