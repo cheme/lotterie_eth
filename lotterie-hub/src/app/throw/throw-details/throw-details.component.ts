@@ -10,6 +10,7 @@ import { map, flatMap } from 'rxjs/operators';
 import { Bignumber } from '../../eth-components/bignumber';
 import { Athrow } from '../athrow';
 import { StorageService } from '../../storage.service';
+import { Erc721 } from '../erc721';
 
 @Component({
   selector: 'app-throw-details',
@@ -35,6 +36,23 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
 
   subThrowEvent : Subject<ThrowEventNewParticipation | ThrowEventRevealed> = new Subject();
 
+  erc721Prizes : Array<Observable<Erc721>> = null;
+  lazyErc721Prizes() {
+    if(this.erc721Prizes.length != this.thr.nbErc721) {
+      this.initErc721Prizes();
+    }
+    return this.erc721Prizes;
+  }
+  initErc721Prizes() {
+    var res = [];
+    for (let i = 0; i < this.thr.nbErc721; ++i) {
+      let p = this.lotterieService.get721fromThrow(this.thr.throwLib,i).pipe(
+        map(([ta,ti]) => new Erc721(ta,ti)),
+      );
+      res.push(p);
+    }
+    this.erc721Prizes = res;
+  }
   reloadParticipations() : void {
     this.subParticipations.next(true);
   }
@@ -52,6 +70,13 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
   nextPhase : Date = null;
 
   onInitExtend() : void {
+    this.initErc721Prizes();
+    if (this.thr.currentPhase == 0) {
+      if (this.thr.bidType != 0) {
+        this.lotterieService.waitInitValue(this.thr.throwLib).subscribe(wiv => this.thr.waitingInitvalue = wiv);
+      }
+      this.lotterieService.nbERC721Construct(this.thr.throwLib).subscribe(n7 => this.thr.nbErc721Construct = n7);
+    }
     this.updateSortedWinners();
     if (this.thr.currentPhase === this.lotterieService.phases.Bidding) {
     Athrow.withParam(this.thr,(p) => {
@@ -118,12 +143,10 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
     if (this.thr.calcPhase > 2) {
       // when calcPhase is 3 we do not have additional reveal (this might change with other phase switching)
       // so we calc it only once (could not change afterwards)
-      if (this.calcSortedWinners == null) {
+      if (this.calcSortedWinners == null || this.calcSortedWinners.length == 0) {
         // this.calcWinnersFromParticipations();
         this.calcWinnersFromParticipationsLog();
       }
-    }
-    if (this.thr.calcPhase > 3) {
       this.getWinnersFromParticipations();
     }
   }
@@ -216,9 +239,9 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
             flatMap((p) => {
               return zip(
               of(p),
-              this.lotterieService.getParticipation(this.thr.throwLib,p[1]),
+              this.lotterieService.getParticipation(this.thr.throwLib,parseInt(p[1])),
               ([withdrawned, pid, score], part) => {
-              let participation = Participation.fromObject(this.thr.address, pid, part);
+              let participation = Participation.fromObject(this.thr.address, parseInt(pid), part);
               participation.score = this.lotterieService.stringToBytes(score);
               participation.wintowithdraw = !withdrawned;
               return participation;
@@ -237,23 +260,20 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
 
   }
   private recalcPhase() {
-    let thisS = this;
     this.lotterieService.calcPhase(this.thr.throwLib).subscribe(newPhase => {
-      if (thisS.thr.calcPhase !== newPhase) {
-        thisS.thr.calcPhase = newPhase;
+      if (this.thr.calcPhase !== newPhase) {
+        this.thr.calcPhase = newPhase;
         if (newPhase == 3) {
-          this.lotterieService.fetchCurrentSeed(thisS.thr.throwLib).pipe(
-            map((currentSeed : string) => {
-              thisS.thr.currentSeed = currentSeed;
-              thisS.updateSortedWinners();
-            })
-          );
+          this.lotterieService.fetchCurrentSeed(this.thr.throwLib).subscribe((currentSeed : string) => {
+              this.thr.currentSeed = currentSeed;
+              this.updateSortedWinners();
+          });
         }
         if (newPhase == 4) {
-          thisS.updateSortedWinners();
+          this.updateSortedWinners();
         }
-        thisS.calcPhaseBadge = true;
-        thisS.nextTimeTresholdSub();
+        this.calcPhaseBadge = true;
+        this.nextTimeTresholdSub();
       }
     });
   }
@@ -269,6 +289,13 @@ export class ThrowDetailsComponent extends ThrowComponentBase implements OnDestr
       });
       }
     });
+  }
+
+  forceStart() {
+    this.lotterieService.forceStart(this.thr.throwLib).subscribe(evt => {
+      this.thr.currentPhase = 1;
+      this.thr.calcPhase = 1;
+    })
   }
 
 

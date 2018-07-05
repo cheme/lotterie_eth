@@ -14,6 +14,7 @@ export const environment = {
   defaultThrowerMargin: 0,
   delayBlockDate: 30, // second delay to check date (calcPhase mainly) to ensure a block was emitted
   dbName: 'lotterie-hub',
+  unsafe: false,
 };
   // 
 /*

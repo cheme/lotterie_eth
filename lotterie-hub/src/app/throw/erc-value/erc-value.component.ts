@@ -29,7 +29,15 @@ export class ErcValueComponent extends ParticipationNewComponent {
         this.athrow.throwLib,
         this.athrow.tokenLib,
         this._val.fullrepr
-      ).subscribe(recpt => this.messageService.add("init Erc223 value success"));
+      ).subscribe(recpt => {
+        this.messageService.add("init Erc223 value success");
+        this.athrow.waitingInitvalue = 2;
+        if (this.athrow.nbErc721Construct == 0) {
+          this.athrow.currentPhase = 1;
+          this.athrow.calcPhase = 1;
+        } 
+ 
+      });
     } else if (this.athrow.bidType == 2) {
 
       this.lotterieService.allowBid20(
@@ -41,7 +49,14 @@ export class ErcValueComponent extends ParticipationNewComponent {
         this.lotterieService.initPrize20(
           this.athrow.throwLib,
           this.athrow.tokenLib
-        ).subscribe(recpt => this.messageService.add("init Erc20 value success"));
+        ).subscribe(recpt => {
+          this.messageService.add("init Erc20 value success");
+          this.athrow.waitingInitvalue = 2;
+          if (this.athrow.nbErc721Construct == 0) {
+            this.athrow.currentPhase = 1;
+            this.athrow.calcPhase = 1;
+          } 
+        });
         
       });
 

@@ -105,7 +105,7 @@ export class ParticipationNewComponent implements OnInit {
         this._val.fullrepr,
         hiddenS
       );
-      this.newParticipationInternal(q,hiddenS,revealedS);
+      this.newParticipationInternal223(q,hiddenS,revealedS);
 
     } else if (this.athrow.bidType == 2) {
 
@@ -132,10 +132,22 @@ export class ParticipationNewComponent implements OnInit {
       q.subscribe((ev : any) => {
         let partId = ev.events.NewParticipation.returnValues.participationId;
         this.messageService.add("New bid emitted : " + partId);
-        this.storageService.addParticipation(this.athrow.address, partId); 
+        this.storageService.addParticipation(this.athrow.address, parseInt(partId)); 
       })
     })
   }
+  newParticipationInternal223(q,hiddenS,revealedS) {
+    this.storageService.writeVal(hiddenS,revealedS).then(() => {
+      this.messageService.add("writen seeds");
+      q.subscribe((ev : any) => {
+ 
+        let partId = this.lotterieService.extractPartId(ev.events[0].raw.data);
+        this.messageService.add("New bid emitted : " + partId);
+        this.storageService.addParticipation(this.athrow.address, parseInt(partId)); 
+      })
+    })
+  }
+
 
 
 }

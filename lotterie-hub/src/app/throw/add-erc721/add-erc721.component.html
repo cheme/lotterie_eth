@@ -1,0 +1,21 @@
+
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="tokenAddress" placeholder="Token address"/>
+</mat-form-field>
+</div>
+<br/>
+<div>
+<mat-form-field>
+  <input matInput [(ngModel)]="tokenId" placeholder = "Token id"/>
+</mat-form-field>
+
+<p *ngIf="tokenName">
+  Contract {{ tokenName }}
+</p>
+<p *ngIf="!isYourToken">
+  You do not own this token
+</p>
+<p *ngIf="isYourToken">
+  <button mat-raised-button (click)="addToken()">Add this token</button>
+</p>

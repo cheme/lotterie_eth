@@ -6,10 +6,19 @@
               Initialize 
             </mat-panel-title>
             <mat-panel-description>
-              Initialize throw value
+              Additional Throw Initialize step
             </mat-panel-description>
           </mat-expansion-panel-header>   
-    <app-erc-value [athrow]="thr"></app-erc-value>
+          <div  *ngIf="thr.waitingInitvalue == 1">
+            <app-erc-value [athrow]="thr"></app-erc-value>
+          </div>
+          <div  *ngIf="thr.nbErc721Construct > 0">
+            Total expected nb erc721 : {{ thr.nbErc721Construct }}
+            <app-add-erc721 [athrow]="thr"></app-add-erc721>
+          </div>
+          <div *ngIf="unsafe">
+            <button mat-raised-button (click)="forceStart()">Force Start Throw</button>
+          </div>
     </mat-expansion-panel>
  
         <mat-expansion-panel expanded>
@@ -74,7 +83,21 @@
   </div>
 
 </mat-expansion-panel>
-
+<mat-expansion-panel *ngIf="thr.nbErc721 > 0">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+               Erc721 prizes
+            </mat-panel-title>
+            <mat-panel-description>
+               Erc721 prizes
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+         <div *ngFor="let e7$ of lazyErc721Prizes(); let i = index">
+         <span  *ngIf="(e7$ | async) as e7">
+           <app-erc721-details [erc]="e7" [disIx]="i + 1"></app-erc721-details>
+         </span>
+         </div>
+    </mat-expansion-panel>
    <mat-expansion-panel *ngIf="thr.calcPhase > 0">
           <mat-expansion-panel-header>
             <mat-panel-title>
@@ -99,9 +122,9 @@
             </mat-panel-description>
           </mat-expansion-panel-header>   
 <mat-tab-group>
-  <mat-tab *ngIf="thr.calcPhase > 3">
-    <ng-template mat-tab-label *ngIf="thr.calcPhase == 4">Registered</ng-template>
-    <ng-template mat-tab-label *ngIf="thr.calcPhase > 5">Final</ng-template>
+  <mat-tab *ngIf="thr.calcPhase > 2">
+    <ng-template mat-tab-label *ngIf="thr.calcPhase == 3">Registered</ng-template>
+    <ng-template mat-tab-label *ngIf="thr.calcPhase > 3">Final</ng-template>
   <ul *ngFor="let w of sortedWinners">
    <li>
     <app-participation-detail 

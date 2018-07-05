@@ -836,7 +836,7 @@ contract('Lotterie', function(accounts) {
 
 
     // init721 test with thrower
-    var erc721 = await ERC721Test.new({ from : account_bidder3 });
+    var erc721 = await ERC721Test.new(5,{ from : account_bidder3 });
     await tr_log( lotterie.initThrow20 (true,3,erc20.address,0,0,0,0,0,0, { from : account_bidder3 }), true);
     ltax = await lotterie.getThrowAddress.call(1);
     lotteriethrow = LotterieThrow20.at(ltax);

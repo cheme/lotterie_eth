@@ -28,7 +28,9 @@ export class ParticipationDetailComponent implements OnInit {
   @Input() onThrow : boolean = true;
 
   changeState = false;
-  
+
+  unsafe = false;
+
   constructor(
     protected route: ActivatedRoute,
     protected lotterieService: LotterieService,
@@ -56,6 +58,7 @@ export class ParticipationDetailComponent implements OnInit {
     return revSead != null && this.participation.seed === this.lotterieService.hideSeed(revSead)
   }
   ngOnInit() {
+    this.unsafe = this.storageService.environment.unsafe;
     if (this.throwLib == null) {
       this.throwLib = this.lotterieService.newThrowLib(this.throwId);
     }
@@ -114,7 +117,7 @@ export class ParticipationDetailComponent implements OnInit {
 
     ).subscribe()
   }
-  public withdrawWin() {
+  public withdrawWin(conf : number) {
       this.lotterieService.positionAtPhaseEnd(this.throwLib,this.participation.participationId).pipe(
         filter(position => {
           if (position == 0) {
@@ -123,7 +126,15 @@ export class ParticipationDetailComponent implements OnInit {
           }
           return true;
         }),
-        flatMap(position => this.lotterieService.withDrawWin(this.throwLib,this.participation.participationId))
+        flatMap(position => {
+          if (conf == 0) {
+            return this.lotterieService.withDrawWin(this.throwLib,this.participation.participationId);
+          } else if (conf == 1) {
+            return this.lotterieService.withDraw721(this.throwLib,this.participation.participationId);
+          } else if (conf == 2) {
+            return this.lotterieService.withDrawAllWin(this.throwLib,this.participation.participationId);
+          }
+        })
       ).subscribe();
   }
 

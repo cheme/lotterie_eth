@@ -29,5 +29,11 @@
 <mat-slider thumbLabel min="0" [displayWith]="percentOM" max="4294967296" (change)="changeTM($event)"></mat-slider>
 </div>
 <div>
+<mat-checkbox
+    [(ngModel)]="env.unsafe">
+    Unsafe
+</mat-checkbox>
+</div>
 <button mat-raised-button (click)="savePrefs()">Save preferences</button>
 <button mat-raised-button (click)="resetToDefault()">Reset to default</button>
+</div>

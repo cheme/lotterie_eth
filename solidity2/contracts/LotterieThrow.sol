@@ -267,7 +267,7 @@ contract LotterieThrow is LotterieMargins {
      }
      require(ptr != 255);
      w = winners[ptr];
-     return (w.withdrawned, w.participationId, w.score);
+     return (winners[winnerIx].withdrawned, w.participationId, w.score);
   }
 
   // TODO remove (redundant with other method)

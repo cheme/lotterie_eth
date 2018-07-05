@@ -10,6 +10,7 @@ import { MatSlideToggleChange } from "@angular/material";
 export abstract class ThrowComponentBase implements OnInit {
 
 
+  unsafe = false;
   private _favorite : Boolean = null;
   private initFavorite() {
     if (this._favorite == null) {
@@ -42,6 +43,7 @@ export abstract class ThrowComponentBase implements OnInit {
     ) { }
 
     ngOnInit(): void {
+      this.unsafe = this.storageService.environment.unsafe;
       const addressstring = this.route.snapshot.paramMap.get('address');
       if (addressstring == null) {
       } else {

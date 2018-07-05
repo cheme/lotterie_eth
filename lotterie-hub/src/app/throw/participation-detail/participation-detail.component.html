@@ -25,7 +25,11 @@
   <mat-card-footer>
   <button mat-raised-button *ngIf="throwState == 2 && participation.state == 0 && participation.revealedSeed" (click)="revealParticipation()">Reveal participation</button>
   <button mat-raised-button *ngIf="throwState == 3 && participation.state == 1" (click)="registerForWin()">Register participation as win</button>
-  <button mat-raised-button *ngIf="throwState == 4 && participation.state == 2 && participation.wintowithdraw" (click)="withdrawWin()">Withdraw this win</button>
+  <span *ngIf="throwState == 4 && participation.state == 2">
+  <button *ngIf="unsafe && participation.wintowithdraw" mat-raised-button (click)="withdrawWin(0)">Withdraw only value</button>
+  <button *ngIf="unsafe" mat-raised-button (click)="withdrawWin(1)">Withdraw 721 only</button>
+  <button *ngIf="participation.wintowithdraw" mat-raised-button (click)="withdrawWin(2)">Withdraw all</button>
+  </span>
   <button mat-raised-button *ngIf="isInStorage()" (click)="removeFromStorage()">Remove from board</button>
   <button mat-raised-button *ngIf="!isInStorage()" (click)="addToStorage()">Add to board</button>
   </mat-card-footer>

@@ -1,0 +1,13 @@
+<mat-card *ngIf="erc">
+  <mat-card-header>
+  <mat-card-title>
+    <span *ngIf="disIx">{{ disIx }} : </span>
+    <span>{{ symbol }} {{ erc.tokenId }}</span>
+  </mat-card-title>
+ </mat-card-header>
+  <mat-card-content>
+    <div *ngIf="name">Erc721 : {{ name }}</div>
+    <div>Address {{ erc.tokenAddress }}</div>
+    <div *ngIf="uri">URI : {{ uri }}</div>
+  </mat-card-content>
+  </mat-card>

@@ -12,7 +12,7 @@ import { MessagesComponent } from './messages/messages.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 //import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {ScrollDispatchModule} from '@angular/cdk/scrolling';
-import {MatPaginatorModule, MatButtonModule, MatGridListModule, MatCard, MatCardModule, MatMenuModule, MatToolbarModule, MatFormFieldModule, MatSliderModule, MatInputModule} from '@angular/material';
+import {MatPaginatorModule, MatButtonModule, MatGridListModule, MatCard, MatCardModule, MatMenuModule, MatToolbarModule, MatFormFieldModule, MatSliderModule, MatInputModule, MatCheckbox, MatCheckboxModule} from '@angular/material';
 import { LottEnvironmentComponent } from './lott-environment/lott-environment.component';
 import { FormsModule } from '@angular/forms';
 
@@ -41,6 +41,7 @@ import { FormsModule } from '@angular/forms';
     MatFormFieldModule,
     MatSliderModule,
     MatInputModule,
+    MatCheckboxModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

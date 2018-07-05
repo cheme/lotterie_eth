@@ -8,7 +8,7 @@ import './ERC223-token-standard/token/ERC223/ERC223_receiving_contract.sol';
 contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
 
   ERC223Interface token;
-  uint8 waitingInitValue = 0;
+  uint8 public waitingInitValue = 0;
 
   function bid (
     uint commitmentSeed

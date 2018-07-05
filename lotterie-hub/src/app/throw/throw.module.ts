@@ -15,6 +15,8 @@ import { EthComponentsModule } from '../eth-components/eth-components.module';
 import { MyBoardComponent } from './my-board/my-board.component';
 import { MyFavoritesComponent } from './my-favorites/my-favorites.component';
 import { ErcValueComponent } from './erc-value/erc-value.component';
+import { AddErc721Component } from './add-erc721/add-erc721.component';
+import { Erc721DetailsComponent } from './erc721-details/erc721-details.component';
 
 @NgModule({
   imports: [
@@ -57,6 +59,8 @@ import { ErcValueComponent } from './erc-value/erc-value.component';
     MyBoardComponent,
     MyFavoritesComponent,
     ErcValueComponent,
+    AddErc721Component,
+    Erc721DetailsComponent,
   ],
   entryComponents: [
     DialogNPart,

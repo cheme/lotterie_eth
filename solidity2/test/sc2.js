@@ -24,8 +24,6 @@ contract('Lotterie sc2', function(accounts) {
     console.log("erc223:" + erc223.address);
     var erc20 = await ERC20Test.new("5000000000000000000", { from : account_owner });
     console.log("erc20:" + erc20.address);
-    var erc721 = await ERC721Test.new({ from : account_owner });
-    console.log("erc721:" + erc721.address);
 
   });
 

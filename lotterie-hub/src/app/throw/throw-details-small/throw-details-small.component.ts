@@ -16,7 +16,12 @@ import { StorageService } from '../../storage.service';
 })
 export class ThrowDetailsSmallComponent extends ThrowComponentBase {
 
-  onInitExtend() : void { }
+  onInitExtend() : void {
+    if (this.thr.currentPhase == 0) {
+      this.lotterieService.nbERC721Construct(this.thr.throwLib).subscribe(n7 => this.thr.nbErc721Construct = n7);
+    }
+
+   }
   
   constructor(
     route: ActivatedRoute,

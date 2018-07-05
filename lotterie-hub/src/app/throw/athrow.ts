@@ -57,9 +57,9 @@ export class Athrow {
   public tokenSymbol : string;
   public tokenDecimals : number;
   public tokenLib : any;
-  private _nbErc721 : number = 0;
+  public nbErc721 : number = 0;
   public nbErc721Construct : number = 0;
-  get nbErc721() : number {return this._nbErc721;}
+  public waitingInitvalue : number = 0;
 
   public static initAthrow(addresses : string, lotterieService : LotterieService,cb? :Function) : Observable<Athrow> {
 
@@ -111,11 +111,7 @@ export class Athrow {
             });
             // warning erc721 call are not sync with of cb
             lotterieService.nbERC721(at.throwLib).subscribe(nb => {
-              at._nbErc721 = nb;
-            }); // only if currentPhase = 0 else get from table... else nbERC721Prizes
-            lotterieService.nbERC721Construct(at.throwLib) // only if currentPhase = 0 else get from table... else nbERC721Prizes
-            .subscribe(nb => {
-              at.nbErc721Construct = nb;
+              at.nbErc721 = nb;
             });
             var tokenLib;
             if (type == 1) {

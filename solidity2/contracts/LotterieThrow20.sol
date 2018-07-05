@@ -7,7 +7,7 @@ import './zeppelin/token/ERC20/ERC20.sol';
 contract LotterieThrow20 is LotterieThrow721 {
 
   ERC20 token;
-  uint8 waitingInitValue = 0;
+  uint8 public waitingInitValue = 0;
 
   function bid (
     uint commitmentSeed

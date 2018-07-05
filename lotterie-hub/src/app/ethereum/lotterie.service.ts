@@ -35,6 +35,7 @@ export class ThrowEventWin {
   providedIn: 'root'
 })
 export class LotterieService {
+  
   public newErc223Lib(addres: string): any {
     return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.Erc223Abi, addres);
   }
@@ -49,7 +50,6 @@ export class LotterieService {
     return from(ercLib.methods.balanceOf(this.defaultAccount).call());
   }
   public getTokenInfos(ercLib: any): Observable<[string,string,number]> {
-    // TODO use a cache (ercLib should be cached to (put address as parameter))
     return zip(
       from(ercLib.methods.name().call()),
       from(ercLib.methods.symbol().call()),
@@ -59,6 +59,16 @@ export class LotterieService {
       }
     );
   }
+  public getToken721Infos(ercLib: any): Observable<[string,string]> {
+    return zip(
+      from(ercLib.methods.name().call()),
+      from(ercLib.methods.symbol().call()),
+      (n,s) => {
+        return [n,s] as [string,string];
+      }
+    );
+  }
+ 
   private map223 = {};
   private map20 = {};
   private map721 = {};
@@ -97,6 +107,70 @@ export class LotterieService {
         return [lib,name,symbol,decimals] as [any,string,string,number];
       }),
     );
+ 
+  }
+ public getInfo721(tokaddress: string): Observable<[any,string,string]> {
+    if (this.map721[tokaddress] != null) {
+      let i = this.map721[tokaddress]
+      return of([i.lib,i.name,i.symbol] as [any,string,string]);
+    }
+    let lib = this.newErc721Lib(tokaddress);
+    return this.getToken721Infos(lib).pipe(
+      map(([name,symbol]) => {
+        this.map721[tokaddress] = {
+          lib,
+          name,
+          symbol
+        };
+        return [lib,name,symbol] as [any,string,string];
+      }),
+    );
+ 
+  }
+  isYour721(tokAddress: string, tokId: string): Observable<[boolean,string]> {
+    return this.getInfo721(tokAddress).pipe(
+      flatMap(([lib,name,symbol]) => {
+        return from(lib.methods.ownerOf(tokId).call()).pipe(
+          map((o : string) => {
+            let a = this.web3.eth.defaultAccount;
+            return [o===a,name] as [boolean, string];
+          })
+        );
+      }),
+    );
+  }
+  getUri(tokAddress: string, tokId: string): Observable<[string,string,string]> {
+    return this.getInfo721(tokAddress).pipe(
+      flatMap(([lib,name,symbol]) => {
+        return from(lib.methods.tokenURI(tokId).call()).pipe(
+          map((u : string) => {
+            return [name,symbol,u] as [string,string,string];
+          }),
+
+        );
+      }),
+    );
+  }
+  get721fromThrow(thrLib: any, tokIx: number): Observable<[string,string]> {
+    return from(thrLib.methods.prizeErc721(tokIx).call());
+  }
+
+  addErc721(thrLib: any, tokAddress: string, tokId: string): Observable<any> {
+    return this.getInfo721(tokAddress).pipe(
+      flatMap(([lib,name,symbol]) => {
+        let a = this.web3.eth.defaultAccount;
+        let call = lib.methods.safeTransferFrom(a, thrLib._address, tokId);
+        return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+          .then((gas) => 
+            call.send({from: this.web3.eth.defaultAccount, gas: Math.floor(gas * 1.5) })));
+      }),
+    );
+  }
+  forceStart(thrLib: any): Observable<any> {
+    var call = thrLib.methods.forceStartNoPrize();
+    return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+       .then((gas) => 
+         call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000 })));
  
   }
 
@@ -342,7 +416,7 @@ export class LotterieService {
 
 
   public fetchCurrentSeed(throwLib : any): Observable<string> {
-      return from(throwLib.getThrow().call()).pipe(map(t =>
+      return from(throwLib.methods.getThrow().call()).pipe(map(t =>
         this.lotterieLib.newThrow(t).currentSeed
       ));
   }
@@ -364,7 +438,7 @@ export class LotterieService {
          ))
         ));
   }
-  public getFinalWinner(throwLib : any,ix : number) : Observable<[boolean,number,string]> {
+  public getFinalWinner(throwLib : any,ix : number) : Observable<[boolean,string,string]> {
     return from(throwLib.methods.getWinner(ix).call());
   }
 
@@ -566,7 +640,7 @@ export class LotterieService {
     throwLib : any,
     participationId : number 
   ) : Observable<number> {
-    return from( throwLib.methods.currentIxAmongWinners(participationId).call());
+    return from(throwLib.methods.currentIxAmongWinners(participationId).call());
   }
     
   // get position of a participation at phase end or 0 if not in cashout wins
@@ -615,6 +689,27 @@ public registerWin(
       .then((gas) => 
                  call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000 })));
   }
+public withDrawAllWin(
+     throwLib : any,
+    participationId : number 
+  ) : Observable<Object> {
+    var call = throwLib.methods.withdrawAllWin(participationId);
+    return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+      .then((gas) => 
+                 call.send({from: this.web3.eth.defaultAccount, gas: Math.floor(gas * 1.5) })));
+  }
+public withDraw721(
+     throwLib : any,
+    participationId : number 
+  ) : Observable<Object> {
+    var call = throwLib.methods.withdraw721(participationId);
+    return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+      .then((gas) => 
+                 call.send({from: this.web3.eth.defaultAccount, gas: Math.floor(gas * 1.5) })));
+  }
+
+
+
 
   nbERC721Construct(throwLib: any): Observable<number> {
     return from( throwLib.methods.nbERC721().call() ).pipe(
@@ -625,6 +720,9 @@ public registerWin(
     return from( throwLib.methods.nbErc721Prizes().call() ).pipe(
       map((n: string) => parseInt(n)),
     );
+  }
+  waitInitValue(throwLib : any) : Observable<number> {
+    return from(throwLib.methods.waitingInitValue().call());
   }
  
   
@@ -637,6 +735,22 @@ public registerWin(
     );
   }
 
+  extractPartId(data : string) : string {
+        let n = this.lotterieLib.web3.eth.abi.decodeParameters
+         (
+          [
+            {
+              "name": "participationId",
+              "type": "uint64"
+            },
+            {
+              "name": "bid",
+              "type": "uint256"
+            }
+          ]
+           , data);
+         return n[0];
+  };
   public currentAccount(): Observable<string | Error> {
     if (this.web3.eth.defaultAccount) {
         return of(this.web3.eth.defaultAccount);
