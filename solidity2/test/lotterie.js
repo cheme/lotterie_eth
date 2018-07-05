@@ -397,7 +397,6 @@ contract('Lotterie', function(accounts) {
 
   // TODO test a lot more than the name : split it using scenario1 functions
   dis("switch phases on user tresholds", async function() {
-  //dis("switch phases on user tresholds", async function() {
       
     var myConf = Object.assign({}, conf1);
     myConf.maxParticipant = 5;
@@ -640,8 +639,7 @@ contract('Lotterie', function(accounts) {
     await tr_log( lotteriethrow.emptyOffThrow({ from : account_owner }), true);
   });
 
-  dis("supports erc223", async function() {
-  //dis("switch phases on user tresholds", async function() {
+  it("supports erc223", async function() {
       
     var myConf = Object.assign({}, conf1);
     myConf.maxParticipant = 5;
@@ -707,12 +705,19 @@ contract('Lotterie', function(accounts) {
 
     // a standard bid at 0 value
     await tr_log( lotteriethrow.bid(calcCommitment('0x0'), { from : account_bidder1 }), true );
+
+    thr = lotterieLib.newParticipation(await lotteriethrow.getParticipation.call(0)); //TODO
+    assert.equal(web3.toHex(thr.seed),calcCommitment('0x0'));
+
     accountParts.push(account_bidder1);
 //          console.log(_.find(LotterieThrow223.abi, { name: 'bid' }));
     bidencoded = w3abi.encodeFunctionCall(
             _.find(LotterieThrow223.abi, { name: 'bid' }),
             [calcCommitment('0x1111111111111111111111111111111111')]);
     await tr_log( erc223t.transfer(lotteriethrow.address, '1000', bidencoded, { from : account_bidder2 }), true);
+    thr = lotterieLib.newParticipation(await lotteriethrow.getParticipation.call(1)); //TODO
+    assert.equal(web3.toHex(thr.seed),calcCommitment('0x1111111111111111111111111111111111'));
+//    await tr_log( erc223t.transfer(lotteriethrow.address, '1000', calcCommitment('0x1111111111111111111111111111111111'), { from : account_bidder2 }), true);
     thr = lotterieLib.newThrow(await lotteriethrow.getThrow.call());
     assert.equal(web3.toHex(thr.totalBidValue), web3.toHex(500 + 1000));
     assert.equal(web3.toHex(await erc223.balanceOf(account_bidder2)), web3.toHex(0));
@@ -733,6 +738,7 @@ contract('Lotterie', function(accounts) {
     await tr_log( lotteriethrow.revealParticipation(3,3), true);
     await tr_log( lotteriethrow.revealParticipation(4,4), true);
     await tr_log( lotteriethrow.revealParticipation(1,'0x1111111111111111111111111111111111'), true);
+
     await tr_log( lotteriethrow.revealParticipation(2,2), true);
     assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.Cashout);
     // get postition by heavy cost call (still less costy thant previous method
@@ -744,13 +750,14 @@ contract('Lotterie', function(accounts) {
       // TODO only winner?
     //var posNb0 = await lotteriethrow.checkPositionHeavyCost.call(0);
       await tr_log( lotteriethrow.cashOut(i, ix), true);
-    }
+   }
     var nbwin = await lotteriethrow.nbWinners.call();
     assert.equal(nbwin,4);
     assert.equal(web3.toHex(await lotteriethrow.linkedWinnersLength.call()),4);
     // TODO additional user trying to insert (in a non salt conf it will be easier)
     await dirtyPause(3);
     assert.equal(await lotteriethrow.getPhase.call(), lotterieLib.phases.End);
+          
     // register win and withdraw
           // let one win amount to test end phase empty
     for (var j = 0; j < (nbwin - 1); ++j) {
@@ -783,10 +790,9 @@ contract('Lotterie', function(accounts) {
     var initBalance = parseInt(await erc223.balanceOf(account_owner));
     await tr_log( lotteriethrow.emptyOffThrow({ from : account_owner }), true);
     assert.equal(web3.toHex(await erc223.balanceOf(account_owner)), web3.toHex(initBalance + ((1000+500)/4)));
-    
+
   });
-  it("supports erc20", async function() {
-  //dis("switch phases on user tresholds", async function() {
+  dis("supports erc20", async function() {
       
     var myConf = Object.assign({}, conf1);
     myConf.maxParticipant = 5;

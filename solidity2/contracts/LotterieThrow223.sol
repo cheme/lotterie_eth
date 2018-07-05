@@ -71,7 +71,7 @@ contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
   function bytesToUInt256(uint _offst, bytes memory _input) internal pure returns (uint256 _output) {
         
         assembly {
-            _output := mload(add(_input, _offst))
+            _output := mload(add(add(_input, _offst),32))
         }
   }
 
