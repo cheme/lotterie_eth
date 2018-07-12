@@ -1,7 +1,8 @@
 <div *ngIf="param && view()">
-  <div><span>id: </span>{{param.id}}</div>
+  <div>
+    <span>id: </span>{{param.id}}</div>
   <div><span>Dapp author: {{ param.authorDapp }}</span></div>
-  <div><span>Winning param id: {{ param.winningParamsId }}</span></div> <!-- TODO make link -->
+  <div><span>Winning param id:  <a routerLink="/winningparam/{{ param.winningParamsId }}">{{ param.winningParamsId }}</a></span></div> <!-- TODO make link -->
   <div><span>Min bid value: {{ param.minBidValue }}</span></div><!-- TODO format with units -->
   <div><span>Bidding treshold: {{ param.biddingTreshold }}</span></div><!-- TODO format with units -->
   <div><span>Max nb participant: {{ param.maxParticipant }}</span></div>

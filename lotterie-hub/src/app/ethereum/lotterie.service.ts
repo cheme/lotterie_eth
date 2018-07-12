@@ -483,9 +483,8 @@ export class LotterieService {
     throwEndMode : number,
     throwEndValue : string,
     ) : Observable<boolean> {
-    return this.currentAccount().pipe(
-         flatMap(account => 
-          from(this.lotterieLib.lotterie.methods
+      let call = 
+          this.lotterieLib.lotterie.methods
             .addPhaseParams(
     participationStartMode,
     participationStartTreshold,
@@ -495,8 +494,11 @@ export class LotterieService {
     cashoutEndValue,
     throwEndMode,
     throwEndValue
-            )
-             .send({from : account}))),
+            );
+
+    return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+      .then((gas) => 
+        from(call.send({from: this.web3.eth.defaultAccount, gas: gas})).pipe(
           map(r => {
             console.log("Transaction pass for : " + r['transactionHash']);
             return true;
@@ -504,9 +506,11 @@ export class LotterieService {
           catchError((err : Error) => {
             console.error(err);
             return of(false);
-          })
-        );
-    }
+          }),
+        )
+      ));
+ 
+  }
   public launchLotterieParamCreation(
     winningParamsId: string,
     doSalt: boolean,
@@ -515,9 +519,7 @@ export class LotterieService {
     biddingTreshold: string,
     maxParticipant: number
   ) {
-   return this.currentAccount().pipe(
-         flatMap(account => 
-          from(this.lotterieLib.lotterie.methods
+    let call = this.lotterieLib.lotterie.methods
             .addParams(
     winningParamsId,
     doSalt,
@@ -525,8 +527,11 @@ export class LotterieService {
     minBidValue,
     biddingTreshold,
     maxParticipant
-            )
-             .send({from : account}))),
+            );
+
+    return from(call.estimateGas({from: this.web3.eth.defaultAccount})
+      .then((gas) => 
+        from(call.send({from: this.web3.eth.defaultAccount, gas: gas})).pipe(
           map(r => {
             console.log("Transaction pass for : " + r['transactionHash']);
             return true;
@@ -534,8 +539,9 @@ export class LotterieService {
           catchError((err : Error) => {
             console.error(err);
             return of(false);
-          })
-        );
+          }),
+        )
+      ));
   }
 
 //function addParams (

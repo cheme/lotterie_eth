@@ -69,25 +69,47 @@ export class PhaseparamNewComponent implements OnInit {
   }
  
   public createParamConf() {
+    console.log("shan");
     let ptresh;
-    if (this.infinitestart) {
+    if (this.infinitestart.value) {
       ptresh = "0";
     } else {
-      if (this.pendmode.value == this.startmodes.Absolute) {
+      if (this.startmode.value == this.startmodes.Absolute) {
         ptresh = Date.parse(this.form.get('starttreshold').value)/1000;
       } else {
         ptresh = this.form.get('starttreshold').value;
       }
     }
+    let ptresh2;
+    if (this.pendmode.value == this.participationenmodes.Absolute || this.pendmode.value == this.participationenmodes.EagerAbsolute) {
+        ptresh2 = Date.parse(this.form.get('pendtreshold').value)/1000;
+    } else {
+        ptresh2 = this.form.get('pendtreshold').value;
+    }
+ 
+    let ptresh3;
+    if (this.coutmode.value == this.startmodes.Absolute) {
+      ptresh3 = Date.parse(this.form.get('couttreshold').value)/1000;
+    } else {
+      ptresh3 = this.form.get('couttreshold').value;
+    }
+
+    let ptresh4;
+    if (this.throwmode.value == this.startmodes.Absolute) {
+      ptresh4 = Date.parse(this.form.get('throwtreshold').value)/1000;
+    } else {
+      ptresh4 = this.form.get('throwtreshold').value;
+    }
+ 
     this.lotterieService.launchPhaseParamCreation(
     this.startmode.value,
     ptresh,
     this.pendmode.value,
-    this.form.get('pendtreshold').value,
+    ptresh2,
     this.coutmode.value,
-    this.form.get('couttreshold').value,
+    ptresh3,
     this.throwmode.value,
-    this.form.get('throwtreshold').value
+    ptresh4
     ).subscribe(ok => {
       if (ok) {
         this.messageService.add("A Phase param creation succeed");

@@ -69,11 +69,13 @@
      <div *ngIf="coutmode.value == startmodes.Relative">
        <mat-form-field>
          <input matInput placeholder="Duration in seconds" formControlName="couttreshold" />
+        <mat-hint>Hard limit to 4 weeks</mat-hint>
        </mat-form-field>
      </div>
      <div *ngIf="coutmode.value == startmodes.Absolute">
        <mat-form-field>
          <input matInput placeholder="Absolute Date" formControlName="couttreshold" />
+        <mat-hint>Hard limit to 4 weeks from now</mat-hint>
         <input hidden matInput [matDatepicker]="picker3" (dateInput)="setDate($event,'couttreshold')" />
         <mat-datepicker-toggle matPrefix [for]="picker3"></mat-datepicker-toggle>
         <mat-datepicker #picker3></mat-datepicker>
@@ -95,11 +97,13 @@
      <div *ngIf="throwmode.value == startmodes.Relative">
        <mat-form-field>
          <input matInput placeholder="Duration in seconds" formControlName="throwtreshold" />
+         <mat-hint>Hard limit to 20 weeks</mat-hint>
        </mat-form-field>
      </div>
      <div *ngIf="throwmode.value == startmodes.Absolute">
        <mat-form-field>
          <input matInput placeholder="Absolute Date" formControlName="throwtreshold" />
+         <mat-hint>Hard limit to 20 weeks from now</mat-hint>
         <input hidden matInput [matDatepicker]="picker4" (dateInput)="setDate($event,'throwtreshold')" />
         <mat-datepicker-toggle matPrefix [for]="picker4"></mat-datepicker-toggle>
         <mat-datepicker #picker4></mat-datepicker>

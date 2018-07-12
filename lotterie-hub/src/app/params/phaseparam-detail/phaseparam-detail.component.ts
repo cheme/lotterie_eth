@@ -33,4 +33,57 @@ export class PhaseparamDetailComponent extends ParamDetailsComponentBase<Phasepa
      super(route,lotterieService,messageService,location);
    }
 
+   coutMode(ix : number) : string {
+     let m = this.lotterieService.cashoutEndModes;
+     for(let k in m) {
+       if (m[k] == ix) {
+         return k;
+       }
+     }
+     return "Invalid mode";
+   }
+   partMode(ix : number) : string {
+     let m = this.lotterieService.participationEndModes;
+     for(let k in m) {
+       if (m[k] == ix) {
+         return k;
+       }
+     }
+     return "Invalid mode";
+   }
+
+   public dispDateDuration(ixMode : number, value : number) : string {
+     if (value == 0) {
+       return "Max";
+     }
+     if (ixMode == this.lotterieService.cashoutEndModes.Absolute) {
+       return this.dispDate(value);
+     }
+     return this.dispDur(value);
+   }
+   public dispDateDurationPart(ixMode : number, value : number) : string {
+     if (value == 0) {
+       return "Max";
+     }
+     if (ixMode == this.lotterieService.participationEndModes.Absolute || ixMode == this.lotterieService.participationEndModes.EagerAbsolute) {
+       return this.dispDate(value);
+     }
+     return this.dispDur(value);
+   }
+   dispDur(value : number) : string {
+    var rem = value;
+    var days = Math.floor(rem / 86400);
+    rem = rem % 86400;
+    var hours = Math.floor(rem / 3600);
+    rem = rem % 3600;
+    var min = Math.floor(rem / 60);
+    var sec = rem % 60;
+    var disp = "" + days + " days " + hours + ":" + min + ":" + sec;
+    return disp;
+   }
+   dispDate(value : number) : string {
+    var date = new Date(value * 1000);
+    return date.toISOString();
+   }
+ 
 }

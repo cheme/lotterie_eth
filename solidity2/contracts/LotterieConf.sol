@@ -107,7 +107,7 @@ library LotterieConf {
   function validDateOnlySwitch(CashoutEndMode endMode, uint duration, uint hardLimit) public view returns(bool) {
     if (endMode == CashoutEndMode.Absolute) {
       // absolute
-      if (now + hardLimit > duration) {
+      if (duration > now + hardLimit) {
         return false;
       }
     } else {

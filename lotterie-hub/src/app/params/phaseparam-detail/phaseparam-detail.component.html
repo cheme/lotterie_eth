@@ -1,13 +1,13 @@
 <div *ngIf="param && view()">
   <div><span>id: </span>{{param.id}}</div>
-  <div><span>Participation start date treshold: {{ param.participationStartTreshold }}</span></div> <!-- TODO convert to date depending on other conf -->
-  <div><span>Participation end value: {{ param.participationEndValue }}</span></div> <!-- TODO convert to date depending on other conf -->
-  <div><span>Cashout end value: {{ param.cashoutEndValue }}</span></div> <!-- TODO convert to date depending on other conf -->
-  <div><span>Throw end value: {{ param.throwEndValue }}</span></div> <!-- TODO convert to date depending on other conf -->
-  <div><span>Participation start date mode: {{ param.participationStartMode }}</span></div> <!-- TODO convert to date depending on other conf -->
-  <div><span>Participation end mode: {{ param.participationEndMode }}</span></div> <!-- TODO select -->
-  <div><span>Cashout end mode: {{ param.cashoutEndMode }}</span></div> <!-- TODO select -->
-  <div><span>Throw end mode: {{ param.throwEndMode }}</span></div> <!-- TODO select -->
+  <div><span>Participation start date treshold: {{ dispDateDuration(param.participationStartMode,param.participationStartTreshold) }}</span></div>
+  <div><span>Participation end value: {{ dispDateDurationPart(param.participationEndMode,param.participationEndValue) }}</span></div>
+  <div><span>Cashout end value: {{ dispDateDuration(param.cashoutEndMode,param.cashoutEndValue) }}</span></div>
+  <div><span>Throw end value: {{ dispDateDuration(param.throwEndMode,param.throwEndValue) }}</span></div>
+  <div><span>Participation start date mode: {{ coutMode(param.participationStartMode) }}</span></div>
+  <div><span>Participation end mode: {{ partMode(param.participationEndMode) }}</span></div>
+  <div><span>Cashout end mode: {{ coutMode(param.cashoutEndMode) }}</span></div>
+  <div><span>Throw end mode: {{ coutMode(param.throwEndMode) }}</span></div>
 </div>
 <div *ngIf="inline()">
   <div><span>
@@ -15,14 +15,14 @@
       <a routerLink="/phaseparam/{{ param.id }}">
         id: {{ param.id }}
       </a>
-  , Participation start date treshold: {{ param.participationStartTreshold }}
-  , Participation end value: {{ param.participationEndValue }}
-  , Cashout end value: {{ param.cashoutEndValue }}
-  , Throw end value: {{ param.throwEndValue }}
-  , Participation start mode: {{ param.participationStartMode }}
-  , Participation end mode: {{ param.participationEndMode }}
-  , Cashout end mode: {{ param.cashoutEndMode }}
-  , Throw end mode: {{ param.throwEndMode }}
+  , Participation start date treshold: {{ dispDateDuration(param.participationStartMode,param.participationStartTreshold) }}
+  , Participation end value: {{ dispDateDurationPart(param.participationEndMode,param.participationEndValue) }}
+  , Cashout end value: {{ dispDateDuration(param.cashoutEndMode,param.cashoutEndValue) }}
+  , Throw end value: {{ dispDateDuration(param.throwEndMode,param.throwEndValue) }}
+  , Participation start mode: {{ coutMode(param.participationStartMode) }}
+  , Participation end mode: {{ partMode(param.participationEndMode) }}
+  , Cashout end mode: {{ coutMode(param.cashoutEndMode) }}
+  , Throw end mode: {{ coutMode(param.throwEndMode) }}
   </span></div>
 </div>
 <div *ngIf="!inline()">
