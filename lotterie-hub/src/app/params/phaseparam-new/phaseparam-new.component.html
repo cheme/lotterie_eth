@@ -1,0 +1,118 @@
+<form [formGroup]="form" (ngSubmit)="createParamConf()">
+  <mat-divider></mat-divider>
+  <article>
+   <mat-checkbox #noStartLimit matTooltip="No start limit (one year hard limit)" formControlName="infinitestart">No start limit</mat-checkbox>
+  </article>
+ 
+   <span *ngIf="infinitestart.value == false">
+  <article>
+<mat-form-field>
+  <mat-select formControlName="startmode" placeholder="Bidding end mode">
+    <mat-option *ngFor="let sm of startmodesentries" [value]="sm[1]">{{sm[0]}}</mat-option>
+  </mat-select>
+</mat-form-field>
+  </article>
+ <article>
+     <div *ngIf="startmode.value == startmodes.Relative">
+       <mat-form-field>
+         <input matInput placeholder="Duration in seconds" formControlName="starttreshold" />
+       </mat-form-field>
+     </div>
+     <div *ngIf="startmode.value == startmodes.Absolute">
+       <mat-form-field>
+         <input matInput placeholder="Absolute Date" formControlName="starttreshold" />
+        <input hidden matInput [matDatepicker]="picker1" (dateInput)="setDate($event,'starttreshold')" />
+        <mat-datepicker-toggle matPrefix [for]="picker1"></mat-datepicker-toggle>
+        <mat-datepicker #picker1></mat-datepicker>
+       </mat-form-field>
+    </div>
+  </article>
+  </span>
+  <br />
+  <mat-divider></mat-divider>
+
+  <article>
+<mat-form-field>
+  <mat-select formControlName="pendmode" placeholder="Participation End mode">
+    <mat-option *ngFor="let sm of pendentries" [value]="sm[1]">{{sm[0]}}</mat-option>
+  </mat-select>
+</mat-form-field>
+  </article>
+ 
+  <article>
+     <div *ngIf="pendmode.value == participationenmodes.Relative || pendmode.value == participationenmodes.EagerRelative">
+       <mat-form-field>
+         <input matInput placeholder="Duration in seconds" formControlName="pendtreshold" />
+       </mat-form-field>
+     </div>
+     <div *ngIf="pendmode.value == participationenmodes.Absolute || pendmode.value == participationenmodes.EagerAbsolute">
+       <mat-form-field>
+         <input matInput placeholder="Absolute Date" formControlName="pendtreshold" />
+        <input hidden matInput [matDatepicker]="picker2" (dateInput)="setDate($event,'pendtreshold')" />
+        <mat-datepicker-toggle matPrefix [for]="picker2"></mat-datepicker-toggle>
+        <mat-datepicker #picker2></mat-datepicker>
+       </mat-form-field>
+     </div>
+  </article>
+
+  <br />
+  <mat-divider></mat-divider>
+  <article>
+<mat-form-field>
+  <mat-select formControlName="coutmode" placeholder="Register win end mode">
+    <mat-option *ngFor="let sm of startmodesentries" [value]="sm[1]">{{sm[0]}}</mat-option>
+  </mat-select>
+</mat-form-field>
+  </article>
+
+   <article>
+     <div *ngIf="coutmode.value == startmodes.Relative">
+       <mat-form-field>
+         <input matInput placeholder="Duration in seconds" formControlName="couttreshold" />
+       </mat-form-field>
+     </div>
+     <div *ngIf="coutmode.value == startmodes.Absolute">
+       <mat-form-field>
+         <input matInput placeholder="Absolute Date" formControlName="couttreshold" />
+        <input hidden matInput [matDatepicker]="picker3" (dateInput)="setDate($event,'couttreshold')" />
+        <mat-datepicker-toggle matPrefix [for]="picker3"></mat-datepicker-toggle>
+        <mat-datepicker #picker3></mat-datepicker>
+       </mat-form-field>
+     </div>
+  </article> 
+
+  <br />
+  <mat-divider></mat-divider>
+  <article>
+<mat-form-field>
+  <mat-select formControlName="throwmode" placeholder="Throw Withdraw win end mode">
+    <mat-option *ngFor="let sm of startmodesentries" [value]="sm[1]">{{sm[0]}}</mat-option>
+  </mat-select>
+</mat-form-field>
+  </article>
+
+   <article>
+     <div *ngIf="throwmode.value == startmodes.Relative">
+       <mat-form-field>
+         <input matInput placeholder="Duration in seconds" formControlName="throwtreshold" />
+       </mat-form-field>
+     </div>
+     <div *ngIf="throwmode.value == startmodes.Absolute">
+       <mat-form-field>
+         <input matInput placeholder="Absolute Date" formControlName="throwtreshold" />
+        <input hidden matInput [matDatepicker]="picker4" (dateInput)="setDate($event,'throwtreshold')" />
+        <mat-datepicker-toggle matPrefix [for]="picker4"></mat-datepicker-toggle>
+        <mat-datepicker #picker4></mat-datepicker>
+       </mat-form-field>
+     </div>
+  </article> 
+
+
+
+  <button [disabled]="form.invalid" type="submit">Submit</button>
+</form>
+
+<span *ngIf="unsafe">
+<p>Form value: {{ form.value | json }}</p>
+<p>Form status: {{ form.status | json }}</p>
+</span>

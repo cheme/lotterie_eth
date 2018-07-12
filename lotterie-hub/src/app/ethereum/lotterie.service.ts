@@ -183,6 +183,9 @@ export class LotterieService {
   public newThrowLib223(addres : string) : any {
     return new this.lotterieLib.web3.eth.Contract(this.lotterieLib.lotterieThrow223Abi, addres);
   }
+  get participationStartModes(): any {
+    return this.lotterieLib.cashoutEndModes;
+  };
 
   get participationEndModes(): any {
     return this.lotterieLib.participationEndModes;
@@ -467,7 +470,75 @@ export class LotterieService {
           })
         );
     }
+  public launchPhaseParamCreation(
+    participationStartMode : number,
+    participationStartTreshold : string,
+  
+    participationEndMode : number,
+    participationEndValue : string,
+  
+    cashoutEndMode : number,
+    cashoutEndValue : string,
+  
+    throwEndMode : number,
+    throwEndValue : string,
+    ) : Observable<boolean> {
+    return this.currentAccount().pipe(
+         flatMap(account => 
+          from(this.lotterieLib.lotterie.methods
+            .addPhaseParams(
+    participationStartMode,
+    participationStartTreshold,
+    participationEndMode,
+    participationEndValue,
+    cashoutEndMode,
+    cashoutEndValue,
+    throwEndMode,
+    throwEndValue
+            )
+             .send({from : account}))),
+          map(r => {
+            console.log("Transaction pass for : " + r['transactionHash']);
+            return true;
+          }),
+          catchError((err : Error) => {
+            console.error(err);
+            return of(false);
+          })
+        );
+    }
+  public launchLotterieParamCreation(
+    winningParamsId: string,
+    doSalt: boolean,
+    authorDapp: string,
+    minBidValue: string,
+    biddingTreshold: string,
+    maxParticipant: number
+  ) {
+   return this.currentAccount().pipe(
+         flatMap(account => 
+          from(this.lotterieLib.lotterie.methods
+            .addParams(
+    winningParamsId,
+    doSalt,
+    authorDapp,
+    minBidValue,
+    biddingTreshold,
+    maxParticipant
+            )
+             .send({from : account}))),
+          map(r => {
+            console.log("Transaction pass for : " + r['transactionHash']);
+            return true;
+          }),
+          catchError((err : Error) => {
+            console.error(err);
+            return of(false);
+          })
+        );
+  }
 
+//function addParams (
     public initThrow(
       nbErc721 : number,
       params : string,

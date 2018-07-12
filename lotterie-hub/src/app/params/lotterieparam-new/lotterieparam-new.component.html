@@ -1,0 +1,50 @@
+<form [formGroup]="form" (ngSubmit)="createParamConf()">
+  <article>
+<mat-form-field>
+  <input matInput formControlName="winningParamsId" placeholder = "Winning parameters"/>
+  <mat-hint>Valid winning parameter index</mat-hint>
+</mat-form-field>
+  </article>
+  <article>
+   <mat-checkbox matTooltip="Apply salt is recomanded" formControlName="doSalt">Do salt</mat-checkbox>
+  </article>
+  <article>
+<mat-form-field>
+<amount-eth placeholder="Min bid value" [units]="units" formControlName="minBidValue"></amount-eth>
+</mat-form-field>
+<div>
+If used with a token the full value representation is : {{ minbidvalue }} (if token has decimals divide by 10^nbdecs to get nb token)
+</div>
+  </article>
+  <article>
+<mat-form-field>
+<amount-eth placeholder="Bidding treshold" [units]="units" formControlName="biddingTreshold"></amount-eth>
+</mat-form-field>
+<div>
+Full value representation : {{ biddingtreshold }}
+</div>
+<div>
+  When using 0, no treshold is defined (with treshold the participation phase start imediatly when the treshold is reached)
+</div>
+  </article>
+  <article>
+<mat-form-field>
+  <input matInput type="number" formControlName="maxParticipant" placeholder = "Max number of participant"/>
+  <mat-hint>0 for unlimited</mat-hint>
+</mat-form-field>
+<div>
+  When using 0, their is no maximum (unlimited). Otherwhise the participation phase will start as soon as this number of participant is reached.
+</div>
+
+  </article>
+ 
+
+
+
+  <button [disabled]="form.invalid" type="submit">Submit</button>
+</form>
+
+<span *ngIf="unsafe">
+<p>Form value: {{ form.value | json }}</p>
+<p>Form status: {{ form.status | json }}</p>
+</span>

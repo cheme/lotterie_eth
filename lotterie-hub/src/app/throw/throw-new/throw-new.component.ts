@@ -6,6 +6,7 @@ import { EthId } from '../../eth-components/eth-id';
 import { MatSliderChange } from '@angular/material';
 import { EthValue, EthUnits } from '../../eth-components/eth-value';
 import { StorageService } from '../../storage.service';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-throw-new',

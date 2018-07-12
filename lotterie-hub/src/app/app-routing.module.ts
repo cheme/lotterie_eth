@@ -13,6 +13,8 @@ import { ThrowNewComponent } from './throw/throw-new/throw-new.component';
 import { MyBoardComponent } from './throw/my-board/my-board.component';
 import { MyFavoritesComponent } from './throw/my-favorites/my-favorites.component';
 import { LottEnvironmentComponent } from './lott-environment/lott-environment.component';
+import { PhaseparamNewComponent } from './params/phaseparam-new/phaseparam-new.component';
+import { LotterieparamNewComponent } from './params/lotterieparam-new/lotterieparam-new.component';
 //import { DashboardComponent }   from './dashboard/dashboard.component';
 
 const routes: Routes = [
@@ -30,6 +32,8 @@ const routes: Routes = [
   { path: 'winningparam/:id', component: WinningparamDetailComponent },
   { path: 'lotterieparam/:id', component: LotterieparamDetailComponent },
   { path: 'phaseparam/:id', component: PhaseparamDetailComponent },
+  { path: 'newphaseparam', component: PhaseparamNewComponent },
+  { path: 'newlotterieparam', component: LotterieparamNewComponent },
 ];
 
 @NgModule({
