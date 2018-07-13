@@ -2,7 +2,7 @@
 pragma solidity ^0.4.23;
 
 // small addition on erc223 for lotterie lib
-import './ERC223-token-standard/token/ERC223/ERC223_interface.sol';
+import '../ERC223-token-standard/token/ERC223/ERC223_interface.sol';
 
 
 contract ERC223L is ERC223Interface {

@@ -1,8 +1,8 @@
 
 pragma solidity ^0.4.23;
 
-import "./LotterieThrow721.sol";
-import './zeppelin/token/ERC20/ERC20.sol';
+import "../721/LotterieThrow721.sol";
+import '../../zeppelin/token/ERC20/ERC20.sol';
 
 contract LotterieThrow20 is LotterieThrow721 {
 

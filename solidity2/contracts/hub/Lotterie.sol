@@ -1,15 +1,15 @@
 pragma solidity ^0.4.23;
 //pragma experimental ABIEncoderV2;
 
-import "./zeppelin/ownership/Ownable.sol";
-import "./LotterieThrowEther.sol";
-import "./LotterieThrow223.sol";
-import "./LotterieThrow20.sol";
-import "./LotterieThrow721.sol";
+import "../zeppelin/ownership/Ownable.sol";
+import "../throw/ether/LotterieThrowEther.sol";
+import "../throw/223/LotterieThrow223.sol";
+import "../throw/20/LotterieThrow20.sol";
+import "../throw/721/LotterieThrow721.sol";
 import "./LotterieThrowProxy.sol";
 import "./LotterieParams.sol";
-import "./Author.sol";
-import "./LotterieIf.sol";
+import "../throw/Author.sol";
+import "../if/LotterieIf.sol";
 
 // Contract for Lotterie
 contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import { LotterieConf as LC } from "./LotterieConf.sol";
+import { LotterieConf as LC } from "../LotterieConf.sol";
 
 
 contract LotterieParams  {

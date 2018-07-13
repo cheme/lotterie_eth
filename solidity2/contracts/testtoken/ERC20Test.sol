@@ -1,7 +1,7 @@
 
 pragma solidity ^0.4.23;
 
-import './zeppelin/token/ERC20/StandardToken.sol';
+import '../zeppelin/token/ERC20/StandardToken.sol';
 
 contract ERC20Test is StandardToken {
  function name() constant returns (string _name) {

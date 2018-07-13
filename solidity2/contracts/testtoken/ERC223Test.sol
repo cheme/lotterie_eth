@@ -1,7 +1,7 @@
 
 pragma solidity ^0.4.23;
 
-import './ERC223-token-standard/token/ERC223/ERC223_token.sol';
+import '../ERC223-token-standard/token/ERC223/ERC223_token.sol';
 
 contract ERC223Test is ERC223Token {
  function name() constant returns (string _name) {

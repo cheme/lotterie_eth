@@ -1,7 +1,7 @@
 
 pragma solidity ^0.4.23;
 
-import "./LotterieThrow721.sol";
+import "../721/LotterieThrow721.sol";
 
 
 contract LotterieThrowEther is LotterieThrow721 {

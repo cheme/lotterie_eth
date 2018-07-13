@@ -2,7 +2,7 @@ pragma solidity ^0.4.23;
 //pragma experimental ABIEncoderV2;
 
 import "./LotterieBase.sol";
-import { LotterieConf as LC } from "./LotterieConf.sol";
+import { LotterieConf as LC } from "../LotterieConf.sol";
 
 // phase related methods
 contract LotteriePhases is LotterieBase {

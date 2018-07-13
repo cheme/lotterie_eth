@@ -1,7 +1,7 @@
 
 pragma solidity ^0.4.23;
 
-import './zeppelin/token/ERC721/ERC721Token.sol';
+import '../zeppelin/token/ERC721/ERC721Token.sol';
 
 contract ERC721Test is ERC721Token {
   constructor(uint nb)

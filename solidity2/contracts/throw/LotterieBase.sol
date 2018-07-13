@@ -1,9 +1,9 @@
 pragma solidity ^0.4.23;
 //pragma experimental ABIEncoderV2;
 
-import "./LotterieLib.sol";
+import "../LotterieLib.sol";
 import "./LotterieParam.sol";
-import { LotterieConf as LC } from "./LotterieConf.sol";
+import { LotterieConf as LC } from "../LotterieConf.sol";
 
 // Contract for Lotterie
 

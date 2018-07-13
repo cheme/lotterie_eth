@@ -1,6 +1,7 @@
 
 pragma solidity ^0.4.23;
-import { LotterieBase as LB } from "./LotterieBase.sol";
+import { LotterieBase as LB } from "./throw/LotterieBase.sol";
+
 // TODO check times are > a minute
 // TODO check absolute times are consecutive
 // TODO check if transformed to contract (use call instead of delegatecall) in term of cost

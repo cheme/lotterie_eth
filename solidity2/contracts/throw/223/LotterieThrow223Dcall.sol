@@ -2,9 +2,9 @@
 
 pragma solidity ^0.4.23;
 
-import "./LotterieThrow721.sol";
-import './ERC223-token-standard/token/ERC223/ERC223_interface.sol';
-import './ERC223-token-standard/token/ERC223/ERC223_receiving_contract.sol';
+import "../721/LotterieThrow721.sol";
+import '../../ERC223-token-standard/token/ERC223/ERC223_interface.sol';
+import '../../ERC223-token-standard/token/ERC223/ERC223_receiving_contract.sol';
 
 contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
 

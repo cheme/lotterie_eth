@@ -3,8 +3,8 @@ pragma solidity ^0.4.23;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../contracts/Lotterie.sol";
-import "../contracts/LotterieBase.sol";
+import "../contracts/hub/Lotterie.sol";
+import "../contracts/throw/LotterieBase.sol";
 import {LotterieConf as LC} from "../contracts/LotterieConf.sol";
 
 contract TestLotterie {

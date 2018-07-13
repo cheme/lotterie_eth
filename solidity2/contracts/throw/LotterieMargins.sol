@@ -3,8 +3,8 @@ pragma solidity ^0.4.23;
 
 import "./Thrower.sol";
 import "./FromLotterie.sol";
-import "./LotteriePayment.sol";
-import { LotterieConf as LC } from "./LotterieConf.sol";
+import "../LotteriePayment.sol";
+import { LotterieConf as LC } from "../LotterieConf.sol";
 import "./LotteriePhases.sol";
 
 contract LotterieMargins is Thrower, LotteriePhases, FromLotterie, LotteriePayment {

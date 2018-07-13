@@ -1,6 +1,4 @@
 
-// TODO template in a before all!!!
-
 import lotterieLib from '../index.js';
 
 const w3abi = require ('web3-eth-abi');
@@ -139,7 +137,7 @@ contract('Lotterie', function(accounts) {
   });*/
 
 
-  dis("should add params", async function() {
+  it("should add params", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
@@ -173,7 +171,7 @@ contract('Lotterie', function(accounts) {
   });
 
 
-  dis("should withdraw for some account", async function() {
+  it("should withdraw for some account", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
@@ -292,7 +290,7 @@ contract('Lotterie', function(accounts) {
 
   });
 
-  dis("should withdraw all", async function() {
+  it("should withdraw all", async function() {
     var account_owner = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
@@ -334,7 +332,7 @@ contract('Lotterie', function(accounts) {
     });
   });
 
-  dis("should not allow margin over 100%", async function() {
+  it("should not allow margin over 100%", async function() {
     var account_one = accounts[0];
     var account_contract_author = accounts[1];
     var template = await LotterieThrowTemplate.new();
@@ -361,7 +359,7 @@ contract('Lotterie', function(accounts) {
     ));
   });
 
-  dis("calculate correct commitments", async function() {
+  it("calculate correct commitments", async function() {
     var template = await LotterieThrowTemplate.new();
     var template223 = await LotterieThrowTemplate223.new();
     var template20 = await LotterieThrowTemplate20.new();
@@ -379,7 +377,7 @@ contract('Lotterie', function(accounts) {
     checkit("0x5cee5c91812f9cf35e8b05c524993810a78f25fd7e87ae61008433d43e27bb0");
   });
 
-  dis("calculate correct scores", async function() {
+  it("calculate correct scores", async function() {
     var template = await LotterieThrowTemplate.new();
     var template223 = await LotterieThrowTemplate223.new();
     var template20 = await LotterieThrowTemplate20.new();
@@ -396,7 +394,7 @@ contract('Lotterie', function(accounts) {
 
 
   // TODO test a lot more than the name : split it using scenario1 functions
-  dis("switch phases on user tresholds", async function() {
+  it("switch phases on user tresholds", async function() {
       
     var myConf = Object.assign({}, conf1);
     myConf.maxParticipant = 5;
@@ -792,7 +790,7 @@ contract('Lotterie', function(accounts) {
     assert.equal(web3.toHex(await erc223.balanceOf(account_owner)), web3.toHex(initBalance + ((1000+500)/4)));
 
   });
-  dis("supports erc20", async function() {
+  it("supports erc20", async function() {
       
     var myConf = Object.assign({}, conf1);
     myConf.maxParticipant = 5;

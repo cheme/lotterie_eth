@@ -6,7 +6,7 @@ A toy contract to run some lotterie (pseudo-random choice of a winner) on ethere
 
 In 'solidity2' is the contracts and a small npm lib.
 
-In 'lotterie-hub' is an angular Dapp (me trying angular, not really a good web app, still a basic sample interface).
+In 'lotterie-hub' is an angular Dapp (me trying angular, not really a good web app, probably a lot of leaking subscribtion, very inconsistent, still a basic sample interface).
 
 In 'pwasm', some initial testing of parity wasm contract, totally incomplete and unmaintained.
 

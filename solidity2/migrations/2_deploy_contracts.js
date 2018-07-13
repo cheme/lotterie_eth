@@ -7,13 +7,18 @@ var LotterieThrow20 = artifacts.require("./LotterieThrow20.sol");
 const LotterieAuthor = '0x0000000000000000000000000000000000000000';
 
 module.exports = function(deployer) {
-  deployer.deploy(LotterieConf);
+  deployer.deploy(LotterieConf).then(lc => {
   deployer.link(LotterieConf, LotterieThrow20);
-  deployer.deploy(LotterieThrow20);
+  return deployer.deploy(LotterieThrow20).then(l20 => {
   deployer.link(LotterieConf, LotterieThrow223);
-  deployer.deploy(LotterieThrow223);
+  return deployer.deploy(LotterieThrow223).then(() => {
   deployer.link(LotterieConf, LotterieThrowEther);
-  deployer.deploy(LotterieThrowEther);
+  return deployer.deploy(LotterieThrowEther).then(() => {
   deployer.link(LotterieConf, Lotterie);
-  deployer.deploy(Lotterie,LotterieAuthor,LotterieAuthor,LotterieAuthor,LotterieAuthor); // TODO way to get the throw template addresses!!!
+console.log(LotterieThrowEther.address);
+console.log(LotterieThrow20.address);
+console.log(LotterieThrow223.address);
+  return deployer.deploy(Lotterie,LotterieAuthor,LotterieThrowEther.address,LotterieThrow223.address,LotterieThrow20.address);
+  });});});});
 };
+

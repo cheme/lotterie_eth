@@ -1,10 +1,10 @@
 pragma solidity ^0.4.23;
 
-import "./LotterieThrow.sol";
-import "./LotterieIf.sol";
+import "../LotterieThrow.sol";
+import "../../if/LotterieIf.sol";
 //import './zeppelin/token/ERC20/ERC20.sol';
-import './zeppelin/token/ERC721/ERC721Receiver.sol';
-import './zeppelin/token/ERC721/ERC721.sol';
+import '../../zeppelin/token/ERC721/ERC721Receiver.sol';
+import '../../zeppelin/token/ERC721/ERC721.sol';
 
 contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
   uint16 public nbERC721;
