@@ -10,6 +10,8 @@ In 'lotterie-hub' is an angular Dapp (me trying angular, not really a good web a
 
 In 'pwasm', some initial testing of parity wasm contract, totally incomplete and unmaintained.
 
+Note also that switch between phase is done at the first action of the phase to have a more determinist behavior in term of contract cost.
+
 Status
 ------
 
@@ -93,9 +95,49 @@ Configuring is done :
 - when starting a lotterie throw by referencing existing configuration stored in the main contract (the main contract allow to create new configuration but you can reuse some if you know what you are doing (main point should be to avoid reusing phase param with absolute date as that is very likely to not be what you wanted)) :
 
 ### Lotterie params
-
+ - address authorDapp : the dapp author address, it is up to the dapp author to ensure that new throw contract build through his dapp uses the right address. It could be use to define other kind of margins. Note that there is no way to ensure that the right address is use by the thrower.
+ -  uint winningParamsId : the id of the wining params to use (see next section).
+ -  uint minBidValue : the minimum bid for participating. Min bid at 0 makes sense for case where there is already something to win (an initial bid value or some erc721).
+ -  uint biddingTreshold : if not 0, it defines a treshold that will block any new bidding, and trigger a switch to the next phase. It is a maximum sum of bidding value (initial biding is use in this sum).
+ -  uint64 maxParticipant : if not 0, it defines a treshould that will block any new bidding and trigger a switch to the next phase. It is a maximum number of participant.
+ -  bool doSalt : if false the calculation of the throw final seed does not include block related salt information and only is calculated by doing xor operation with all revealed participant seed. It is a bit less costy but I do not think it is a good idea to deactivate salt; maybe to be closer to a game than a random throw (making it fun to try to 'cheat').
+ 
 ### Winning params
+ - uint16 nbWinners : the number of winners for the throw. Having many winners involve additional cost for registering a win and for withdrawing a win. Technically for the nth position you have to iterate on a linked list structure which is quite costy (the number 1 winners is not impacted). To make it clear that low number of winners is better, we use uint16 type and there is a hard limit at 254 winners.
+ - uint16 nbWinnerMinRatio : a value from 0 to 100 that is a maximal percentage of winners : for instance if 50% and and 5 winners and there is only 6 Participant, we do not have 5 winners but 50% of 6 participant equal 3 winners. If we would have 12 participant we would have 5 winners because 12 * 50% = 6 is bigger than 5.
+ - WinningDistribution distribution : an enum for the kind of distribution between winners. Currently the only possible value is 0 and is an even distribution (every winners win the same thing : winning prize = (total bid amount - margins) / nbwinners.
 
+ 
 ### Phase params
+Note that absolute dates are a bit awkward because the configuration will certainly be usable only once.
+
+ -  CashoutEndMode participationStartMode : Absolute (0) or Relative (1) : if absolute the treshold defines a fix date in time (unix time in secs from 1970), if relative it is a date calculated from the moment of the previous phase switch plus a duration in secs.
+ -  uint participationStartTreshold : value defining at which time participation phase start (bidding phase ends). Please note that if a treshold from lotterie params is reached before, the phase switch earlier.
+ -  ParticipationEndModes participationEndMode : mode for switching from participation phase to cashout phase (win registering phase). AbsoluteEager(0), RelativeEager(1), Absolute(2), Relative(3), similar to previous mode defs, but with Eager variant where we can switch to cashout before the date if every participation are revealed (every previously bid chose to participate and reveal their hidden seed).
+ -  uint participationEndValue : same as start treshold (absolute time in secs or relative from last phase switch)
+ -  CashoutEndMode cashoutEndMode : Absolute(0) or Relative(1), mode to switch to withdraw phase
+ -  uint cashoutEndValue : same as for previous phase, but to define the cashout (win registration) phase duration.
+ -  CashoutEndMode throwEndMode : final switch mode, indicates the end of the throw (end of the phase for withdrawing win for users). From that point the throw is in Off state and values (token and ether) could be withdrawned by the contract owner to solve some possible issue, or if the contract owner is an evil person to remunerate the owner. There is a hard limit of 4 weeks (may be to short in certain case for absolute defs).
+ -  uint throwEndValue : the duration up to the end of the contract. There is a hard limit of 10 weeks (in relative it seems ok but in absolute it may be a bit short depending on the usecases).
+
+Globally there is also a 57 weeks hard limit on construct phase. Also phase switch are really done on the first action, but be aware that if you are the only winner and you wish to use this behaviour to postpone a withdraw (relative next phase end date is calculated from the actual phase switch writing), it is a wrong idea because any user can pay for the phase switch without doing an actual action (there is a public method for that).
+
 
 ### Throw related info
+
+Aka init throw methods parameter (there is 3 different initThrow fn depending on erc20, 223 or ether usage).
+
+  - lotterie params id (quite obvious)
+  - Phase params id (same a pointer to the conf to use to initiate my throw
+  - uint16 nb721 : if you want to attach erc721 as winning prize (only possible with one erc21 for the first winner, another for the second winner... until nb721 is reached), define the number of prize with this parameters. If this value is more than zero, the construct phase will require additional actions (adding those erc721 (one tx per items)).
+  - address token : for erc20 or 223 it is the address of the erc contract.
+  - bool waitValue : for erc20 or 223 the value is send in a second phase (in construct state), so putting this to true makes the throw delay until we send some token (there is a way to force start if we change our mind). For ether the initialBidValue is simply the number of ether send in the transaction.
+  - uint32 ownerMargin : margin for owner of the hub contract
+    uint32 authorContractMargin : margin for the author of the contract (author address set in hub when deploying the hub contract)
+  - uint32 authorDappMargin : margin for the dapp author, the dapp author is defined in the associated lotterie param
+  - uint32 throwerMargin : margin for the initiator of the throw, it is the account with which we called initThrow on the hub (the traditional 'owner' of the throw contract renamed to 'thrower' because 'owner' is already the 'owner' of the hub).
+
+Warning, all those uint32 values represents a percentage of the totalbid sum (init bid value included), and the percentage is not a number from 0 to 100 but a number from 0 to max(uint32), so we get a good precision. So in the case of a throw were the user mainly bid for the ERC721 prizes, it makes sense give 100% to the thrower : in this case the value to use is not 100 but (2^32 - 1).
+
+Please not that there is no minimal margin value so by default it should be some 0 margin throw. It is up to the participant to favor throw with responsible author and thrower margins (or not).
+ 

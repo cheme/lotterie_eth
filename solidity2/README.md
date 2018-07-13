@@ -10,7 +10,8 @@ Global design is simple:
  - LotterieThrow20.sol : for erc 20 token
  - LotterieConf.sol : a lib (not that usefull)
 
-The first implementation was even simplier (all on a single contract), but to reduce cost for participant (not for the thrower) the split is good.
+The first implementation was even simplier (all on a single contract), but to reduce cost for participant (not for the thrower) the split is good. It explains why we still have an internal Throw struct in every Throw, it should be remove in future version.
+
 A branch with every participation in a single contract could be try in the future to compare costs.
 
 The contract makes use of [https://gist.github.com/GNSPS/ba7b88565c947cfd781d44cf469c2ddb](https://gist.github.com/GNSPS/ba7b88565c947cfd781d44cf469c2ddb) to reduce contract instantiation cost.
@@ -58,4 +59,7 @@ There is a lot of parasite system log during test that should be cleaned in the 
 
 The npm lib do not provide tests, maybe when truffle includes an updated web3 dependency or when I stop to wait for it (running independant test).
 
+## Issue
+
+The contract do too much things and is too big, plus espacially not great to audit linked list structure.
 
