@@ -109,7 +109,7 @@ contract LotterieThrow is LotterieMargins {
   ) external forParticipation(participationId,ParticipationState.BidSent,Phase.Participation) {
     Participation storage part = participations[participationId];
     // check seed (phase and throw checked in forParticipation)
-    require(part.seed == uint(keccak256(hiddenSeed)));
+    require(part.seed == uint(keccak256(abi.encodePacked(hiddenSeed))));
     // update
     thr.numberOfRevealParticipation += 1;
     if (param.doSalt) {
@@ -392,7 +392,7 @@ contract LotterieThrow is LotterieMargins {
      emit Win(participationId, msg.sender, uint16(result) + 1, amount);
   }
 
-  function getWinningPos(uint64 participationId) internal returns (uint) {
+  function getWinningPos(uint64 participationId) internal view returns (uint) {
 
      uint16 ptr = thr.results.firstWinner;
      uint result = 0;

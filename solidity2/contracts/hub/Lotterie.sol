@@ -306,7 +306,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   // warning this function should not be use outside of testing 
   // (especially not for calculing bid commitment when using non local ethereum instance)
   function checkCommitment(uint256 hiddenSeed) pure external returns(uint) {
-    return (uint(keccak256(hiddenSeed)));
+    return (uint(keccak256(abi.encodePacked(hiddenSeed))));
   }
   // mainly for testing or asserting correct implementation
   function checkScore(uint256 hiddenSeed,uint256 currentSeed) pure external returns(uint) {

@@ -25,7 +25,7 @@ contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
     token.transfer(msg.sender,amount);
   }
 
-  function tokenFallback(address _from, uint _value, bytes _data) {
+  function tokenFallback(address _from, uint _value, bytes _data) public {
     // code does not allow 0 (0 indicates direct api call)
     require(_value != 0);
     require(msg.sender == address(token));

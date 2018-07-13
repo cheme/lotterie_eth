@@ -43,7 +43,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
 
   function onERC721Received(
     address _operator,
-    address _from,
+    address,// _from,
     uint256 _tokenId,
     bytes _data
   )
@@ -211,7 +211,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
   event Win721(uint64 participationId, address winner, uint ix721);
 
   function withdraw721(uint64 participationId, uint result) internal {
-    PrizeErc721 p = erc721s[result];
+    PrizeErc721 storage p = erc721s[result];
     ERC721(p.token).transferFrom(address(this),msg.sender,p.tId);
     emit Win721(participationId, msg.sender, result);
   }
@@ -220,7 +220,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
     forThrowStorage(Phase.Off) 
     onlyOwner
     external {
-    PrizeErc721 p = erc721s[ix721];
+    PrizeErc721 storage p = erc721s[ix721];
     ERC721(p.token).transferFrom(address(this),msg.sender,p.tId);
   }
 

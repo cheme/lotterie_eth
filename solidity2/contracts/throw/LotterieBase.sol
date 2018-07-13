@@ -106,7 +106,7 @@ contract LotterieBase is LotterieLib, LotterieParam {
 
   function challengeParticipation(uint64 participationId, uint256 hiddenSeed) view external returns(uint,uint) {
     Participation storage part = participations[participationId];
-    return (part.seed,uint(keccak256(hiddenSeed)));
+    return (part.seed,uint(keccak256(abi.encodePacked(hiddenSeed))));
   }
 
   function calcPositionWin(LC.WinningDistribution distribution,uint16 totalWin, uint base) public pure returns(uint) {

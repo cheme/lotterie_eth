@@ -136,7 +136,7 @@ library LotterieConf {
     //uint no = now;
     uint nb = block.number;
     uint lastblockhashused = uint(blockhash(nb - 1));
-    return uint(keccak256(lastblockhashused ^ nb ^ now));
+    return uint(keccak256(abi.encodePacked(lastblockhashused ^ nb ^ now)));
   }
 
   function calcMargin(uint totalBidValue, uint32 margin) public pure returns(uint) {
