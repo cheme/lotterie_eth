@@ -43,6 +43,23 @@ LotterieParams.sol : parameters management (to add new throw configuration)
    + Author : author role mgmt
    + LotterieIf : interface for being call from throw contracts
 
+### Thought on miners tampering
+
+Obviously the biggest weakness of this system is the possibility for the miner of the last block for the participation revealing to chose which transaction to include.
+So a big mining pool just need to check results with every combination until one of its participation does win.
+
+So if that kind of contract start to be a thing, there is high probability that miners pool could let users subcontract in order to favorize their user participation. At the end users should subcontract with every mining pools and the system end up being a bet on the wining pool. This is not viable as pools will margin on it, still this kind of rule shift can be interesting.
+
+There should be some way to try to mitigate it (for instance trying to add some incertainty in the end of revealed block : difficult because miners are the first to see the possible resulting state : on a determinist chain it seems impossible).
+
+Yet, when looking at the size of the address space, the impact of a miners might not be as bad as it seems : doing some math could be a good idea here. 
+
+There is a lot of other things that could go wrong due to miners, starting with DOSing winning registration.
+
+So as for most of blockchain application centralization of miners is an issue.
+
+Also note that the miner case is the easiest to see but we can also consider pools of participant subcontracting in order to increase their winning probability (the race at the last blocks is way more uncomfortable here).
+
 ## Tooling
 
 I use truffle (with old web3 version at the time of writting it), it got a few issues when building, many time its a good idea to delete build dir then truffle compile.
