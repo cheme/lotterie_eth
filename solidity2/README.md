@@ -52,13 +52,15 @@ So if that kind of contract start to be a thing, there is high probability that 
 
 There should be some way to try to mitigate it (for instance trying to add some incertainty in the end of revealed block : difficult because miners are the first to see the possible resulting state : on a determinist chain it seems impossible).
 
-Yet, when looking at the size of the address space, the impact of a miners might not be as bad as it seems : doing some math could be a good idea here. 
+Yet, when looking at the size of the address space, the impact of a miners might not be as bad as it seems : doing some math could be a good idea here. It would be interesting to be able to put a number on the miner advantage (100% he dos all participation revealed but in this case he need to be the miner of all blocks for the phase).
 
 There is a lot of other things that could go wrong due to miners, starting with DOSing winning registration.
 
 So as for most of blockchain application centralization of miners is an issue.
 
 Also note that the miner case is the easiest to see but we can also consider pools of participant subcontracting in order to increase their winning probability (the race at the last blocks is way more uncomfortable here).
+Participant subcontracting is probably a more realistic attack model.
+
 
 ## Tooling
 

@@ -92,7 +92,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   // start a thow
   // @payable value is added as inital win value (that way you can do free lotterie with something to win with minBidValue to 0 and not participating)
   function initThrow (
-    uint16 nb721,
+    uint8 nb721,
     uint paramsId,
     uint paramsPhaseId,
 
@@ -178,7 +178,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
   function initThrow223 (
     bool waitValue,
-    uint16 nb721,
+    uint8 nb721,
     address token,
     uint paramsId,
     uint paramsPhaseId,
@@ -241,7 +241,7 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
   }
   function initThrow20 (
     bool waitValue,
-    uint16 nb721,
+    uint8 nb721,
     address token,
     uint paramsId,
     uint paramsPhaseId,
@@ -315,8 +315,8 @@ contract Lotterie is Ownable, LotterieParams, Author, LotterieIf {
 
   // TODO find a way to declare and address with two If at the same time and move this to params implementing paramsif
   function getWinningParams(uint ix) external returns(
-    uint16,
-    uint16,
+    uint8,
+    uint8,
     uint8
   ) {
     return(

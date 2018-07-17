@@ -86,8 +86,8 @@ contract LotterieParams  {
 
 
   function addWinningParams (
-    uint16 nbWinners,
-    uint16 nbWinnerMinRatio,
+    uint8 nbWinners,
+    uint8 nbWinnerMinRatio,
     uint8 distribution
   ) external {
     require(LC.validWinningParams(nbWinners,nbWinnerMinRatio));

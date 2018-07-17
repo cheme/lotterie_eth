@@ -79,9 +79,9 @@ contract LotterieBase is LotterieLib, LotterieParam {
   struct LotterieResult {
     uint totalBidValue;
     uint totalClaimedValue;
-    uint16 totalCashout;
+    uint8 totalCashout;
     // linked list over winners sort by rank
-    uint16 firstWinner;
+    uint8 firstWinner;
   }
 
   struct Winner {
@@ -91,7 +91,7 @@ contract LotterieBase is LotterieLib, LotterieParam {
     uint64 participationId;
     uint score;
     // winners is stored as a linked list (0 being null)
-    uint16 nextWinner;
+    uint8 nextWinner;
   }
 
   struct Participation {
@@ -109,7 +109,7 @@ contract LotterieBase is LotterieLib, LotterieParam {
     return (part.seed,uint(keccak256(abi.encodePacked(hiddenSeed))));
   }
 
-  function calcPositionWin(LC.WinningDistribution distribution,uint16 totalWin, uint base) public pure returns(uint) {
+  function calcPositionWin(LC.WinningDistribution distribution,uint8 totalWin, uint base) public pure returns(uint) {
     if (distribution == LC.WinningDistribution.Equal) {
       return base / uint(totalWin);
     }

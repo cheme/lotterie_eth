@@ -43,9 +43,9 @@ library LotterieConf {
   // rules for winning
   struct WinningParams {
     // Hard limit to 256 winners due to cost of accessing 256 position in linked storage
-    uint16 nbWinners;
+    uint8 nbWinners;
     // Percentage, If not enough participant to reach this ratio of , round down but one if result 0
-    uint16 nbWinnerMinRatio;
+    uint8 nbWinnerMinRatio;
     WinningDistribution distribution;
   }
 
@@ -121,11 +121,11 @@ library LotterieConf {
   }
 
 
-  function validWinningParams(uint16 nbWinners, uint16 nbWinnerMinRatio) public pure returns(bool) {
+  function validWinningParams(uint8 nbWinners, uint8 nbWinnerMinRatio) public pure returns(bool) {
     if (nbWinnerMinRatio > 100) {
       return false;
     }
-    // max u16 value is use as uninitialized linked list pointer
+    // max u8 value is use as uninitialized linked list pointer
     if (nbWinners == 0 || nbWinners == 255) {
       return false;
     }

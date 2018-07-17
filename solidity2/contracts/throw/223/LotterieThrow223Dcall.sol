@@ -46,7 +46,7 @@ contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
 
   function deffered_constructor(
     bool waitValue,
-    uint16 nb721,
+    uint8 nb721,
     address _token,
     uint paramsId,
     uint paramsPhaseId,

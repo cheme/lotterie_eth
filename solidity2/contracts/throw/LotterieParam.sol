@@ -9,7 +9,7 @@ contract LotterieParam {
   LC.LotteriePhaseParams public phaseParam;
   LC.WinningParams public winningParam;
 
-  function getWinningParam() public view returns(uint16, uint16, uint8) {
+  function getWinningParam() public view returns(uint8, uint8, uint8) {
     return (winningParam.nbWinners,winningParam.nbWinnerMinRatio, uint8(winningParam.distribution));
   }
 

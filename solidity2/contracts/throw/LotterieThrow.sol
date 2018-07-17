@@ -10,7 +10,7 @@ contract LotterieThrow is LotterieMargins {
 
   event NewParticipation(uint64 participationId,uint bid);
   // win event
-  event Win(uint64 participationId, address winner, uint16 position, uint amount);
+  event Win(uint64 participationId, address winner, uint8 position, uint amount);
   // TODO index it and info for list of throw : harder than expected
   // probably need date to limit to a period range (which will be indexed)
   event NewThrow(uint throwId);
@@ -154,8 +154,8 @@ contract LotterieThrow is LotterieMargins {
   // position is final calculated position; position is 0 for winner (-1)
   function cashOut (
     uint64 participationId,
-    uint16 startPossibleIx
-    //uint16 position
+    uint8 startPossibleIx
+    //uint8 position
   ) external 
   {
     // using fn instead of modifier due to stack size
@@ -168,9 +168,9 @@ contract LotterieThrow is LotterieMargins {
     
     require(startPossibleIx <= winners.length);
     Winner storage w;
-    uint16 ptr = thr.results.firstWinner;
-    uint16 iter = 0;
-    uint16 before = 255;
+    uint8 ptr = thr.results.firstWinner;
+    uint8 iter = 0;
+    uint8 before = 255;
     if (startPossibleIx > 0) {
       require(ptr != 255);
       for (;ptr != 255 && iter < startPossibleIx; iter++) {
@@ -201,7 +201,7 @@ contract LotterieThrow is LotterieMargins {
         ptr = w.nextWinner;
       }
     }
-    uint16 next = 255;
+    uint8 next = 255;
     // next TODO include in loop
     if (before == 255) {
       next = thr.results.firstWinner;
@@ -219,7 +219,7 @@ contract LotterieThrow is LotterieMargins {
         score : myScore,
         nextWinner : next
       }));
-      iter = uint16(winners.length) - 1;
+      iter = uint8(winners.length - 1);
     } else {
       for (; w.nextWinner != 255 && iter < thr.results.totalCashout; iter++) {
         ptr = w.nextWinner;
@@ -258,7 +258,7 @@ contract LotterieThrow is LotterieMargins {
   {
      require(winnerIx < winners.length);
      Winner storage w;
-     uint16 ptr = thr.results.firstWinner;
+     uint8 ptr = thr.results.firstWinner;
      for (uint iter = 0; ptr != 255 && 
        iter < winnerIx;++iter) {
        require(ptr < winners.length);
@@ -276,7 +276,7 @@ contract LotterieThrow is LotterieMargins {
      uint result = 0;
      // go through linked list
 
-     uint16 ptr = thr.results.firstWinner;
+     uint8 ptr = thr.results.firstWinner;
 
      for (; ptr != 255 && 
        result < thr.results.totalCashout;++result) {
@@ -298,7 +298,7 @@ contract LotterieThrow is LotterieMargins {
      Participation storage part = participations[participationId];
      uint myScore = part.seed ^ thr.currentSeed;
 
-     uint16 ptr = thr.results.firstWinner;
+     uint8 ptr = thr.results.firstWinner;
 
      for (; ptr != 255 && 
        result < thr.results.totalCashout;++result) {
@@ -321,7 +321,7 @@ contract LotterieThrow is LotterieMargins {
      require(participationId < participations.length);
      // go through linked list
 
-     uint16 ptr = thr.results.firstWinner;
+     uint8 ptr = thr.results.firstWinner;
 
 
      uint result = 0;
@@ -389,12 +389,12 @@ contract LotterieThrow is LotterieMargins {
        // msg.sender.transfer(amount);
        withdrawAmount(amount);
      }
-     emit Win(participationId, msg.sender, uint16(result) + 1, amount);
+     emit Win(participationId, msg.sender, uint8(result) + 1, amount);
   }
 
   function getWinningPos(uint64 participationId) internal view returns (uint) {
 
-     uint16 ptr = thr.results.firstWinner;
+     uint8 ptr = thr.results.firstWinner;
      uint result = 0;
      for (; ptr != 255 && result < thr.results.totalCashout; ++result) {
        require(ptr < winners.length);

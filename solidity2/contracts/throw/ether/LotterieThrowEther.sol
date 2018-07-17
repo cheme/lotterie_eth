@@ -19,7 +19,7 @@ contract LotterieThrowEther is LotterieThrow721 {
     msg.sender.transfer(amount);
   }
   function deffered_constructor (
-    uint16 nb721,
+    uint8 nb721,
     uint paramsId,
     uint paramsPhaseId,
     uint32 ownerMargin,

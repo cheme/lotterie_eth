@@ -48,7 +48,7 @@ contract LotteriePhases is LotterieBase {
     Phase currentPhase = forThrowStorageMyPhase();
     require(currentPhase == throwPhase);
   }
-  function totalCashout() external view returns (uint16) {
+  function totalCashout() external view returns (uint8) {
     Phase currentPhase = getCurrentPhase();
     if (currentPhase == Phase.Cashout) {
       return (calcTotalCashout());
@@ -57,15 +57,15 @@ contract LotteriePhases is LotterieBase {
   }
 
   // TODO assert it is similar cost wise as a macro
-  function calcTotalCashout() internal view returns (uint16) {
-       uint ratioBidWinner = uint(thr.numberOfBid) * winningParam.nbWinnerMinRatio / 100;
-      uint16 rcashout;
+  function calcTotalCashout() internal view returns (uint8) {
+      uint ratioBidWinner = uint(thr.numberOfBid) * winningParam.nbWinnerMinRatio / 100;
+      uint8 rcashout;
       // calculate nbCashout
       if (ratioBidWinner < uint(winningParam.nbWinners)) {
          if (ratioBidWinner == 0) {
            rcashout = 1;
          } else {
-           rcashout = uint16(ratioBidWinner);
+           rcashout = uint8(ratioBidWinner);
          }
       } else {
         rcashout = winningParam.nbWinners;

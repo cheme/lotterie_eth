@@ -7,7 +7,7 @@ import '../../zeppelin/token/ERC721/ERC721Receiver.sol';
 import '../../zeppelin/token/ERC721/ERC721.sol';
 
 contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
-  uint16 public nbERC721;
+  uint8 public nbERC721;
   struct PrizeErc721 {
     address token;
     uint256 tId;
@@ -18,7 +18,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
     return (erc721s.length);
   }
 
-  function prizeErc721(uint16 ix) external view returns(address, uint256) {
+  function prizeErc721(uint8 ix) external view returns(address, uint256) {
     return (erc721s[uint(ix)].token,erc721s[uint(ix)].tId);
   }
 
@@ -86,7 +86,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
   function internal_deffered_constructor(
 
     uint amount,
-    uint16 _nbERC721,
+    uint8 _nbERC721,
     uint paramsId,
     uint paramsPhaseId,
 

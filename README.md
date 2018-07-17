@@ -4,6 +4,8 @@ lotterie-eth
 
 A toy contract to run some lotterie (pseudo-random choice of a winner) on ethereum.
 
+Warning there is probably multiple ways to mess with those contracts (the more obvious one being the miner selecting the transactions in order to win).
+
 In 'solidity2' is the contracts and a small npm lib.
 
 In 'lotterie-hub' is an angular Dapp (me trying angular, not really a good web app, probably a lot of leaking subscribtion, very inconsistent, still a basic sample interface).

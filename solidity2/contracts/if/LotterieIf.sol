@@ -10,7 +10,7 @@ interface LotterieIf {
 
  
   function initThrow (
-    uint16 nb721,
+    uint8 nb721,
     uint paramsId,
     uint paramsPhaseId,
 
@@ -44,8 +44,8 @@ interface LotterieIf {
   );
 
  function getWinningParams(uint ix) external returns(
-    uint16,
-    uint16,
+    uint8,
+    uint8,
     uint8
   );
 
