@@ -1,6 +1,5 @@
 
 pragma solidity ^0.4.23;
-import { LotterieBase as LB } from "./throw/LotterieBase.sol";
 
 // TODO check times are > a minute
 // TODO check absolute times are consecutive

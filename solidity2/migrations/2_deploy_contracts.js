@@ -4,7 +4,7 @@ var Lotterie = artifacts.require("./Lotterie.sol");
 var LotterieThrowEther = artifacts.require("./LotterieThrowEther.sol");
 var LotterieThrow223 = artifacts.require("./LotterieThrow223.sol");
 var LotterieThrow20 = artifacts.require("./LotterieThrow20.sol");
-const LotterieAuthor = '0x0000000000000000000000000000000000000000';
+const LotterieAuthor = '0x8d52c034ac92c8ea552a68044ce73c7a8058c8ad';
 
 module.exports = function(deployer) {
   deployer.deploy(LotterieConf).then(lc => {

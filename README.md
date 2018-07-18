@@ -25,7 +25,7 @@ I do not plan to deploy it on mainnet as it could be a liability (legally speaki
 
 Please note that after a long period the owner of the contract can have access to lost founds or token : so if the contract start to be use you should probably chose one where the owner is well known.
 
-There is 4 kind of margin so you can use my addresses for dapp or contract author. My addresse is TODO, if the host environment is not hacked :)
+There is 4 kind of margin so you can use my addresses for dapp or contract author. One of my addresses is 0x8d52c034ac92c8ea552a68044ce73c7a8058c8ad, if the host environment of this readme is not hacked :)
 
 Currently it needs some solid testing, and you are more than welcome for experimenting on kovan.
 

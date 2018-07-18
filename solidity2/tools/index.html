@@ -1,0 +1,33 @@
+<html>
+  <header>
+    <script>
+
+function buf2hex(buffer) { // buffer is an ArrayBuffer
+  return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
+}
+
+      let xhr = new XMLHttpRequest();
+      xhr.responseType = 'javascript';
+      xhr.onload = () => {
+        let js = xhr.response;
+
+        if (crypto.subtle.digest == null) {
+          console.error("non native sha 512");
+        } else {
+          crypto.subtle.digest('sha-512',(new TextEncoder()).encode(js)).then((hash) => {
+            console.log('hash : ' + buf2hex(hash));
+            eval(js);
+          });
+        }
+      };
+      xhr.open('GET',"./bundle.js");
+      xhr.send();
+    </script>
+
+    <!-- <script src="lightwallet.min.js"></script> -->
+  </header>
+  <body>
+          <button onclick="testlib.createAndSaveAccount()">Create Account</button>
+          <button onclick="testlib.run()">run</button>
+  </body>
+</html>
