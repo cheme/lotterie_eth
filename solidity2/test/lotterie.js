@@ -17,7 +17,7 @@ var ERC223Test = artifacts.require("./ERC223Test.sol");
 var ERC20Test = artifacts.require("./ERC20Test.sol");
 var ERC223ForTruffle = artifacts.require("./ERC223ForTruffle.sol");
 
-var LotterieConf = artifacts.require("./LotterieConf.sol");
+//var LotterieConf = artifacts.require("./LotterieConf.sol");
 // lotterilib calc commitment with web3 0.2
 function calcCommitment(hexstring) {
     if (hexstring.startsWith('0x')) {

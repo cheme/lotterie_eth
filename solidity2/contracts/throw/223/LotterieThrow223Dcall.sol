@@ -5,6 +5,7 @@ pragma solidity ^0.4.23;
 import "../721/LotterieThrow721.sol";
 import '../../ERC223-token-standard/token/ERC223/ERC223_interface.sol';
 import '../../ERC223-token-standard/token/ERC223/ERC223_receiving_contract.sol';
+import { ThrowLib as TL } from "../lib/ThrowLib.sol";
 
 contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
 
@@ -38,7 +39,7 @@ contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
     require(_value != 0);
     require(msg.sender == address(token));
     // corner case of possible phase switch (but if right call should not happen)
-    require(thr.currentPhase == Phase.Bidding || thr.currentPhase == Phase.Construct);
+    require(thr.currentPhase == TL.Phase.Bidding || thr.currentPhase == TL.Phase.Construct);
     currentAmount = _value;
     currentFrom = _from;
     require(address(this).delegatecall(_data));
@@ -71,7 +72,7 @@ contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
       throwerMargin
     );
     if (waitValue) {
-      thr.currentPhase = Phase.Construct;
+      thr.currentPhase = TL.Phase.Construct;
       waitingInitValue = true;
     }
   }
@@ -81,7 +82,7 @@ contract LotterieThrow223 is LotterieThrow721, ERC223ReceivingContract {
   public
   {
     require(currentFrom == thrower);
-    thr.currentPhase = Phase.Bidding;
+    thr.currentPhase = TL.Phase.Bidding;
     thr.results.totalBidValue = currentAmount;
     currentAmount = 0;
   }

@@ -9,6 +9,7 @@ Global design is simple:
  - LotterieThrow223.sol : for erc 223 token
  - LotterieThrow20.sol : for erc 20 token
  - LotterieConf.sol : a lib (not that usefull)
+ - ThrowLib.sol : lib to reduce size of phase code (contract code size reduction)
 
 The first implementation was even simplier (all on a single contract), but to reduce cost for participant (not for the thrower) the split is good. It explains why we still have an internal Throw struct in every Throw, it should be remove in future version.
 

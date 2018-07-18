@@ -3,6 +3,7 @@ pragma solidity ^0.4.23;
 
 import "./LotterieMargins.sol";
 import "./FromLotterie.sol";
+import { ThrowLib as TL } from "./lib/ThrowLib.sol";
 
 // Contract for Lotterie
 contract LotterieThrow is LotterieMargins {
@@ -78,26 +79,13 @@ contract LotterieThrow is LotterieMargins {
     thr.withdraws.ownerWithdrawned, thr.withdraws.authorContractWithdrawned, thr.withdraws.authorDappWithdrawned, thr.withdraws.throwerWithdrawned);
   }
 
-  // bid logic without payment processing
   function internal_bid (
     address _from,
     uint commitmentSeed,
     uint amount
-  ) internal forThrowStorage(Phase.Bidding) {
-    require(amount >= param.minBidValue);
-    if (amount > 0) {
-      thr.results.totalBidValue = thr.results.totalBidValue.add(amount);
-    }
-    thr.numberOfBid += 1;
-    uint64 participationId = uint64(participations.length);
-    Participation memory part = Participation({
-      from : _from,
-//      bid : amount,
-      seed : commitmentSeed,
-      state : ParticipationState.BidSent
-    });
-    participations.push(part);
-    emit NewParticipation(participationId,amount);
+  ) internal {
+
+    TL.internal_bid(_from,commitmentSeed,amount,thr,participations,param,phaseParam,winningParam);
   }
 
 
@@ -106,47 +94,23 @@ contract LotterieThrow is LotterieMargins {
   function revealParticipation (
     uint64 participationId,
     uint256 hiddenSeed
-  ) external forParticipation(participationId,ParticipationState.BidSent,Phase.Participation) {
-    Participation storage part = participations[participationId];
-    // check seed (phase and throw checked in forParticipation)
-    require(part.seed == uint(keccak256(abi.encodePacked(hiddenSeed))));
-    // update
-    thr.numberOfRevealParticipation += 1;
-    if (param.doSalt) {
-      uint salt = LC.salt();
-      thr.currentSeed = thr.currentSeed ^ hiddenSeed ^ salt;
-    } else {
-      thr.currentSeed = thr.currentSeed ^ hiddenSeed;
-    }
-    uint concealed = part.seed;
-    part.seed = hiddenSeed;
-    part.state = ParticipationState.Revealed;
-
-    emit Revealed(participationId,hiddenSeed,concealed);
-
+  ) external forParticipation(participationId,TL.ParticipationState.BidSent,TL.Phase.Participation) {
+    TL.Participation storage part = participations[participationId];
+    TL.revealParticipation (
+    participationId,
+    hiddenSeed,
+    param.doSalt,
+    thr,
+    part
+    );
   }
 
   // should not be use in dapp, log should be used
   function checkPositionHeavyCost(uint64 participationId)
    external view returns (uint)
-  {
-    Participation storage part = participations[participationId];
-    Phase calculatedNewPhase = getCurrentPhase();
-    require(calculatedNewPhase != Phase.Bidding);
-    require(calculatedNewPhase != Phase.Participation);
 
-    uint myScore = part.seed ^ thr.currentSeed;
-    uint position = thr.numberOfBid;
-    for(uint i = 0; i < participations.length; ++i) {
-      if (i != participationId) {
-        Participation storage pelse = participations[i];
-        uint pscore = pelse.seed ^ thr.currentSeed;
-        if (myScore > pscore || (myScore == pscore && participationId < i)) {
-          --position;
-        }
-      }
-    }
-    return (position);
+  {
+    return TL.checkPositionHeavyCost(participationId,thr,param,phaseParam,participations);
   }
   
  
@@ -157,86 +121,19 @@ contract LotterieThrow is LotterieMargins {
     uint8 startPossibleIx
     //uint8 position
   ) external 
+
+    forParticipation(participationId,TL.ParticipationState.Revealed,TL.Phase.Cashout)
   {
     // using fn instead of modifier due to stack size
-    forParticipationInternal(participationId,ParticipationState.Revealed,Phase.Cashout);
-    Participation storage part = participations[participationId];
-
-    part.state = ParticipationState.Cashout;
-
-    uint myScore = part.seed ^ thr.currentSeed;
-    
-    require(startPossibleIx <= winners.length);
-    Winner storage w;
-    uint8 ptr = thr.results.firstWinner;
-    uint8 iter = 0;
-    uint8 before = 255;
-    if (startPossibleIx > 0) {
-      require(ptr != 255);
-      for (;ptr != 255 && iter < startPossibleIx; iter++) {
-        w = winners[ptr];
-        before = ptr;
-        ptr = w.nextWinner;
-      }
-      //w = winners[before];
-      // compare with previous
-      // we need to check n-1 is superior 
-      // (otherwhise best score could take place of others)
-      // TODO remove those require when correctly tested (no cost gain currently)
-      require(myScore <= w.score);
-      if (w.score == myScore) {
-        require(participationId > w.participationId);
-      }
-    }
-    for (;
-      // not null ptr
-      ptr != 255 &&
-      // in result nb
-      iter < thr.results.totalCashout; iter++) {
-      w = winners[ptr];
-      if (myScore > w.score || (myScore == w.score && participationId < w.participationId)) {
-        break; 
-      } else {
-        before = ptr;
-        ptr = w.nextWinner;
-      }
-    }
-    uint8 next = 255;
-    // next TODO include in loop
-    if (before == 255) {
-      next = thr.results.firstWinner;
-    } else {
-      next = winners[before].nextWinner;
-    }
-
-
-    if (winners.length < thr.results.totalCashout) {
-      // initiate a cashout value if not all used
-      winners.push(Winner({
-        withdrawned : false,
-        totalPositionWin : calcPositionWin(winningParam.distribution,thr.results.totalCashout,thr.withdraws.winningBase), // TODO calculate winning part for next position
-        participationId : participationId,
-        score : myScore,
-        nextWinner : next
-      }));
-      iter = uint8(winners.length - 1);
-    } else {
-      for (; w.nextWinner != 255 && iter < thr.results.totalCashout; iter++) {
-        ptr = w.nextWinner;
-        w = winners[ptr];
-      }
-      w.participationId = participationId;
-      w.score = myScore;
-      w.nextWinner = next;
-      iter = ptr;
-    }
-
-    // insert
-    if (before == 255) {
-      thr.results.firstWinner = iter;
-    } else {
-      winners[before].nextWinner = iter;
-    }
+    TL.Participation storage part = participations[participationId];
+    TL.cashOut(
+      participationId,
+      startPossibleIx,
+      part,
+      thr,
+      winners,
+      winningParam.distribution
+      );
 
   }
 
@@ -245,6 +142,7 @@ contract LotterieThrow is LotterieMargins {
   {
      return (winners.length);
   }
+
   function fisrtWinner (
   ) view external returns (uint)
   {
@@ -256,18 +154,7 @@ contract LotterieThrow is LotterieMargins {
     uint winnerIx
   ) view external returns (bool,uint,uint)
   {
-     require(winnerIx < winners.length);
-     Winner storage w;
-     uint8 ptr = thr.results.firstWinner;
-     for (uint iter = 0; ptr != 255 && 
-       iter < winnerIx;++iter) {
-       require(ptr < winners.length);
-       w = winners[ptr];
-       ptr = w.nextWinner;
-     }
-     require(ptr != 255);
-     w = winners[ptr];
-     return (winners[winnerIx].withdrawned, w.participationId, w.score);
+     return TL.getWinner(winnerIx, thr, winners);
   }
 
   // TODO remove (redundant with other method)
@@ -281,7 +168,7 @@ contract LotterieThrow is LotterieMargins {
      for (; ptr != 255 && 
        result < thr.results.totalCashout;++result) {
        require(ptr < winners.length);
-       Winner storage w = winners[ptr];
+       TL.Winner storage w = winners[ptr];
        ptr = w.nextWinner;
      }
      
@@ -292,25 +179,7 @@ contract LotterieThrow is LotterieMargins {
   function currentIxAmongWinners (
     uint64 participationId
   ) view external returns(uint) {
-     require(participationId < participations.length);
-     uint result = 0;
-     // go through linked list
-     Participation storage part = participations[participationId];
-     uint myScore = part.seed ^ thr.currentSeed;
-
-     uint8 ptr = thr.results.firstWinner;
-
-     for (; ptr != 255 && 
-       result < thr.results.totalCashout;++result) {
-       require(ptr < winners.length);
-       Winner storage w = winners[ptr];
-       if (myScore > w.score || (myScore == w.score && participationId < w.participationId)) {
-         return (result);
-       }
-       ptr = w.nextWinner;
-     }
-     
-     return (result);
+     return TL.currentIxAmongWinners(participationId,thr,winners,participations);
   }
 
   // check the wining ix of a participation (after all cashout (phase end))
@@ -318,6 +187,7 @@ contract LotterieThrow is LotterieMargins {
   function positionAtPhaseEnd (
     uint64 participationId
   ) view external returns(uint) {
+//  return TL.positionAtPhaseEnd(participationId,thr,winners,participations.length);
      require(participationId < participations.length);
      // go through linked list
 
@@ -328,7 +198,7 @@ contract LotterieThrow is LotterieMargins {
      for (; ptr != 255 && 
        result < thr.results.totalCashout;++result) {
        require(ptr < winners.length);
-       Winner storage w = winners[ptr];
+       TL.Winner storage w = winners[ptr];
        if (w.participationId == participationId) {
          return (result + 1);
        }
@@ -340,7 +210,7 @@ contract LotterieThrow is LotterieMargins {
 
   // do not let stuck value in a throw
   function emptyOffThrow()
-    forThrowStorage(Phase.Off) 
+    forThrowStorage(TL.Phase.Off) 
     onlyOwner
     external {
     uint amount = thr.results.totalBidValue.sub(thr.results.totalClaimedValue);
@@ -355,9 +225,9 @@ contract LotterieThrow is LotterieMargins {
     onlyOwner
     external {
 
-    Phase currentPhase = getCurrentPhase();
+    TL.Phase currentPhase = TL.getCurrentPhase(thr,param,phaseParam);
 //    Phase currentPhase = thr.currentPhase;
-    require(currentPhase == Phase.Off);
+    require(currentPhase == TL.Phase.Off);
     uint amount = thr.results.totalBidValue.sub(thr.results.totalClaimedValue);
     if (amount != 0) {
       thr.results.totalClaimedValue += amount;
@@ -368,10 +238,10 @@ contract LotterieThrow is LotterieMargins {
 
   function withdrawWin(uint64 participationId)
     public 
-    forParticipation(participationId,ParticipationState.Cashout,Phase.End) 
+    forParticipation(participationId,TL.ParticipationState.Cashout,TL.Phase.End) 
     {
      // go through linked list
-     Participation storage part = participations[participationId];
+     TL.Participation storage part = participations[participationId];
 
      require(msg.sender == part.from);
 
@@ -398,7 +268,7 @@ contract LotterieThrow is LotterieMargins {
      uint result = 0;
      for (; ptr != 255 && result < thr.results.totalCashout; ++result) {
        require(ptr < winners.length);
-       Winner storage w = winners[ptr];
+       TL.Winner storage w = winners[ptr];
        if (w.participationId == participationId) {
          return(result);
        }
@@ -408,5 +278,5 @@ contract LotterieThrow is LotterieMargins {
      require(false);
   }
 
- 
+
 }

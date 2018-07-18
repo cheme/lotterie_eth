@@ -9,6 +9,7 @@ compile_toinp () {
 cd ..
 compile_toinp . LotterieConf
 compile_toinp hub Lotterie
+compile_toinp throw/lib ThrowLib
 compile_toinp throw/ether LotterieThrowEther
 compile_toinp throw/20 LotterieThrow20
 compile_toinp throw/223 LotterieThrow223

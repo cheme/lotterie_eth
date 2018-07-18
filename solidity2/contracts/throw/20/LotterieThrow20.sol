@@ -3,6 +3,7 @@ pragma solidity ^0.4.23;
 
 import "../721/LotterieThrow721.sol";
 import '../../zeppelin/token/ERC20/ERC20.sol';
+import { ThrowLib as TL } from "../lib/ThrowLib.sol";
 
 contract LotterieThrow20 is LotterieThrow721 {
 
@@ -68,7 +69,7 @@ contract LotterieThrow20 is LotterieThrow721 {
   )
   public
   {
-    require(thr.currentPhase == Phase.Construct);
+    require(thr.currentPhase == TL.Phase.Construct);
     require (waitingInitValue == 1);
     require(msg.sender == thrower);
     uint amount = token.allowance(msg.sender, address(this));
@@ -76,7 +77,7 @@ contract LotterieThrow20 is LotterieThrow721 {
     thr.results.totalBidValue = amount;
 
     if (0 == nbERC721) {
-      thr.currentPhase = Phase.Bidding;
+      thr.currentPhase = TL.Phase.Bidding;
     } else {
       waitingInitValue = 2;
     }

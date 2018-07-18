@@ -7,7 +7,8 @@ var Lotterie = artifacts.require("./Lotterie.sol");
 var LotterieThrowTemplate = artifacts.require("./LotterieThrowEther.sol");
 var LotterieThrowTemplate223 = artifacts.require("./LotterieThrow223.sol");
 var LotterieThrowTemplate20 = artifacts.require("./LotterieThrow20.sol");
-var LotterieConf = artifacts.require("./LotterieConf.sol");
+//var LotterieConf = artifacts.require("./LotterieConf.sol");
+//var ThrowLib = artifacts.require("./ThrowLib.sol");
 const conf1 = {
   dosalt : true,
   nbWinners : 5,

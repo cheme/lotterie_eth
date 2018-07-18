@@ -5,6 +5,7 @@ import "./Thrower.sol";
 import "./FromLotterie.sol";
 import "../LotteriePayment.sol";
 import { LotterieConf as LC } from "../LotterieConf.sol";
+import { ThrowLib as TL } from "./lib/ThrowLib.sol";
 import "./LotteriePhases.sol";
 
 contract LotterieMargins is Thrower, LotteriePhases, FromLotterie, LotteriePayment {
@@ -12,80 +13,50 @@ contract LotterieMargins is Thrower, LotteriePhases, FromLotterie, LotteriePayme
 
   // for debugging
   event Withdraw(address to, uint amount);
-
+ 
   // can withdraw in participation
   function withdrawOwner()
-    forThrowStorageNot2(Phase.Bidding,Phase.Off)
     onlyOwner 
     public returns (uint) {
-    
-    if (thr.withdraws.ownerWithdrawned == false) {
-      uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.ownerMargin);
-
-      if (amount > 0) {
-        thr.withdraws.ownerWithdrawned = true;
-        thr.results.totalClaimedValue += amount;
-//        msg.sender.transfer(amount);
-        withdrawAmount(amount);
-        emit Withdraw(msg.sender, amount);
-        return amount;
-      }
+    uint amount = TL.withdrawOwner(thr,param,phaseParam,winningParam);
+    if (amount > 0) {
+      withdrawAmount(amount);
+      emit Withdraw(msg.sender, amount);
     }
-    return 0;
+    return amount;
   }
+
   function withdrawContractAuthor()
-    forThrowStorageNot2(Phase.Bidding,Phase.Off)
     onlyContractAuthor
     public returns (uint) {
-    
-    if (thr.withdraws.authorContractWithdrawned == false) {
-    uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.authorContractMargin);
-      if (amount > 0) {
-        thr.withdraws.authorContractWithdrawned = true;
-        thr.results.totalClaimedValue += amount;
-        //msg.sender.transfer(amount);
-        withdrawAmount(amount);
-        emit Withdraw(msg.sender, amount);
-        return amount;
-      }
+    uint amount = TL.withdrawContractAuthor(thr,param,phaseParam,winningParam);
+    if (amount > 0) {
+      withdrawAmount(amount);
+      emit Withdraw(msg.sender, amount);
     }
-    return 0;
+    return amount;
   }
+
   function withdrawThrower()
-    forThrowStorageNot2(Phase.Bidding,Phase.Off)
     public returns (uint) {
-    
     require(thrower == msg.sender);
-    if (thr.withdraws.throwerWithdrawned == false) {
-    uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.throwerMargin);
-      if (amount > 0) {
-        thr.withdraws.throwerWithdrawned = true;
-        thr.results.totalClaimedValue += amount;
-        //msg.sender.transfer(amount);
-        withdrawAmount(amount);
-        emit Withdraw(msg.sender, amount);
-        return amount;
-      }
+    uint amount = TL.withdrawThrower(thr,param,phaseParam,winningParam);
+    if (amount > 0) {
+      withdrawAmount(amount);
+      emit Withdraw(msg.sender, amount);
     }
-    return 0;
+    return amount;
   }
+
   function withdrawDappAuthor()
-    forThrowStorageNot2(Phase.Bidding,Phase.Off)
     public returns (uint) {
-    
     require(param.authorDapp == msg.sender);
-    if (thr.withdraws.authorDappWithdrawned == false) {
-    uint amount = LC.calcMargin(thr.results.totalBidValue, thr.withdraws.authorDappMargin);
-      if (amount > 0) {
-        thr.withdraws.authorDappWithdrawned = true;
-        thr.results.totalClaimedValue += amount;
-        //msg.sender.transfer(amount);
-        withdrawAmount(amount);
-        emit Withdraw(msg.sender, amount);
-        return amount;
-      }
+    uint amount = TL.withdrawDappAuthor(thr,param,phaseParam,winningParam);
+    if (amount > 0) {
+      withdrawAmount(amount);
+      emit Withdraw(msg.sender, amount);
     }
-    return 0;
+    return amount;
   }
 
 }

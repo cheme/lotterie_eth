@@ -5,8 +5,10 @@ import "../../if/LotterieIf.sol";
 //import './zeppelin/token/ERC20/ERC20.sol';
 import '../../zeppelin/token/ERC721/ERC721Receiver.sol';
 import '../../zeppelin/token/ERC721/ERC721.sol';
+import { ThrowLib as TL } from "../lib/ThrowLib.sol";
 
 contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
+
   uint8 public nbERC721;
   struct PrizeErc721 {
     address token;
@@ -25,7 +27,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
 
   function addErc721Prize(address tok, uint256 p) internal {
 
-    require(thr.currentPhase == Phase.Construct);
+    require(thr.currentPhase == TL.Phase.Construct);
     require(erc721s.length < nbERC721);
 
     erc721s.push(PrizeErc721({
@@ -36,7 +38,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
     if (erc721s.length == nbERC721) {
       nbERC721 = 0; // gb eth or unlock other cond
       if (!otherConditionConstruct()) {
-        thr.currentPhase = Phase.Bidding;
+        thr.currentPhase = TL.Phase.Bidding;
       }
     }
   }
@@ -63,10 +65,10 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
   )
   external 
   {
-    require(thr.currentPhase == Phase.Construct);
+    require(thr.currentPhase == TL.Phase.Construct);
     require(msg.sender == thrower);
     // nbERC721 = 0; // keep trace of intended
-    thr.currentPhase = Phase.Bidding;
+    thr.currentPhase = TL.Phase.Bidding;
   }
 
   // let owner change state for stuct contract 
@@ -75,10 +77,10 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
   ) onlyOwner()
   external 
   {
-    require(thr.currentPhase == Phase.Construct);
+    require(thr.currentPhase == TL.Phase.Construct);
     // if can switch to participation the contract is useless (no possibility to bid)
-    require(canSwitchToParticipation());
-    thr.currentPhase = Phase.Off;
+    require (TL.canSwitchToParticipation(thr,param,phaseParam));
+    thr.currentPhase = TL.Phase.Off;
   }
 
 
@@ -97,76 +99,48 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
   ) 
   internal 
   {
+
     // warn Construct must be 0 (default value)
-    require(thr.currentPhase == Phase.Construct);
+    require(thr.currentPhase == TL.Phase.Construct);
     // only from lotterie main contract -> NO
     //require(address(lotterie) == msg.sender);
     //FromLotterie()
     lotterie = LotterieIf(msg.sender);
     //Thrower(tx.origin)
     thrower = tx.origin;
-    initParams(paramsId);
-    initPhaseParams(paramsPhaseId);
-    Phase cp; 
+    TL.initParams(paramsId,lotterie,param,winningParam);
+    TL.initPhaseParams(paramsPhaseId,lotterie,phaseParam);
+    TL.Phase cp; 
     if (_nbERC721 > 0 || otherConditionConstruct()) {
       nbERC721 = _nbERC721;
-      cp = Phase.Construct;
+      cp = TL.Phase.Construct;
     } else {
-      cp = Phase.Bidding;
+      cp = TL.Phase.Bidding;
     }
-    uint tnext;
 
-    if (phaseParam.participationStartTreshold > 0) {
-      if (phaseParam.participationStartMode == LC.CashoutEndMode.Relative) { 
-        tnext = now + phaseParam.participationStartTreshold;
-      } else {
-        require (phaseParam.participationStartMode == LC.CashoutEndMode.Absolute);
-        require (phaseParam.participationStartTreshold > now);
-        tnext = phaseParam.participationStartTreshold;
-      }
-    } else {
-      uint limit = 57 weeks; // not true infinite at 0 (a year seemleessly)
-      tnext = now + limit;
-    }
-    thr = LThrow({
-      paramsId : paramsId,
-      paramsPhaseId : paramsPhaseId,
-      blockNumber : block.number,
-      numberOfBid : 0,
-      numberOfRevealParticipation : 0,
-      currentSeed : 0,
-      tmpTime : tnext,
-      currentPhase : cp,
-      withdraws : LC.LotterieWithdraw({
-      winningBase : 0,
-      ownerMargin : ownerMargin,
-      authorContractMargin : authorContractMargin,
-      authorDappMargin : authorDappMargin,
-      throwerMargin : throwerMargin,
+    TL.internal_deffered_constructor(
 
-      ownerWithdrawned : false,
-      authorContractWithdrawned : false,
-      authorDappWithdrawned : false,
-      throwerWithdrawned : false
+     amount,
+     paramsId,
+     paramsPhaseId,
 
-    }),
-      results : LotterieResult({
-      totalBidValue : amount,
-      totalClaimedValue : 0,
-      firstWinner : 255,
-      totalCashout : 0
-      })
-    });
+     ownerMargin,
+     authorContractMargin,
+     authorDappMargin,
+     throwerMargin,
 
-  
+    cp,
+    thr,
+    phaseParam);
+ 
   }
 
   function withdraw721(uint64 participationId)
     public 
-    forParticipation(participationId,ParticipationState.Cashout,Phase.End) 
+    forParticipation(participationId,TL.ParticipationState.Cashout,TL.Phase.End) 
     {
      // go through linked list
-     Participation storage part = participations[participationId];
+     TL.Participation storage part = participations[participationId];
 
      require(msg.sender == part.from);
 
@@ -186,10 +160,10 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
 
   function withdrawAllWin(uint64 participationId)
     public 
-    forParticipation(participationId,ParticipationState.Cashout,Phase.End) 
+    forParticipation(participationId,TL.ParticipationState.Cashout,TL.Phase.End) 
     {
      // go through linked list
-     Participation storage part = participations[participationId];
+     TL.Participation storage part = participations[participationId];
 
      require(msg.sender == part.from);
 
@@ -217,7 +191,7 @@ contract LotterieThrow721 is LotterieThrow, ERC721Receiver {
   }
 
   function off721(uint ix721)
-    forThrowStorage(Phase.Off) 
+    forThrowStorage(TL.Phase.Off) 
     onlyOwner
     external {
     PrizeErc721 storage p = erc721s[ix721];

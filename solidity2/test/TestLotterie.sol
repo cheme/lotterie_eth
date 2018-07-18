@@ -6,6 +6,7 @@ import "truffle/DeployedAddresses.sol";
 import "../contracts/hub/Lotterie.sol";
 import "../contracts/throw/LotterieBase.sol";
 import {LotterieConf as LC} from "../contracts/LotterieConf.sol";
+import {ThrowLib as TL} from "../contracts/throw/lib/ThrowLib.sol";
 
 contract TestLotterie {
 /*
@@ -60,16 +61,16 @@ contract TestLotterie {
     Assert.equal(uint(uint8(LC.CashoutEndMode.Relative)),1,"wrong enum rep");
   }
   function testPhaseVals () {
-    Assert.equal(uint(uint8(LotterieBase.Phase.Construct)),0,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.Bidding)),1,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.Participation)),2,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.Cashout)),3,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.End)),4,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.Phase.Off)),5,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.Phase.Construct)),0,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.Phase.Bidding)),1,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.Phase.Participation)),2,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.Phase.Cashout)),3,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.Phase.End)),4,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.Phase.Off)),5,"wrong enum rep");
   }
   function testParticipationStateVals () {
-    Assert.equal(uint(uint8(LotterieBase.ParticipationState.BidSent)),0,"wrong enum rep");
-    Assert.equal(uint(uint8(LotterieBase.ParticipationState.Revealed)),1,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.ParticipationState.BidSent)),0,"wrong enum rep");
+    Assert.equal(uint(uint8(TL.ParticipationState.Revealed)),1,"wrong enum rep");
   }
 
   function testMarginCalc () {
