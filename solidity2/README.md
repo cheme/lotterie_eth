@@ -81,5 +81,12 @@ The npm lib do not provide tests, maybe when truffle includes an updated web3 de
 
 ## Issue
 
+The proxy code deployed (to avoid big costy contract instantiation) involves assembly : cf [https://gist.github.com/GNSPS/ba7b88565c947cfd781d44cf469c2ddb](https://gist.github.com/GNSPS/ba7b88565c947cfd781d44cf469c2ddb)
+
 The contract do too much things and is too big, plus espacially not great to audit linked list structure.
+
+ThrowLib is extra awkward, just here to reduce size of contracts, there is a lot of storage pointer in parameter and an overall bad looking code organisation (all end up in the library file).
+
+
+A possible refactor will be to use fallback to delegate to other contract (we have already written all throw logic for a delegate call due to proxy), but it will need to be able to link with the contract (I do not want to use a storage address for it): some testing will be needed before moving to such design (could fallback multiple time for very big contract). Also to test how to call parent contract that way (bidirect link needed here).
 

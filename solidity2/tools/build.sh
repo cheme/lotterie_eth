@@ -1,7 +1,7 @@
 #!/bin/bash
 compile_toinp () {
   rm -rf ./tmp
-  solc --allow-paths . ./contracts/$1/$2.sol --bin -o tmp
+  solc --optimize --allow-paths . ./contracts/$1/$2.sol --bin -o tmp
   solc --allow-paths . ./contracts/$1/$2.sol --abi -o tmp
   mv ./tmp/$2.abi tools/inp
   mv ./tmp/$2.bin tools/inp

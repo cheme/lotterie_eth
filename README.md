@@ -17,9 +17,9 @@ Note also that switch between phase is done at the first action of the phase to 
 Status
 ------
 
-I am going to deploy the Dapp on kovan, the address of the main hub is : TODO
+The currently deployed contract on ropsten is at '0xAB6967bA23b49F19B5ED694b2aCaEA9283C81A98'.
 
-Access to the Dapp could be done through [boot_site_torrent](https://cheme.github.io/boot_site_torrent/?8172f5d05cd813bdcc52377aa1cd8595b8456485d048fd9f8bcae0f7cc3ac72e&magnet:?xt=urn:btih:0636580de3f886de7a563d724ac9b80b20e8c1b0&dn=dist.zip&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com) (the environment is configured to point on prev kovan address). But it is likely to have no seed, but you should simply build the angular dapp and use it from localhost.
+Access to the Dapp could be done through [boot_site_torrent](https://cheme.github.io/boot_site_torrent/?4b50d817b7c058db153766ecb10efd9ad5d23a5a977843debe28b6087b09b9f9&magnet:?xt=urn:btih:0ff7df91d3c4166d33a3d9a5082eee56c40ae15e&dn=lhub0.0.1.zip&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com) (the environment is configured to point on prev ropsten address). But it is likely to have no seed, but you should simply build the angular dapp and use it from localhost.
 
 I do not plan to deploy it on mainnet as it could be a liability (legally speaking), if I see that someone did deploy it I may publish the contract address (tools like etherscan for finding similarity in contract can be use).
 
@@ -27,7 +27,7 @@ Please note that after a long period the owner of the contract can have access t
 
 There is 4 kind of margin so you can use my addresses for dapp or contract author. One of my addresses is 0x8d52c034ac92c8ea552a68044ce73c7a8058c8ad, if the host environment of this readme is not hacked :)
 
-Currently it needs some solid testing, and you are more than welcome for experimenting on kovan.
+Currently it needs some solid testing, and you are more than welcome for experimenting on ropsten .
 
 The angular Dapp is also not something I really enjoy doing, and any PR are really welcome (a lot of obvious validation are missing : I focused on the usage from a participant point of view, I think that initiating a throw should be done with web3.js after having read the contract).
 I am also thinking about trying that a webgl visualization of the throw current seed value would be very nice.

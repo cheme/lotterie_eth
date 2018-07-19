@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  contractAddress: '0x08217a8519d10947a872f856f174187177b53889',
-  authorDapp: '0xE6C0DD1Bd577DEBAf0C8E78d60b7a07F26eA4DA',
+  contractAddress: '0xAB6967bA23b49F19B5ED694b2aCaEA9283C81A98',
+  authorDapp: '0x8d52c034ac92c8ea552a68044ce73c7a8058c8ad',
   nbParamsShow: 10,
   nbThrowsShow: 10,
   nbParticipationsShow: 5,

@@ -405,7 +405,7 @@ library ThrowLib {
       state : ParticipationState.BidSent
     });
     participations.push(part);
-    uint64 participationId = uint64(participations.length);
+    uint64 participationId = uint64(participations.length - 1);
     emit NewParticipation(participationId,amount);
   }
 

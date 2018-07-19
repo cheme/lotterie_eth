@@ -626,7 +626,7 @@ export class LotterieService {
       var call = throwLib.methods.bid(hiddenSeed);
       return from(call.estimateGas({from: this.web3.eth.defaultAccount, value: bidValue})
         .then((gas) => 
-                   call.send({from: this.web3.eth.defaultAccount, gas: gas + 2000, value: bidValue})));
+                   call.send({from: this.web3.eth.defaultAccount, gas: gas + 5000, value: bidValue})));
                    // TODO check why I need those additional 2k
     }
 

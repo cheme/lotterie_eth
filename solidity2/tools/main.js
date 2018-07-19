@@ -1,9 +1,13 @@
 var fs = require('fs');
 
-var lotterie_abi = fs.readFileSync( 'inp/Lotterie.abi', 'utf8');
-var lotterie_bin = fs.readFileSync( 'inp/Lotterie.bin', 'utf8');
 var lotterieConf_abi = fs.readFileSync( 'inp/LotterieConf.abi', 'utf8');
 var lotterieConf_bin = fs.readFileSync( 'inp/LotterieConf.bin', 'utf8');
+var throwLib_abi = fs.readFileSync( 'inp/ThrowLib.abi', 'utf8');
+var throwLib_bin = fs.readFileSync( 'inp/ThrowLib.bin', 'utf8');
+
+
+var lotterie_abi = fs.readFileSync( 'inp/Lotterie.abi', 'utf8');
+var lotterie_bin = fs.readFileSync( 'inp/Lotterie.bin', 'utf8');
 var lotterieThrow20_abi = fs.readFileSync( 'inp/LotterieThrow20.abi', 'utf8');
 var lotterieThrow20_bin = fs.readFileSync( 'inp/LotterieThrow20.bin', 'utf8');
 var lotterieThrow223_abi = fs.readFileSync( 'inp/LotterieThrow223.abi', 'utf8');
@@ -12,6 +16,7 @@ var lotterieThrowEther_abi = fs.readFileSync( 'inp/LotterieThrowEther.abi', 'utf
 var lotterieThrowEther_bin = fs.readFileSync( 'inp/LotterieThrowEther.bin', 'utf8');
 
 const libNameLink = "./contracts/LotterieConf.sol:LotteriConf";
+const tLNameLink = "./contracts/throw/lib/ThrowLib.sol:ThrowLib";
 
 
 const Web3 = require('web3');
@@ -73,21 +78,34 @@ function signMessage(message) {
 async function deployConf(send) {
   await deploy(send, lotterieConf_abi, lotterieConf_bin, []);
 }
-async function deploy20(send,confAdd) {
-  deployThrow(send,confAdd,lotterieThrow20_abi,lotterieThrow20_bin);
-}
-async function deploy223(send,confAdd) {
-  deployThrow(send,confAdd,lotterieThrow223_abi,lotterieThrow223_bin);
-}
-async function deployEther(send,confAdd) {
-  deployThrow(send,confAdd,lotterieThrowEther_abi,lotterieThrowEther_bin);
-}
-
-async function deployThrow(send,confAdd, abi,bin) {
+async function deployTL(send,confAdd) {
   if (confAdd.startsWith('0x')) {
     confAdd = confAdd.substring(2,confAdd.length);
   }
+  let lbin = link(throwLib_bin, libNameLink, confAdd);
+  await deploy(send, throwLib_abi, lbin, []);
+}
+
+async function deploy20(send,confAdd,tLAdd) {
+  deployThrow(send,confAdd,tLAdd,lotterieThrow20_abi,lotterieThrow20_bin);
+}
+async function deploy223(send,confAdd,tLAdd) {
+  deployThrow(send,confAdd,tLAdd,lotterieThrow223_abi,lotterieThrow223_bin);
+}
+async function deployEther(send,confAdd,tLAdd) {
+  deployThrow(send,confAdd,tLAdd,lotterieThrowEther_abi,lotterieThrowEther_bin);
+}
+
+async function deployThrow(send,confAdd,tLAdd,abi,bin) {
+  if (confAdd.startsWith('0x')) {
+    confAdd = confAdd.substring(2,confAdd.length);
+  }
+  if (tLAdd.startsWith('0x')) {
+    tLAdd = tLAdd.substring(2,tLAdd.length);
+  }
+ 
   let lbin = link(bin, libNameLink, confAdd);
+  lbin = link(lbin, tLNameLink, tLAdd);
   if (lbin.length == bin.length) {
 
     await deploy(send, abi, lbin, []);
@@ -117,6 +135,10 @@ async function deployHub(send,confAdd,ethAdd,e223Add,e20Add) {
 }
 
 
+function hubContract(caddress) {
+  return new web3.eth.Contract(JSON.parse(lotterie_abi),caddress,{from: account.address});
+}
+
 async function deploy(send, abi, bin, args) {
 
         if (!bin.startsWith('0x')) {
@@ -134,7 +156,7 @@ async function deploy(send, abi, bin, args) {
 	  from : account.address,
 //	  to : contractAddress,
 	  data : payload,
-	  gas : gas,
+	  gas : Math.floor(gas * 1.2),
 	  gasPrice : gasPrice
   };
   var rt = (await web3.eth.accounts.signTransaction(tx,privk)).rawTransaction;
@@ -184,11 +206,13 @@ window.testlib = {
   LightWallet,
   initWeb3,
   deployConf,
+  deployTL,
   deploy20,
   deploy223,
   deployEther,
   deployHub,
-  sendTx
+  sendTx,
+  hubContract
 }
 
 
